@@ -1,0 +1,131 @@
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { getMedia } from "@/services/mediaService";
+import { Media, MediaFilters } from "@/types/media";
+
+interface UseMediaGalleryReturn {
+  mediaItems: Media[];
+  loading: boolean;
+  error: string | null;
+  filteredItems: Media[];
+  totalPages: number;
+  paginatedItems: Media[];
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  refetch: () => Promise<void>;
+}
+
+interface UseMediaGalleryProps {
+  searchQuery: string;
+  selectedCategories: string[];
+  selectedEventTypes: string[];
+  selectedYear: number | null;
+  selectedMonth: number | null;
+  itemsPerPage?: number;
+}
+
+export const useMediaGallery = ({
+  searchQuery,
+  selectedCategories,
+  selectedEventTypes,
+  selectedYear,
+  selectedMonth,
+  itemsPerPage = 12,
+}: UseMediaGalleryProps): UseMediaGalleryReturn => {
+  const [mediaItems, setMediaItems] = useState<Media[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Chargement des médias depuis Strapi
+  const loadMedia = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const filters: MediaFilters = {
+        search: searchQuery || undefined,
+        category: selectedCategories.includes("Tous")
+          ? undefined
+          : selectedCategories[0],
+        eventType: selectedEventTypes.includes("Tous")
+          ? undefined
+          : selectedEventTypes[0],
+        year: selectedYear || undefined,
+        month: selectedMonth || undefined,
+        limit: 100, // Charger plus d'éléments pour le filtrage côté client
+      };
+
+      const media = await getMedia(filters);
+      setMediaItems(media);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Erreur inconnue";
+      setError(errorMessage);
+      console.error("Erreur lors du chargement des médias:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    searchQuery,
+    selectedCategories,
+    selectedEventTypes,
+    selectedYear,
+    selectedMonth,
+  ]);
+
+  // Effet pour charger les médias
+  useEffect(() => {
+    loadMedia();
+  }, [loadMedia]);
+
+  // Filtrage des éléments
+  const filteredItems = useMemo(() => {
+    return mediaItems.filter((item) => {
+      const matchesCategory =
+        selectedCategories.includes("Tous") ||
+        selectedCategories.includes(item.category);
+      const matchesEventType =
+        selectedEventTypes.includes("Tous") ||
+        selectedEventTypes.includes(item.eventType || "");
+      const matchesSearch =
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.description &&
+          item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.location &&
+          item.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.photographer &&
+          item.photographer.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesEventType && matchesSearch;
+    });
+  }, [mediaItems, selectedCategories, selectedEventTypes, searchQuery]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchQuery,
+    selectedCategories,
+    selectedEventTypes,
+    selectedYear,
+    selectedMonth,
+  ]);
+
+  return {
+    mediaItems,
+    loading,
+    error,
+    filteredItems,
+    totalPages,
+    paginatedItems,
+    currentPage,
+    setCurrentPage,
+    refetch: loadMedia,
+  };
+};
