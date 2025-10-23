@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     domains: [
       "localhost",
       "127.0.0.1",
-      "informed-activity-db79c3338c.strapiapp.com",
-      "informed-activity-db79c3338c.media.strapiapp.com",
+      "lively-horse-7cb2f4c550.strapiapp.com",
+      "lively-horse-7cb2f4c550.media.strapiapp.com",
     ],
   },
 };
