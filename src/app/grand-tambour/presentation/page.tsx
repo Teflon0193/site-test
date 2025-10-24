@@ -256,8 +256,8 @@ export default function GrandTambourPresentation() {
               </div>
 
               <div className="space-y-6 sm:space-y-8 order-1 lg:order-2">
-                <div className="bg-gradient-to-br from-white to-muted/10 p-6 sm:p-8 rounded-xl shadow-lg border border-muted/20">
-                  <h3 className="text-xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-6">
+                <div className="bg-gradient-to-br from-white to-muted/10 p-6 sm:p-8 rounded-2xl shadow-lg border border-muted/20">
+                  <h3 className="text-lg sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
                     Le Tambour : symbole de la mémoire et de la souveraineté
                     culturelle congolaise
                   </h3>
