@@ -244,7 +244,7 @@ export default function GrandTambourPresentation() {
               <div className="relative order-2 lg:order-1 group">
                 <div className="overflow-hidden rounded-2xl shadow-xl">
                   <Image
-                    src="/images/grand-tambour.jpg"
+                    src="/images/grand-tambour3.jpg"
                     alt="Architecture du Grand Tambour"
                     width={600}
                     height={500}
