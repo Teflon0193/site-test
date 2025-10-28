@@ -11,7 +11,7 @@ export default function VideoFocus() {
   // Configuration vidéo - À personnaliser selon vos besoins
   const videoConfig = {
     // Option 1: Vidéo YouTube (remplacez par votre ID de vidéo)
-    youtubeId: "dQw4w9WgXcQ", // Exemple - remplacez par votre vraie vidéo
+    youtubeId: "6snOnJ-AlwY", // Exemple - remplacez par votre vraie vidéo
 
     // Option 2: Vidéo locale
     localVideo: "/videos/grand-tambour-presentation.mp4",

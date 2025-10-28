@@ -22,7 +22,7 @@ export default function Page() {
 
       <VideoFocus />
 
-      <Partners  />
+      <Partners />
 
       <Footer />
     </div>
