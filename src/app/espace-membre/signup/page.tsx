@@ -17,11 +17,33 @@ import SignupForm, {
   type SignupFormValues,
 } from "@/app/components/auth/SignupForm";
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
+import { signUp } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const handleSignupSubmit = async (values: SignupFormValues) => {
-    console.log("Register attempt:", values);
-    // À connecter à l'API d'inscription (BetterAuth)
+    try {
+      await signUp.email({
+        email: values.email,
+        password: values.password,
+        name: values.firstName + " " + values.lastName,
+      });
+      // Initialiser le profil membre (idempotent)
+      await fetch("/api/members/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: values.email,
+          phone: values.phone,
+          name: values.firstName + " " + values.lastName,
+        }),
+      });
+      router.push("/espace-membre");
+    } catch (error) {
+      console.log("Signup error:", error);
+      throw error;
+    }
   };
 
   const handleGoogleSignUp = () => {

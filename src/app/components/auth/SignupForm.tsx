@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +30,7 @@ const schema = z
 export type SignupFormValues = z.infer<typeof schema>;
 
 interface SignupFormProps {
-  onSubmit?: (values: SignupFormValues) => Promise<void> | void;
+  onSubmit: (values: SignupFormValues) => Promise<void> | void;
 }
 
 export function SignupForm({ onSubmit }: SignupFormProps) {
@@ -52,18 +51,8 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
     mode: "onTouched",
   });
 
-  const defaultSubmit = useCallback((values: SignupFormValues) => {
-    // À connecter au flux d'inscription (BetterAuth) ultérieurement
-
-    console.log("Signup submit:", values);
-  }, []);
-
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit ?? defaultSubmit)}
-      className="space-y-4"
-      noValidate
-    >
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">Prénom</Label>

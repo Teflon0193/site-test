@@ -9,8 +9,14 @@ import {
 } from "../components/ui/card";
 import Header from "../components/home/header";
 import Footer from "../components/home/footer";
+import { getSession } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
 
-export default function EspaceMembres() {
+export default async function EspaceMembres() {
+  const session = await getSession();
+  if (!session) {
+    redirect("/espace-membre/login");
+  }
   return (
     <>
       <Header />
