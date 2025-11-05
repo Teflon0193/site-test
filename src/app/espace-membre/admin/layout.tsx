@@ -1,18 +1,19 @@
-"use client";
-
 import type React from "react";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Users, BarChart3, Calendar, Home } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  const UserIsAdmin = await isAdmin();
+  if (!UserIsAdmin) {
+    redirect("/espace-membre/login");
+  }
 
   const navItems = [
     {
@@ -52,19 +53,12 @@ export default function AdminLayout({
         <nav className="flex-1 space-y-1 p-4">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-4 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground/70 hover:bg-accent hover:text-foreground"
-                )}
+                className="flex items-center gap-3 rounded-md px-4 py-2.5 text-sm font-medium transition-colors"
               >
                 <Icon className="h-5 w-5" />
                 {item.label}

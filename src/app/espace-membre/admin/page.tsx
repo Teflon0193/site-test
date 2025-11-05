@@ -6,14 +6,9 @@ import {
 } from "@/app/components/ui/card";
 import { Users, Calendar, Activity, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isAdmin } from "@/lib/auth-server";
-import { redirect } from "next/navigation";
+
 
 export default async function AdminDashboard() {
-  const UserIsAdmin = await isAdmin();
-  if (!UserIsAdmin) {
-    redirect("/espace-membre/login");
-  }
   const stats = [
     {
       title: "Membres Totaux",
