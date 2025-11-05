@@ -1,5 +1,6 @@
-import { auth } from "./auth"; // path to your Better Auth server instance
+import { auth } from "./auth";
 import { headers } from "next/headers";
+import prisma from "@/lib/prisma";
 
 export const getSession = async () => {
   return await auth.api.getSession({ headers: await headers() });
@@ -7,5 +8,25 @@ export const getSession = async () => {
 
 export const getUser = async () => {
   const session = await getSession();
-  return session?.user;
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      createdAt: true,
+      updatedAt: true,
+      email: true,
+      emailVerified: true,
+      name: true,
+      image: true,
+      role: true,
+    },
+  });
+  return user;
+};
+
+export const isAdmin = async () => {
+  const user = await getUser();
+  return user?.role === "ADMIN";
 };
