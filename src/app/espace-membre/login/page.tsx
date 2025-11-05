@@ -11,20 +11,33 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/app/components/auth/layout";
 import LoginForm, {
   type LoginFormValues,
 } from "../../components/auth/LoginForm";
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
+import { signIn } from "@/lib/auth-client";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const handleGoogleSignIn = () => {
     console.log("Google sign-in initiated");
     // À implémenter avec une vraie intégration Google OAuth
   };
+
   const handleLoginSubmit = async (values: LoginFormValues) => {
-    console.log("Login attempt:", values);
-    // À connecter à l'API d'auth (BetterAuth)
+    try {
+      await signIn.email({
+        email: values.email,
+        password: values.password,
+      });
+      router.push("/espace-membre/admin");
+    } catch (error) {
+      console.log("Signup error:", error);
+      throw error;
+    }
   };
 
   return (
