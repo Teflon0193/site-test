@@ -2,7 +2,7 @@
 
 import type React from "react";
 import Link from "next/link";
-//
+
 import {
   Card,
   CardContent,
@@ -18,6 +18,7 @@ import LoginForm, {
 } from "../../components/auth/LoginForm";
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
 import { signIn } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,16 +29,21 @@ export default function LoginPage() {
   };
 
   const handleLoginSubmit = async (values: LoginFormValues) => {
-    try {
-      await signIn.email({
+    await signIn.email(
+      {
         email: values.email,
         password: values.password,
-      });
-      router.push("/espace-membre/admin");
-    } catch (error) {
-      console.log("Signup error:", error);
-      throw error;
-    }
+      },
+      {
+        onSuccess: () => {
+          router.push("/espace-membre/admin");
+        },
+
+        onError: (error) => {
+          toast.error(error.error.message);
+        },
+      }
+    );
   };
 
   return (
