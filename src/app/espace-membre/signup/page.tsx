@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { AuthLayout } from "@/app/components/auth/layout";
+import { AuthLayout } from "@/app/components/auth/AuthLayout";
 //
 import SignupForm, {
   type SignupFormValues,

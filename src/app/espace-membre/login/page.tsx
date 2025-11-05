@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { useRouter } from "next/navigation";
-import { AuthLayout } from "@/app/components/auth/layout";
+import { AuthLayout } from "@/app/components/auth/AuthLayout";
 import LoginForm, {
   type LoginFormValues,
 } from "../../components/auth/LoginForm";
