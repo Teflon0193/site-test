@@ -5,17 +5,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Menu,
-  X,
-  LogOut,
-  User,
-  Calendar,
-  Bell,
-  Settings,
-  Users,
-  BarChart3,
-  Home,
-} from "lucide-react";
+  HiMenu,
+  HiX,
+  HiLogout,
+  HiUser,
+  HiCalendar,
+  HiBell,
+  HiCog,
+  HiUsers,
+  HiChartBar,
+  HiHome,
+} from "react-icons/hi";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth-client";
 import Image from "next/image";
@@ -28,11 +28,13 @@ interface DashboardLayoutClientProps {
     email: string;
     role: "MEMBER" | "ADMIN";
   };
+  pendingApprovalsCount?: number;
 }
 
 export default function DashboardLayoutClient({
   children,
   user,
+  pendingApprovalsCount = 0,
 }: DashboardLayoutClientProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -41,44 +43,45 @@ export default function DashboardLayoutClient({
   const menuItems =
     user.role === "ADMIN"
       ? [
-          { href: "/espace-membre/admin", label: "Dashboard", icon: Home },
+          { href: "/espace-membre/admin", label: "Dashboard", icon: HiHome },
           {
             href: "/espace-membre/admin/approvals",
             label: "Approbations",
-            icon: Bell,
+            icon: HiBell,
+            badge: pendingApprovalsCount,
           },
           {
             href: "/espace-membre/admin/members",
             label: "Membres",
-            icon: Users,
+            icon: HiUsers,
           },
           {
             href: "/espace-membre/admin/activities",
             label: "Activités",
-            icon: BarChart3,
+            icon: HiChartBar,
           },
           {
             href: "/espace-membre/admin/events",
             label: "Événements",
-            icon: Calendar,
+            icon: HiCalendar,
           },
         ]
       : [
-          { href: "/espace-membre", label: "Accueil", icon: User },
+          { href: "/espace-membre", label: "Accueil", icon: HiUser },
           {
             href: "/espace-membre/events",
             label: "Événements",
-            icon: Calendar,
+            icon: HiCalendar,
           },
           {
             href: "/espace-membre/activities",
             label: "Mes activités",
-            icon: Bell,
+            icon: HiBell,
           },
           {
             href: "/espace-membre/profile",
             label: "Mon profil",
-            icon: Settings,
+            icon: HiCog,
           },
         ];
 
@@ -111,7 +114,7 @@ export default function DashboardLayoutClient({
             className="p-2 hover:bg-primary-foreground/10 rounded-lg transition-colors"
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>
         </div>
       </div>
@@ -169,7 +172,14 @@ export default function DashboardLayoutClient({
                       : "hover:bg-primary-foreground/10 lg:hover:translate-x-1"
                   }`}
                 >
-                  <Icon size={20} />
+                  <div className="relative">
+                    <Icon size={20} />
+                    {"badge" in item && item.badge && item.badge > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {item.badge > 9 ? "9+" : item.badge}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-sm">{item.label}</span>
                 </span>
               </Link>
@@ -196,7 +206,7 @@ export default function DashboardLayoutClient({
               variant="outline"
               className="w-full justify-start gap-2 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10 bg-transparent hover:border-primary-foreground/50 transition-all"
             >
-              <LogOut size={20} />
+              <HiLogout size={20} />
               <span>Déconnexion</span>
             </Button>
           </div>

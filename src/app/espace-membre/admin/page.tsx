@@ -4,49 +4,96 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/components/ui/card";
-import { Users, Calendar, Activity, TrendingUp } from "lucide-react";
+import { HiUsers, HiChartBar, HiUserAdd, HiClock } from "react-icons/hi";
 import { cn } from "@/lib/utils";
 import { getUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
+import prisma from "@/lib/prisma";
 
 export default async function AdminDashboard() {
   const user = await getUser();
 
-  // Les vérifications d'authentification et d'approbation sont gérées par le layout parent
-  // À ce stade, user est garanti d'être non-null et approuvé
-
-  // Rediriger les non-admins vers le dashboard membre
   if (user!.role !== "ADMIN") {
     redirect("/espace-membre");
   }
+
+  // Récupérer les statistiques réelles
+  const [
+    totalMembers,
+    approvedMembers,
+    pendingMembers,
+    totalActivities,
+    recentMembers,
+  ] = await Promise.all([
+    // Total des membres (MEMBER uniquement)
+    prisma.user.count({
+      where: { role: "MEMBER" },
+    }),
+    // Membres approuvés
+    prisma.user.count({
+      where: { role: "MEMBER", isApproved: true },
+    }),
+    // Membres en attente
+    prisma.user.count({
+      where: { role: "MEMBER", isApproved: false },
+    }),
+    // Total des activités
+    prisma.memberActivity.count(),
+    // 5 derniers membres inscrits
+    prisma.user.findMany({
+      where: { role: "MEMBER" },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        isApproved: true,
+      },
+    }),
+  ]);
+
+  // Calculer les membres de la semaine dernière
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const newMembersThisWeek = await prisma.user.count({
+    where: {
+      role: "MEMBER",
+      createdAt: { gte: oneWeekAgo },
+    },
+  });
+
   const stats = [
     {
       title: "Membres Totaux",
-      value: "342",
-      icon: Users,
-      description: "24 nouveaux cette semaine",
+      value: totalMembers.toString(),
+      icon: HiUsers,
+      description: `${newMembersThisWeek} nouveaux cette semaine`,
       color: "bg-blue-50 text-blue-600",
     },
     {
-      title: "Événements",
-      value: "12",
-      icon: Calendar,
-      description: "3 à venir ce mois",
-      color: "bg-purple-50 text-purple-600",
-    },
-    {
-      title: "Activités",
-      value: "1,234",
-      icon: Activity,
-      description: "+18% depuis le mois dernier",
+      title: "Membres Approuvés",
+      value: approvedMembers.toString(),
+      icon: HiUserAdd,
+      description: `${Math.round(
+        (approvedMembers / totalMembers) * 100
+      )}% du total`,
       color: "bg-green-50 text-green-600",
     },
     {
-      title: "Taux d'engagement",
-      value: "78%",
-      icon: TrendingUp,
-      description: "Inscriptions aux événements",
-      color: "bg-amber-50 text-amber-600",
+      title: "En Attente",
+      value: pendingMembers.toString(),
+      icon: HiClock,
+      description: "Demandes à traiter",
+      color: "bg-orange-50 text-orange-600",
+    },
+    {
+      title: "Activités",
+      value: totalActivities.toString(),
+      icon: HiChartBar,
+      description: "Actions enregistrées",
+      color: "bg-purple-50 text-purple-600",
     },
   ];
 
@@ -95,36 +142,68 @@ export default async function AdminDashboard() {
             <CardTitle>Derniers Membres Inscrits</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                {
-                  name: "Jean Dupont",
-                  email: "jean.dupont@email.com",
-                  date: "Aujourd'hui",
-                },
-                {
-                  name: "Marie Mbongo",
-                  email: "marie.mbongo@email.com",
-                  date: "Hier",
-                },
-                {
-                  name: "Pierre Kalala",
-                  email: "pierre.kalala@email.com",
-                  date: "Il y a 2 jours",
-                },
-              ].map((member) => (
-                <div
-                  key={member.email}
-                  className="flex items-center justify-between border-b pb-3 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{member.name}</p>
-                    <p className="text-xs text-foreground/60">{member.email}</p>
-                  </div>
-                  <p className="text-xs text-foreground/50">{member.date}</p>
-                </div>
-              ))}
-            </div>
+            {recentMembers.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Aucun membre pour le moment
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {recentMembers.map((member) => {
+                  const now = new Date();
+                  const memberDate = new Date(member.createdAt);
+                  const diffTime = Math.abs(
+                    now.getTime() - memberDate.getTime()
+                  );
+                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                  let dateLabel = "";
+                  if (diffDays === 0) {
+                    dateLabel = "Aujourd'hui";
+                  } else if (diffDays === 1) {
+                    dateLabel = "Hier";
+                  } else if (diffDays < 7) {
+                    dateLabel = `Il y a ${diffDays} jours`;
+                  } else {
+                    dateLabel = memberDate.toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "short",
+                    });
+                  }
+
+                  return (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between border-b pb-3 last:border-0"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate">
+                            {member.name}
+                          </p>
+                          {member.isApproved ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              <HiUserAdd className="w-3 h-3 mr-1" />
+                              Approuvé
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                              <HiClock className="w-3 h-3 mr-1" />
+                              En attente
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-foreground/60 truncate">
+                          {member.email}
+                        </p>
+                      </div>
+                      <p className="text-xs text-foreground/50 ml-2 whitespace-nowrap">
+                        {dateLabel}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
