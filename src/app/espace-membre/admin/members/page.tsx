@@ -87,7 +87,7 @@ export default function MembersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">
+        <h1 className="text-3xl uppercase font-bold text-foreground">
           Gestion des Membres
         </h1>
         <p className="mt-2 text-sm text-foreground/60">

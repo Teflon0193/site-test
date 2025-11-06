@@ -7,7 +7,6 @@ import {
 import { Users, Calendar, Activity, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-
 export default async function AdminDashboard() {
   const stats = [
     {
@@ -44,7 +43,7 @@ export default async function AdminDashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">
+        <h1 className="text-3xl uppercase font-bold text-foreground">
           Dashboard Administrateur
         </h1>
         <p className="mt-2 text-sm text-foreground/60">

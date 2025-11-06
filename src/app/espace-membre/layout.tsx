@@ -1,9 +1,9 @@
 import type React from "react";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth-server";
-import MemberLayoutClient from "./MemberLayoutClient";
+import DashboardLayoutClient from "./DashboardLayoutClient";
 
-export default async function MemberLayout({
+export default async function EspaceMembreLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -15,10 +15,6 @@ export default async function MemberLayout({
     redirect("/auth/login");
   }
 
-  // Rediriger les admins vers leur espace
-  if (user.role === "ADMIN") {
-    redirect("/espace-membre/admin");
-  }
-
-  return <MemberLayoutClient>{children}</MemberLayoutClient>;
+  // Passer l'utilisateur au layout client pour adapter la navigation
+  return <DashboardLayoutClient user={user}>{children}</DashboardLayoutClient>;
 }
