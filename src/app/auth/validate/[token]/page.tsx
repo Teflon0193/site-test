@@ -1,9 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
-import { redirect } from "next/navigation";
 
 interface ValidatePageProps {
   params: Promise<{
@@ -95,12 +99,14 @@ export default async function ValidateTokenPage({ params }: ValidatePageProps) {
           {status === "success" && (
             <>
               <p className="text-center text-muted-foreground">
-                Félicitations <strong className="text-foreground">{userName}</strong> ! 
-                Votre compte CCAPAC est maintenant actif.
+                Félicitations{" "}
+                <strong className="text-foreground">{userName}</strong> ! Votre
+                compte CCAPAC est maintenant actif.
               </p>
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-sm text-green-800">
-                  ✓ Vous pouvez maintenant accéder à tous les services réservés aux membres :
+                  ✓ Vous pouvez maintenant accéder à tous les services réservés
+                  aux membres :
                 </p>
                 <ul className="mt-2 text-sm text-green-700 space-y-1 ml-4">
                   <li>• Inscription aux événements</li>
@@ -110,15 +116,13 @@ export default async function ValidateTokenPage({ params }: ValidatePageProps) {
               </div>
               <div className="flex flex-col gap-3">
                 <Button asChild className="w-full">
-                  <Link href="/auth/login">
-                    Se connecter maintenant
-                  </Link>
+                  <Link href="/auth/login">Se connecter maintenant</Link>
                 </Button>
                 <Link
                   href="/"
                   className="text-center text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Retour à l'accueil
+                  Retour à l&apos;accueil
                 </Link>
               </div>
             </>
@@ -127,19 +131,18 @@ export default async function ValidateTokenPage({ params }: ValidatePageProps) {
           {status === "used" && (
             <>
               <p className="text-center text-muted-foreground">
-                Ce lien d'activation a déjà été utilisé. Votre compte est actif.
+                Ce lien d&apos;activation a déjà été utilisé. Votre compte est
+                actif.
               </p>
               <div className="flex flex-col gap-3">
                 <Button asChild className="w-full">
-                  <Link href="/auth/login">
-                    Se connecter
-                  </Link>
+                  <Link href="/auth/login">Se connecter</Link>
                 </Button>
                 <Link
                   href="/"
                   className="text-center text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Retour à l'accueil
+                  Retour à l&apos;accueil
                 </Link>
               </div>
             </>
@@ -148,7 +151,8 @@ export default async function ValidateTokenPage({ params }: ValidatePageProps) {
           {status === "expired" && (
             <>
               <p className="text-center text-muted-foreground">
-                Ce lien d'activation a expiré. Veuillez contacter l'administration pour obtenir un nouveau lien.
+                Ce lien d&apos;activation a expiré. Veuillez contacter
+                l&apos;administration pour obtenir un nouveau lien.
               </p>
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                 <p className="text-sm text-orange-800">
@@ -165,7 +169,7 @@ export default async function ValidateTokenPage({ params }: ValidatePageProps) {
                 href="/"
                 className="block text-center text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Retour à l'accueil
+                Retour à l&apos;accueil
               </Link>
             </>
           )}
@@ -173,13 +177,14 @@ export default async function ValidateTokenPage({ params }: ValidatePageProps) {
           {status === "invalid" && (
             <>
               <p className="text-center text-muted-foreground">
-                Ce lien d'activation n'est pas valide. Vérifiez que vous avez copié l'URL complète.
+                Ce lien d&apos;activation n&apos;est pas valide. Vérifiez que
+                vous avez copié l&apos;URL complète.
               </p>
               <Link
                 href="/"
                 className="block text-center text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Retour à l'accueil
+                Retour à l&apos;accueil
               </Link>
             </>
           )}
@@ -188,4 +193,3 @@ export default async function ValidateTokenPage({ params }: ValidatePageProps) {
     </div>
   );
 }
-

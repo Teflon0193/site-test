@@ -35,7 +35,10 @@ export default async function EspaceMembreLayout({
 
   // Passer l'utilisateur au layout client pour adapter la navigation
   return (
-    <DashboardLayoutClient user={user} pendingApprovalsCount={pendingApprovalsCount}>
+    <DashboardLayoutClient
+      user={user}
+      pendingApprovalsCount={pendingApprovalsCount}
+    >
       {children}
     </DashboardLayoutClient>
   );

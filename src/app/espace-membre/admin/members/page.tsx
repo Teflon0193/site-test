@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { MembersTable } from "./MembersTable";
 import { MembersFilters } from "./MembersFilters";
+import { Prisma } from "@prisma/client";
 
 interface PageProps {
   searchParams: Promise<{
@@ -30,7 +31,7 @@ export default async function MembersPage({ searchParams }: PageProps) {
   const filterStatus = params.status || "all";
 
   // Construire les filtres Prisma
-  const whereClause: any = {
+  const whereClause: Prisma.UserWhereInput = {
     role: "MEMBER", // Exclure les admins
   };
 
@@ -120,10 +121,7 @@ export default async function MembersPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filters */}
-      <MembersFilters
-        currentSearch={searchTerm}
-        currentStatus={filterStatus}
-      />
+      <MembersFilters currentSearch={searchTerm} currentStatus={filterStatus} />
 
       {/* Members Table */}
       <Card className="py-6">
