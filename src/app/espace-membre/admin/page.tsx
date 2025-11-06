@@ -6,8 +6,21 @@ import {
 } from "@/app/components/ui/card";
 import { Users, Calendar, Activity, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getUser } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
 
 export default async function AdminDashboard() {
+  const user = await getUser();
+
+  // Rediriger si non authentifié
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  // Rediriger les non-admins vers le dashboard membre
+  if (user.role !== "ADMIN") {
+    redirect("/espace-membre");
+  }
   const stats = [
     {
       title: "Membres Totaux",

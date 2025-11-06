@@ -224,14 +224,14 @@ export default function EventsPage() {
                     onClick={() => handleUnregister(event.id)}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
-                    Annuler l'inscription
+                    Annuler l&apos;`inscription
                   </Button>
                 ) : (
                   <Button
                     onClick={() => handleRegister(event.id)}
                     disabled={event.registered >= event.capacity}
                   >
-                    S'inscrire
+                    S&apos;`inscrire
                   </Button>
                 )}
               </div>

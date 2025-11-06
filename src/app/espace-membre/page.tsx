@@ -7,11 +7,20 @@ import {
 import { Badge } from "../components/ui/badge";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { getUser } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const user = await getUser();
-  // Les vérifications d'auth et de rôle sont déjà faites par le layout
-  if (!user) return null;
+
+  // Rediriger si non authentifié
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  // Rediriger les admins vers leur propre dashboard
+  if (user.role === "ADMIN") {
+    redirect("/espace-membre/admin");
+  }
 
   const memberSince = new Date(user.createdAt).toLocaleDateString("fr-FR");
   const eventsRegistered = 0; // TODO: calculer via EventRegistration
