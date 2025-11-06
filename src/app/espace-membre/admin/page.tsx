@@ -12,13 +12,11 @@ import { redirect } from "next/navigation";
 export default async function AdminDashboard() {
   const user = await getUser();
 
-  // Rediriger si non authentifié
-  if (!user) {
-    redirect("/auth/login");
-  }
+  // Les vérifications d'authentification et d'approbation sont gérées par le layout parent
+  // À ce stade, user est garanti d'être non-null et approuvé
 
   // Rediriger les non-admins vers le dashboard membre
-  if (user.role !== "ADMIN") {
+  if (user!.role !== "ADMIN") {
     redirect("/espace-membre");
   }
   const stats = [

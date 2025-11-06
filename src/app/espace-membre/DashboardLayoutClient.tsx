@@ -43,6 +43,11 @@ export default function DashboardLayoutClient({
       ? [
           { href: "/espace-membre/admin", label: "Dashboard", icon: Home },
           {
+            href: "/espace-membre/admin/approvals",
+            label: "Approbations",
+            icon: Bell,
+          },
+          {
             href: "/espace-membre/admin/members",
             label: "Membres",
             icon: Users,

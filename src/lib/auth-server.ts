@@ -21,6 +21,8 @@ export const getUser = async () => {
       name: true,
       image: true,
       role: true,
+      isApproved: true,
+      newsletterOptIn: true,
     },
   });
   return user;

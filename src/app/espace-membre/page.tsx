@@ -12,17 +12,11 @@ import { redirect } from "next/navigation";
 export default async function DashboardPage() {
   const user = await getUser();
 
-  // Rediriger si non authentifié
-  if (!user) {
-    redirect("/auth/login");
-  }
-
-  // Rediriger les admins vers leur propre dashboard
-  if (user.role === "ADMIN") {
+  if (user!.role === "ADMIN") {
     redirect("/espace-membre/admin");
   }
 
-  const memberSince = new Date(user.createdAt).toLocaleDateString("fr-FR");
+  const memberSince = new Date(user!.createdAt).toLocaleDateString("fr-FR");
   const eventsRegistered = 0; // TODO: calculer via EventRegistration
   const upcomingEvents: Array<{
     id: number;
@@ -44,7 +38,7 @@ export default async function DashboardPage() {
       {/* Welcome Section */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">
-          Bienvenue, {user.name}
+          Bienvenue, {user!.name}
         </h1>
         <p className="text-muted-foreground mt-2">
           Membre depuis le {memberSince}
