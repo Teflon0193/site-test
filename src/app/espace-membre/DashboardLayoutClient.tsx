@@ -88,8 +88,24 @@ export default function DashboardLayoutClient({
   const isActive = (href: string) => pathname === href;
 
   const handleLogout = async () => {
-    await signOut();
-    window.location.href = "/";
+    try {
+      // Appel de la déconnexion côté serveur
+      await signOut();
+
+      // Nettoyer le cache local
+      if (typeof window !== "undefined") {
+        // Effacer le localStorage et sessionStorage
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+
+      // Forcer un rechargement complet sans cache
+      window.location.replace("/");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      // Même en cas d'erreur, rediriger vers l'accueil
+      window.location.replace("/");
+    }
   };
 
   const closeMobileMenu = () => {
