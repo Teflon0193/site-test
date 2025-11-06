@@ -107,7 +107,7 @@ export default function DashboardLayoutClient({
             }
             className="font-bold text-lg uppercase"
           >
-            <Image src="/logo.png" alt="CCAPAC" width={100} height={100} />
+            <Image src="/logo.png" alt="CCAPAC" width={200} height={100} />
           </Link>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -154,7 +154,7 @@ export default function DashboardLayoutClient({
             className="font-bold text-xl uppercase drop-shadow-sm"
             onClick={closeMobileMenu}
           >
-            <Image src="/logo.png" alt="CCAPAC" width={100} height={100} />
+            <Image src="/logo.png" alt="CCAPAC" width={200} height={100} />
           </Link>
         </div>
 
@@ -174,11 +174,13 @@ export default function DashboardLayoutClient({
                 >
                   <div className="relative">
                     <Icon size={20} />
-                    {"badge" in item && item.badge && item.badge > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                        {item.badge > 9 ? "9+" : item.badge}
-                      </span>
-                    )}
+                    {"badge" in item &&
+                      typeof item.badge === "number" &&
+                      item.badge > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                          {item.badge > 9 ? "9+" : item.badge}
+                        </span>
+                      )}
                   </div>
                   <span className="text-sm">{item.label}</span>
                 </span>
