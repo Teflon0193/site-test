@@ -83,7 +83,7 @@ export default function LoginPage() {
           <div className="text-sm text-center text-muted-foreground">
             Vous n&apos;avez pas de compte ?{" "}
             <Link
-              href="/espace-membre/signup"
+              href="/auth/signup"
               className="text-primary font-semibold hover:underline"
             >
               Créer un compte

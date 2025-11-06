@@ -83,7 +83,7 @@ export default function RegisterPage() {
           <div className="text-sm text-center text-muted-foreground">
             Vous avez déjà un compte ?{" "}
             <Link
-              href="/espace-membre/login"
+              href="/auth/login"
               className="text-primary font-semibold hover:underline"
             >
               Se connecter

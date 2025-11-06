@@ -2,7 +2,7 @@ import type React from "react";
 
 import Link from "next/link";
 import { Users, BarChart3, Calendar, Home } from "lucide-react";
-import { isAdmin } from "@/lib/auth-server";
+import { getUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
@@ -10,30 +10,37 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const UserIsAdmin = await isAdmin();
-  if (!UserIsAdmin) {
-    redirect("/espace-membre/login");
+  const user = await getUser();
+
+  // Rediriger si non authentifié
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  // Rediriger les non-admins vers l'espace membre
+  if (user.role !== "ADMIN") {
+    redirect("/espace-membre");
   }
 
   const navItems = [
     {
       label: "Dashboard",
-      href: "admin",
+      href: "/espace-membre/admin",
       icon: Home,
     },
     {
       label: "Membres",
-      href: "admin/members",
+      href: "/espace-membre/admin/members",
       icon: Users,
     },
     {
       label: "Activités",
-      href: "admin/activities",
+      href: "/espace-membre/admin/activities",
       icon: BarChart3,
     },
     {
       label: "Événements",
-      href: "admin/events",
+      href: "/espace-membre/admin/events",
       icon: Calendar,
     },
   ];
