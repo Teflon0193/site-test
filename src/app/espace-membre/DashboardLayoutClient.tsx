@@ -100,12 +100,7 @@ export default function DashboardLayoutClient({
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 z-50 lg:hidden bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg">
         <div className="flex items-center justify-between p-4">
-          <Link
-            href={
-              user.role === "ADMIN" ? "/espace-membre/admin" : "/espace-membre"
-            }
-            className="font-bold text-lg uppercase"
-          >
+          <Link href="/" className="font-bold text-lg uppercase">
             <Image src="/logo.png" alt="CCAPAC" width={200} height={100} />
           </Link>
           <button
@@ -134,12 +129,7 @@ export default function DashboardLayoutClient({
       >
         {/* Header Sidebar - Desktop only */}
         <div className="hidden lg:flex p-6 border-b border-primary-foreground/20 items-center justify-between">
-          <Link
-            href={
-              user.role === "ADMIN" ? "/espace-membre/admin" : "/espace-membre"
-            }
-            className="font-bold text-xl uppercase drop-shadow-sm"
-          >
+          <Link href="/" className="font-bold text-xl uppercase drop-shadow-sm">
             <Image src="/logo.png" alt="CCAPAC" width={300} height={100} />
           </Link>
         </div>
@@ -147,9 +137,7 @@ export default function DashboardLayoutClient({
         {/* Mobile Sidebar Header */}
         <div className="lg:hidden p-6 border-b border-primary-foreground/20">
           <Link
-            href={
-              user.role === "ADMIN" ? "/espace-membre/admin" : "/espace-membre"
-            }
+            href="/"
             className="font-bold text-xl uppercase drop-shadow-sm"
             onClick={closeMobileMenu}
           >
