@@ -33,7 +33,7 @@ export default function DashboardLoading() {
       {/* Recent Activities Skeleton */}
       <div>
         <Skeleton className="h-7 md:h-8 w-48 mb-3 md:mb-4" />
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden py-4">
           <CardContent className="p-0">
             <div className="divide-y">
               {[...Array(5)].map((_, index) => (

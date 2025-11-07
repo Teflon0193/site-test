@@ -13,7 +13,7 @@ export default function AdminDashboardLoading() {
       {/* Stats Cards Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, index) => (
-          <Card key={index} className="relative overflow-hidden">
+          <Card key={index} className="relative overflow-hidden py-4">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-12 w-12 rounded-lg" />
@@ -29,7 +29,7 @@ export default function AdminDashboardLoading() {
       {/* Recent Members Skeleton */}
       <div>
         <Skeleton className="h-8 w-48 mb-4" />
-        <Card>
+        <Card className="py-4">
           <CardHeader>
             <Skeleton className="h-6 w-56" />
           </CardHeader>
@@ -58,7 +58,7 @@ export default function AdminDashboardLoading() {
       {/* Activity Chart Skeleton */}
       <div>
         <Skeleton className="h-8 w-56 mb-4" />
-        <Card>
+        <Card className="py-4">
           <CardHeader>
             <Skeleton className="h-6 w-64" />
           </CardHeader>

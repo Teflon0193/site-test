@@ -1,4 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProfileLoading() {
@@ -11,7 +16,7 @@ export default function ProfileLoading() {
       </div>
 
       {/* Profile Header Card Skeleton */}
-      <Card className="overflow-hidden py-3 md:py-4">
+      <Card className="overflow-hidden py-4">
         <CardHeader className="pb-4 md:pb-8 px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6">
             <Skeleton className="w-16 h-16 md:w-24 md:h-24 rounded-full" />
@@ -28,7 +33,7 @@ export default function ProfileLoading() {
       </Card>
 
       {/* Personal Information Skeleton */}
-      <Card className="py-3 md:py-4">
+      <Card className="py-4">
         <CardHeader className="px-4 md:px-6">
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-4 w-4 md:h-5 md:w-5" />
@@ -54,7 +59,7 @@ export default function ProfileLoading() {
       </Card>
 
       {/* Membership Information Skeleton */}
-      <Card className="py-3 md:py-4">
+      <Card className="py-4">
         <CardHeader className="px-4 md:px-6">
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-4 w-4 md:h-5 md:w-5" />
@@ -81,4 +86,3 @@ export default function ProfileLoading() {
     </div>
   );
 }
-
