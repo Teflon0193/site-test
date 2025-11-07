@@ -95,7 +95,7 @@ export async function approveMemberAction(userId: string) {
               
               <p style="color: #804423; margin: 20px 0; font-size: 15px;">Votre demande d'adhésion au <strong>CCAPAC</strong> a été approuvée par notre équipe.</p>
               
-              <p style="color: #804423; margin: 20px 0; font-size: 15px;">Pour finaliser l'activation de votre compte et accéder à tous nos services culturels et artistiques, veuillez cliquer sur le bouton ci-dessous :</p>
+              <p style="color: #804423; margin: 20px 0; font-size: 15px;">Pour finaliser l'activation de votre compte et y accéder, veuillez cliquer sur le bouton ci-dessous :</p>
               
               <!-- Bouton CTA -->
               <div style="text-align: center; margin: 35px 0;">
@@ -117,17 +117,6 @@ export async function approveMemberAction(userId: string) {
               
               <!-- Séparateur -->
               <hr style="border: none; border-top: 2px solid #e8e6dd; margin: 35px 0;">
-              
-              <!-- Informations complémentaires -->
-              <div style="background: #f3f2e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p style="color: #804423; font-size: 14px; margin: 0 0 10px 0; font-weight: 600;">Une fois votre compte activé, vous pourrez :</p>
-                <ul style="color: #6b5b4f; font-size: 13px; margin: 0; padding-left: 20px;">
-                  <li style="margin: 8px 0;">Accéder aux événements culturels exclusifs</li>
-                  <li style="margin: 8px 0;">Participer aux activités artistiques</li>
-                  <li style="margin: 8px 0;">Rejoindre notre communauté culturelle</li>
-                  <li style="margin: 8px 0;">Bénéficier de tarifs préférentiels</li>
-                </ul>
-              </div>
               
               <!-- Note de sécurité -->
               <p style="color: #6b5b4f; font-size: 13px; margin: 25px 0 0 0; line-height: 1.5;">
