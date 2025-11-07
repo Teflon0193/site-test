@@ -98,7 +98,7 @@ export default function DashboardLayoutClient({
   return (
     <div className="flex h-screen bg-gradient-to-br from-background via-muted/10 to-background">
       {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 lg:hidden bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg">
+      <div className="fixed top-0 left-0 right-0 z-50 lg:hidden bg-primary text-primary-foreground shadow-lg">
         <div className="flex items-center justify-between p-4">
           <Link href="/" className="font-bold text-lg uppercase">
             <Image src="/logo.png" alt="CCAPAC" width={200} height={100} />
@@ -125,7 +125,7 @@ export default function DashboardLayoutClient({
       <aside
         className={`${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-primary to-primary/90 text-primary-foreground transition-transform duration-300 flex flex-col shadow-xl border-r border-primary-foreground/10 lg:flex`}
+        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-primary text-primary-foreground transition-transform duration-300 flex flex-col shadow-xl border-r border-primary-foreground/10 lg:flex`}
       >
         {/* Header Sidebar - Desktop only */}
         <div className="hidden lg:flex p-6 border-b border-primary-foreground/20 items-center justify-between">
@@ -156,7 +156,7 @@ export default function DashboardLayoutClient({
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     active
                       ? "bg-primary-foreground/20 shadow-md font-semibold"
-                      : "hover:bg-primary-foreground/10 lg:hover:translate-x-1"
+                      : "hover:bg-primary-foreground/10 font-semibold lg:hover:translate-x-1"
                   }`}
                 >
                   <div className="relative">
@@ -193,7 +193,7 @@ export default function DashboardLayoutClient({
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full justify-start gap-2 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10 bg-transparent hover:border-primary-foreground/50 transition-all"
+              className="w-full cursor-pointer font-bold bg-white justify-start gap-2 text-primary border-primary-foreground/30 hover:bg-primary-foreground/10 hover:border-primary-foreground/50 transition-all"
             >
               <HiLogout size={20} />
               <span>Déconnexion</span>
