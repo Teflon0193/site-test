@@ -17,8 +17,8 @@ import {
   HiHome,
 } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/lib/auth-client";
 import Image from "next/image";
+import { logoutAction } from "./actions";
 
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
@@ -88,24 +88,7 @@ export default function DashboardLayoutClient({
   const isActive = (href: string) => pathname === href;
 
   const handleLogout = async () => {
-    try {
-      // Appel de la déconnexion côté serveur
-      await signOut();
-
-      // Nettoyer le cache local
-      if (typeof window !== "undefined") {
-        // Effacer le localStorage et sessionStorage
-        localStorage.clear();
-        sessionStorage.clear();
-      }
-
-      // Forcer un rechargement complet sans cache
-      window.location.replace("/");
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-      // Même en cas d'erreur, rediriger vers l'accueil
-      window.location.replace("/");
-    }
+    await logoutAction();
   };
 
   const closeMobileMenu = () => {

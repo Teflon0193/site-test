@@ -76,9 +76,11 @@ export default async function AdminDashboard() {
       title: "Membres Approuvés",
       value: approvedMembers.toString(),
       icon: HiUserAdd,
-      description: `${Math.round(
-        (approvedMembers / totalMembers) * 100
-      )}% du total`,
+      description: `${
+        totalMembers > 0
+          ? Math.round((approvedMembers / totalMembers) * 100)
+          : 0
+      }% du total`,
       color: "bg-green-50 text-green-600",
     },
     {
@@ -120,7 +122,7 @@ export default async function AdminDashboard() {
                   {stat.title}
                 </CardTitle>
                 <div className={cn("rounded-lg p-2", stat.color)}>
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-6 w-6" />
                 </div>
               </CardHeader>
               <CardContent>
