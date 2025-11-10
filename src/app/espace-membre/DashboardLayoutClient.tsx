@@ -16,9 +16,12 @@ import {
   HiChartBar,
   HiHome,
 } from "react-icons/hi";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { logoutAction } from "./actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
@@ -37,7 +40,9 @@ export default function DashboardLayoutClient({
   pendingApprovalsCount = 0,
 }: DashboardLayoutClientProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   // Navigation différente selon le rôle
   const menuItems =
@@ -88,7 +93,26 @@ export default function DashboardLayoutClient({
   const isActive = (href: string) => pathname === href;
 
   const handleLogout = async () => {
-    await logoutAction();
+    setIsLoggingOut(true);
+
+    try {
+      const result = await logoutAction();
+
+      if (result.success) {
+        toast.success(result.message || "Déconnexion réussie");
+        setTimeout(() => {
+          router.push("/");
+          router.refresh();
+        }, 500);
+      } else {
+        toast.error(result.error || "Erreur lors de la déconnexion");
+        setIsLoggingOut(false);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      toast.error("Une erreur inattendue s'est produite");
+      setIsLoggingOut(false);
+    }
   };
 
   const closeMobileMenu = () => {
@@ -193,10 +217,15 @@ export default function DashboardLayoutClient({
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full cursor-pointer font-bold bg-white justify-start gap-2 text-primary border-primary-foreground/30 hover:bg-primary-foreground/10 hover:border-primary-foreground/50 transition-all"
+              disabled={isLoggingOut}
+              className="w-full cursor-pointer font-bold bg-white justify-start gap-2 text-primary border-primary-foreground/30 hover:bg-primary-foreground/10 hover:border-primary-foreground/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <HiLogout size={20} />
-              <span>Déconnexion</span>
+              {isLoggingOut ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <HiLogout size={20} />
+              )}
+              <span>{isLoggingOut ? "Déconnexion..." : "Déconnexion"}</span>
             </Button>
           </div>
         </div>

@@ -6,9 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { Clock, Mail, CheckCircle } from "lucide-react";
+import { Clock, Mail, CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { logoutAction } from "./actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface PendingApprovalProps {
   userName: string;
@@ -19,6 +22,32 @@ export default function PendingApproval({
   userName,
   userEmail,
 }: PendingApprovalProps) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      const result = await logoutAction();
+
+      if (result.success) {
+        toast.success(result.message || "Déconnexion réussie");
+        setTimeout(() => {
+          router.push("/");
+          router.refresh();
+        }, 500);
+      } else {
+        toast.error(result.error || "Erreur lors de la déconnexion");
+        setIsLoggingOut(false);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      toast.error("Une erreur inattendue s'est produite");
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full rounded-2xl bg-gradient-to-br from-white to-muted/10 border border-muted/20 shadow-lg py-4">
@@ -92,10 +121,18 @@ export default function PendingApproval({
               </Link>
               <span className="text-muted-foreground">•</span>
               <button
-                onClick={logoutAction}
-                className="text-sm cursor-pointer text-primary hover:underline"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="text-sm cursor-pointer text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
-                Se déconnecter
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Déconnexion...</span>
+                  </>
+                ) : (
+                  "Se déconnecter"
+                )}
               </button>
             </div>
           </div>
