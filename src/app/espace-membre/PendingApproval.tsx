@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -6,6 +8,7 @@ import {
 } from "../components/ui/card";
 import { Clock, Mail, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { logoutAction } from "./actions";
 
 interface PendingApprovalProps {
   userName: string;
@@ -88,12 +91,12 @@ export default function PendingApproval({
                 ← Retour à l&apos;accueil
               </Link>
               <span className="text-muted-foreground">•</span>
-              <Link
-                href="/auth/login"
-                className="text-sm text-primary hover:underline"
+              <button
+                onClick={logoutAction}
+                className="text-sm cursor-pointer text-primary hover:underline"
               >
                 Se déconnecter
-              </Link>
+              </button>
             </div>
           </div>
         </CardContent>
