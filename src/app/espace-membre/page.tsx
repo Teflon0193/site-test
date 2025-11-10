@@ -18,7 +18,6 @@ export default async function DashboardPage() {
     redirect("/espace-membre/admin");
   }
 
-  // Récupérer les données réelles du membre
   const [eventsRegistered, recentActivities, memberProfile] = await Promise.all(
     [
       // Nombre d'événements inscrits
@@ -41,7 +40,6 @@ export default async function DashboardPage() {
     ]
   );
 
-  // Événements confirmés à venir
   const confirmedEvents = await prisma.eventRegistration.count({
     where: {
       userId: user!.id,
@@ -55,7 +53,6 @@ export default async function DashboardPage() {
     day: "numeric",
   });
 
-  // Statistiques pour les cards
   const stats = [
     {
       title: "Événements Inscrits",

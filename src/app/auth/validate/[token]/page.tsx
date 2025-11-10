@@ -59,7 +59,7 @@ export default async function ValidateTokenPage({ params }: ValidatePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background flex items-center justify-center p-4">
-      <Card className="max-w-md w-full rounded-2xl bg-gradient-to-br from-white to-muted/10 border border-muted/20 shadow-lg">
+      <Card className="max-w-md w-full rounded-2xl bg-gradient-to-br from-white to-muted/10 border border-muted/20 shadow-lg py-4">
         <CardHeader className="text-center pb-6">
           {status === "success" && (
             <>
