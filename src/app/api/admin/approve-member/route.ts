@@ -24,7 +24,6 @@ export async function POST(request: Request) {
     // Récupérer l'utilisateur
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { profile: true },
     });
 
     if (!user) {

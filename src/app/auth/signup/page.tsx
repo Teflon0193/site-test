@@ -19,31 +19,26 @@ import SignupForm, {
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
 import { signUp } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const router = useRouter();
   const handleSignupSubmit = async (values: SignupFormValues) => {
-    try {
-      await signUp.email({
+    await signUp.email(
+      {
         email: values.email,
         password: values.password,
         name: values.firstName + " " + values.lastName,
-      });
-      // Initialiser le profil membre (idempotent)
-      await fetch("/api/members/initialize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: values.email,
-          phone: values.phone,
-          name: values.firstName + " " + values.lastName,
-        }),
-      });
-      router.push("/espace-membre");
-    } catch (error) {
-      console.log("Signup error:", error);
-      throw error;
-    }
+      },
+      {
+        onSuccess: () => {
+          router.push("/espace-membre");
+        },
+        onError: (error) => {
+          toast.error(error.error.message);
+        },
+      }
+    );
   };
 
   return (
