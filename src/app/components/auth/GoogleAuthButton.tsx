@@ -3,25 +3,36 @@
 import type React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { signIn } from "@/lib/auth-client";
+import { toast } from "sonner";
 
-interface GoogleAuthButtonProps {
-  onClick: () => void;
-  label?: string;
-}
+const handleGoogleSignIn = async () => {
+  await signIn.social(
+    {
+      provider: "google",
+      callbackURL: "/espace-membre/admin",
+    },
+    {
+      onSuccess: () => {
+        toast.success("Connexion réussie");
+      },
+      onError: (error) => {
+        toast.error(error.error.message);
+      },
+    }
+  );
+};
 
-export function GoogleAuthButton({
-  onClick,
-  label = "Continuer avec Google",
-}: GoogleAuthButtonProps) {
+export function GoogleAuthButton() {
   return (
     <Button
       type="button"
       variant="outline"
       className="w-full cursor-pointer h-11 mb-4 border border-muted/30 text-base font-semibold flex items-center justify-center gap-2 bg-white hover:bg-muted/30"
-      onClick={onClick}
+      onClick={handleGoogleSignIn}
     >
       <Image src="/google.png" alt="Google" width={20} height={20} />
-      <span className="text-base font-semibold">{label}</span>
+      <span className="text-base font-semibold">Continuer avec Google</span>
     </Button>
   );
 }

@@ -23,11 +23,6 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleGoogleSignIn = () => {
-    console.log("Google sign-in initiated");
-    // À implémenter avec une vraie intégration Google OAuth
-  };
-
   const handleLoginSubmit = async (values: LoginFormValues) => {
     await signIn.email(
       {
@@ -58,7 +53,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <GoogleAuthButton onClick={handleGoogleSignIn} />
+          <GoogleAuthButton />
 
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">

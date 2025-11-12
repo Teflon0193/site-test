@@ -46,11 +46,6 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleSignUp = () => {
-    console.log("Google sign-up initiated");
-    // À implémenter avec une vraie intégration Google OAuth
-  };
-
   return (
     <AuthLayout title="Créer un compte">
       <Card className="rounded-2xl bg-gradient-to-br from-white to-muted/10 border border-muted/20 shadow-lg py-4">
@@ -64,7 +59,7 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <GoogleAuthButton onClick={handleGoogleSignUp} />
+          <GoogleAuthButton />
 
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
