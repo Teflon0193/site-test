@@ -5,6 +5,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   HiMail,
   HiPhone,
@@ -30,8 +31,6 @@ export default async function ProfilePage() {
     redirect("/espace-membre/admin");
   }
 
-  // Les données du profil sont maintenant directement dans user
-
   const memberSince = new Date(user.createdAt).toLocaleDateString("fr-FR", {
     year: "numeric",
     month: "long",
@@ -54,9 +53,12 @@ export default async function ProfilePage() {
       <Card className="overflow-hidden py-3 md:py-4">
         <CardHeader className="pb-4 md:pb-8 px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6">
-            <div className="w-16 h-16 md:w-24 md:h-24 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-white text-2xl md:text-4xl font-bold shadow-lg">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
+            <Avatar className="w-16 h-16 md:w-24 md:h-24">
+              <AvatarImage src={user.image || ""} />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-xl md:text-3xl font-bold mb-2">
                 {user.name}
