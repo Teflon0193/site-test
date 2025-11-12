@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export const runtime = "nodejs";
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -23,28 +21,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.memberProfile.findUnique({
-      where: { userId: user.id },
-    });
-    if (existing) {
+    // Vérifier si le profil est déjà initialisé (phone existe)
+    if (user.phone) {
       return NextResponse.json({ ok: true, created: false });
     }
 
-    await prisma.memberProfile.create({
+    // Mettre à jour l'utilisateur avec les informations du profil
+    await prisma.user.update({
+      where: { id: user.id },
       data: {
-        userId: user.id,
         phone: phone ?? null,
-
-        // Optionnel: tenter de découper le name plus tard (ici on ne stocke pas)
       },
     });
 
     return NextResponse.json({ ok: true, created: true });
   } catch (error) {
+    console.error("Une erreur est survenue: ", error);
     return NextResponse.json(
       { error: "Une erreur est survenue: " + error },
       { status: 500 }
     );
-    console.error("Une erreur est survenue: ", error);
   }
 }

@@ -16,7 +16,6 @@ import {
 } from "react-icons/hi";
 import { getUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
-import prisma from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export default async function ProfilePage() {
@@ -31,10 +30,7 @@ export default async function ProfilePage() {
     redirect("/espace-membre/admin");
   }
 
-  // Récupérer le profil du membre
-  const memberProfile = await prisma.memberProfile.findUnique({
-    where: { userId: user.id },
-  });
+  // Les données du profil sont maintenant directement dans user
 
   const memberSince = new Date(user.createdAt).toLocaleDateString("fr-FR", {
     year: "numeric",
@@ -141,7 +137,7 @@ export default async function ProfilePage() {
             </div>
 
             {/* Téléphone */}
-            {memberProfile?.phone && (
+            {user.phone && (
               <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
                 <div className="p-1.5 md:p-2 bg-purple-50 text-purple-600 rounded-lg">
                   <HiPhone className="h-4 w-4 md:h-5 md:w-5" />
@@ -151,14 +147,14 @@ export default async function ProfilePage() {
                     Téléphone
                   </p>
                   <p className="font-semibold text-sm md:text-base">
-                    {memberProfile.phone}
+                    {user.phone}
                   </p>
                 </div>
               </div>
             )}
 
             {/* Adresse */}
-            {memberProfile?.address && (
+            {user.address && (
               <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
                 <div className="p-1.5 md:p-2 bg-orange-50 text-orange-600 rounded-lg">
                   <HiLocationMarker className="h-4 w-4 md:h-5 md:w-5" />
@@ -168,7 +164,7 @@ export default async function ProfilePage() {
                     Adresse
                   </p>
                   <p className="font-semibold text-sm md:text-base">
-                    {memberProfile.address}
+                    {user.address}
                   </p>
                 </div>
               </div>
@@ -275,7 +271,7 @@ export default async function ProfilePage() {
       </Card>
 
       {/* Additional Info if profile exists */}
-      {memberProfile && (memberProfile.city || memberProfile.country) && (
+      {(user.city || user.country) && (
         <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20 py-3 md:py-4">
           <CardHeader className="px-4 md:px-6">
             <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -285,23 +281,23 @@ export default async function ProfilePage() {
           </CardHeader>
           <CardContent className="px-4 md:px-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              {memberProfile.city && (
+              {user.city && (
                 <div>
                   <p className="text-xs md:text-sm text-muted-foreground mb-1">
                     Ville
                   </p>
                   <p className="font-semibold text-sm md:text-base">
-                    {memberProfile.city}
+                    {user.city}
                   </p>
                 </div>
               )}
-              {memberProfile.country && (
+              {user.country && (
                 <div>
                   <p className="text-xs md:text-sm text-muted-foreground mb-1">
                     Pays
                   </p>
                   <p className="font-semibold text-sm md:text-base">
-                    {memberProfile.country}
+                    {user.country}
                   </p>
                 </div>
               )}

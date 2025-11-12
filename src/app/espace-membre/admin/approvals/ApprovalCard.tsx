@@ -14,9 +14,7 @@ interface ApprovalCardProps {
     name: string;
     email: string;
     createdAt: Date;
-    profile: {
-      phone: string | null;
-    } | null;
+    phone: string | null;
   };
 }
 
@@ -67,10 +65,10 @@ export function ApprovalCard({ user }: ApprovalCardProps) {
                     <Mail className="w-4 h-4" />
                     <span className="truncate">{user.email}</span>
                   </div>
-                  {user.profile?.phone && (
+                  {user.phone && (
                     <div className="flex items-center gap-1.5">
                       <span className="hidden sm:inline">•</span>
-                      <span className="truncate">{user.profile.phone}</span>
+                      <span className="truncate">{user.phone}</span>
                     </div>
                   )}
                 </div>

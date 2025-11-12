@@ -18,27 +18,21 @@ export default async function DashboardPage() {
     redirect("/espace-membre/admin");
   }
 
-  const [eventsRegistered, recentActivities, memberProfile] = await Promise.all(
-    [
-      // Nombre d'événements inscrits
-      prisma.eventRegistration.count({
-        where: {
-          userId: user!.id,
-          status: { in: ["CONFIRMED", "PENDING"] },
-        },
-      }),
-      // 5 dernières activités
-      prisma.memberActivity.findMany({
-        where: { userId: user!.id },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
-      // Profil du membre
-      prisma.memberProfile.findUnique({
-        where: { userId: user!.id },
-      }),
-    ]
-  );
+  const [eventsRegistered, recentActivities] = await Promise.all([
+    // Nombre d'événements inscrits
+    prisma.eventRegistration.count({
+      where: {
+        userId: user!.id,
+        status: { in: ["CONFIRMED", "PENDING"] },
+      },
+    }),
+    // 5 dernières activités
+    prisma.memberActivity.findMany({
+      where: { userId: user!.id },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+  ]);
 
   const confirmedEvents = await prisma.eventRegistration.count({
     where: {
@@ -94,17 +88,13 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground text-sm md:text-lg">
           Membre depuis le {memberSince}
         </p>
-        {memberProfile && (
+        {(user!.phone || user!.address) && (
           <div className="mt-3 md:mt-4 flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm">
-            {memberProfile.phone && (
-              <span className="text-muted-foreground">
-                {memberProfile.phone}
-              </span>
+            {user!.phone && (
+              <span className="text-muted-foreground">{user!.phone}</span>
             )}
-            {memberProfile.address && (
-              <span className="text-muted-foreground">
-                {memberProfile.address}
-              </span>
+            {user!.address && (
+              <span className="text-muted-foreground">{user!.address}</span>
             )}
           </div>
         )}

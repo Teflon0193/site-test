@@ -29,9 +29,6 @@ export default async function ApprovalsPage() {
       isApproved: false,
       role: "MEMBER", // Ne pas inclure les admins
     },
-    include: {
-      profile: true,
-    },
     orderBy: {
       createdAt: "desc",
     },
@@ -130,7 +127,7 @@ export default async function ApprovalsPage() {
                     name: pendingUser.name,
                     email: pendingUser.email,
                     createdAt: pendingUser.createdAt,
-                    profile: pendingUser.profile,
+                    phone: pendingUser.phone,
                   }}
                 />
               ))}

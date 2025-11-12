@@ -21,7 +21,6 @@ export async function approveMemberAction(userId: string) {
     // Récupérer l'utilisateur
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { profile: true },
     });
 
     if (!user) {

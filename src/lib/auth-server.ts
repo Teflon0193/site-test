@@ -23,6 +23,10 @@ export const getUser = async () => {
       role: true,
       isApproved: true,
       newsletterOptIn: true,
+      phone: true,
+      address: true,
+      city: true,
+      country: true,
     },
   });
   return user;

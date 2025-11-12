@@ -35,12 +35,15 @@ model User {
   image           String?
   role            Role                @default(MEMBER)
   isApproved      Boolean             @default(false)
-  newsletterOptIn Boolean             @default(false)
+  newsletterOptIn Boolean             @default(true)
+  phone           String?
+  address         String?
+  city            String?
+  country         String?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @default(now()) @updatedAt
   sessions        Session[]
   accounts        Account[]
-  profile         MemberProfile?
   registrations   EventRegistration[]
   activities      MemberActivity[]
   approvalToken   ApprovalToken?
@@ -104,22 +107,6 @@ model ApprovalToken {
   used      Boolean  @default(false)
 
   @@map("approval_token")
-}
-
-model MemberProfile {
-  id                String   @id @default(cuid()) @map("_id")
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  phone             String?
-  address           String?
-  city              String?
-  country           String?
-  avatar            String?
-  notificationPrefs Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@map("member_profile")
 }
 
 model EventRegistration {
