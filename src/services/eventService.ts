@@ -70,12 +70,12 @@ export const getUpcomingEvents = async (limit?: number): Promise<Event[]> => {
 export const getFilteredEvents = async (filters: {
   month: string;
   discipline: string;
-  public: string;
+  publicTarget: string;
 }): Promise<Event[]> => {
   return fetchEventsFromStrapi({
     month: filters.month,
     discipline: filters.discipline,
-    public: filters.public,
+    public: filters.publicTarget,
   });
 };
 

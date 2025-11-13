@@ -10,7 +10,7 @@ import {
 } from "../ui/select";
 import { Badge } from "../ui/badge";
 import type { FilterState } from "../../../hooks/useEventFilters";
-import { filterOptions } from "../../../data/events";
+import { filterOptions, DEFAULT_FILTER_VALUE } from "../../../data/events";
 import { FaCalendar, FaPalette, FaUsers, FaXmark } from "react-icons/fa6";
 
 interface EventFiltersProps {
@@ -21,6 +21,10 @@ interface EventFiltersProps {
   eventCount?: number;
 }
 
+// Fonction utilitaire définie en dehors du composant pour éviter les recréations
+const capitalizeFirst = (str: string) =>
+  str.charAt(0).toUpperCase() + str.slice(1);
+
 export default function EventFilters({
   filters,
   onFilterChange,
@@ -28,8 +32,16 @@ export default function EventFilters({
   hasActiveFilters,
   eventCount,
 }: EventFiltersProps) {
-  const capitalizeFirst = (str: string) =>
-    str.charAt(0).toUpperCase() + str.slice(1);
+  // Vérification de sécurité pour filterOptions
+  if (
+    !filterOptions ||
+    !filterOptions.months ||
+    !filterOptions.disciplines ||
+    !filterOptions.publics
+  ) {
+    console.error("filterOptions est invalide");
+    return null;
+  }
 
   return (
     <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-muted/5 via-background to-muted/10 border-b border-muted/20">
@@ -46,9 +58,7 @@ export default function EventFilters({
                 <span className="font-bold text-primary text-lg sm:text-xl">
                   {eventCount}
                 </span>{" "}
-                événement
-                {eventCount !== 1 ? "s" : ""} trouvé
-                {eventCount !== 1 ? "s" : ""}
+                {eventCount === 1 ? "événement trouvé" : "événements trouvés"}
               </span>
             </div>
           )}
@@ -59,7 +69,10 @@ export default function EventFilters({
             {/* Filters */}
             <div className="flex rounded-xl flex-col sm:flex-row gap-4 sm:gap-6 flex-1">
               <div className="space-y-3 flex-1 min-w-0">
-                <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-foreground">
+                <label
+                  htmlFor="filter-month"
+                  className="flex items-center gap-2 text-sm sm:text-base font-semibold text-foreground"
+                >
                   <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
                     <FaCalendar className="w-4 h-4 text-primary" />
                   </div>
@@ -69,7 +82,10 @@ export default function EventFilters({
                   value={filters.month}
                   onValueChange={(value) => onFilterChange("month", value)}
                 >
-                  <SelectTrigger className="w-full bg-gradient-to-r from-muted/30 to-muted/10 border-muted/30 focus:border-primary focus:ring-primary/20 rounded-xl h-11 sm:h-12 transition-all duration-300">
+                  <SelectTrigger
+                    id="filter-month"
+                    className="w-full bg-gradient-to-r from-muted/30 to-muted/10 border-muted/30 focus:border-primary focus:ring-primary/20 rounded-xl h-11 sm:h-12 transition-all duration-300"
+                  >
                     <SelectValue placeholder="Sélectionner un mois" />
                   </SelectTrigger>
                   <SelectContent className="border-muted/30 rounded-xl">
@@ -87,7 +103,10 @@ export default function EventFilters({
               </div>
 
               <div className="space-y-3 flex-1 min-w-0">
-                <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-foreground">
+                <label
+                  htmlFor="filter-discipline"
+                  className="flex items-center gap-2 text-sm sm:text-base font-semibold text-foreground"
+                >
                   <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
                     <FaPalette className="w-4 h-4 text-primary" />
                   </div>
@@ -97,7 +116,10 @@ export default function EventFilters({
                   value={filters.discipline}
                   onValueChange={(value) => onFilterChange("discipline", value)}
                 >
-                  <SelectTrigger className="w-full bg-gradient-to-r from-muted/30 to-muted/10 border-muted/30 focus:border-primary focus:ring-primary/20 rounded-xl h-11 sm:h-12 transition-all duration-300">
+                  <SelectTrigger
+                    id="filter-discipline"
+                    className="w-full bg-gradient-to-r from-muted/30 to-muted/10 border-muted/30 focus:border-primary focus:ring-primary/20 rounded-xl h-11 sm:h-12 transition-all duration-300"
+                  >
                     <SelectValue placeholder="Sélectionner une discipline" />
                   </SelectTrigger>
                   <SelectContent className="border-muted/30 rounded-xl">
@@ -115,17 +137,25 @@ export default function EventFilters({
               </div>
 
               <div className="space-y-3 flex-1 min-w-0">
-                <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-foreground">
+                <label
+                  htmlFor="filter-public"
+                  className="flex items-center gap-2 text-sm sm:text-base font-semibold text-foreground"
+                >
                   <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
                     <FaUsers className="w-4 h-4 text-primary" />
                   </div>
                   Public
                 </label>
                 <Select
-                  value={filters.public}
-                  onValueChange={(value) => onFilterChange("public", value)}
+                  value={filters.publicTarget}
+                  onValueChange={(value) =>
+                    onFilterChange("publicTarget", value)
+                  }
                 >
-                  <SelectTrigger className="w-full bg-gradient-to-r from-muted/30 to-muted/10 border-muted/30 focus:border-primary focus:ring-primary/20 rounded-xl h-11 sm:h-12 transition-all duration-300">
+                  <SelectTrigger
+                    id="filter-public"
+                    className="w-full bg-gradient-to-r from-muted/30 to-muted/10 border-muted/30 focus:border-primary focus:ring-primary/20 rounded-xl h-11 sm:h-12 transition-all duration-300"
+                  >
                     <SelectValue placeholder="Sélectionner un public" />
                   </SelectTrigger>
                   <SelectContent className="border-muted/30 rounded-xl">
@@ -146,22 +176,22 @@ export default function EventFilters({
             <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:min-w-fit">
               {/* Active Filters */}
               <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-                {filters.month !== "Tous" && (
+                {filters.month !== DEFAULT_FILTER_VALUE && (
                   <Badge className="bg-gradient-to-r from-primary/10 to-primary/20 text-primary border-primary/30 px-3 py-1 rounded-full">
                     <FaCalendar className="w-3 h-3 mr-1" />
                     {capitalizeFirst(filters.month)}
                   </Badge>
                 )}
-                {filters.discipline !== "Tous" && (
+                {filters.discipline !== DEFAULT_FILTER_VALUE && (
                   <Badge className="bg-gradient-to-r from-primary/10 to-primary/20 text-primary border-primary/30 px-3 py-1 rounded-full">
                     <FaPalette className="w-3 h-3 mr-1" />
                     {filters.discipline}
                   </Badge>
                 )}
-                {filters.public !== "Tous" && (
+                {filters.publicTarget !== DEFAULT_FILTER_VALUE && (
                   <Badge className="bg-gradient-to-r from-primary/10 to-primary/20 text-primary border-primary/30 px-3 py-1 rounded-full">
                     <FaUsers className="w-3 h-3 mr-1" />
-                    {filters.public}
+                    {filters.publicTarget}
                   </Badge>
                 )}
               </div>

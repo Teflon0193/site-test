@@ -1,4 +1,6 @@
 // Configuration des filtres
+export const DEFAULT_FILTER_VALUE = "Tous" as const;
+
 export const filterOptions = {
   disciplines: [
     "Tous",

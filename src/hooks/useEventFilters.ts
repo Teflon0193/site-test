@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { getFilteredEvents } from "@/services/eventService";
 import { Event } from "@/types/events";
+import { DEFAULT_FILTER_VALUE } from "@/data/events";
 
 export interface FilterState {
   month: string;
   discipline: string;
-  public: string;
+  publicTarget: string;
 }
 
 /**
@@ -15,9 +16,9 @@ export interface FilterState {
  */
 export const useEventFilters = () => {
   const [filters, setFilters] = useState<FilterState>({
-    month: "Tous",
-    discipline: "Tous",
-    public: "Tous",
+    month: DEFAULT_FILTER_VALUE,
+    discipline: DEFAULT_FILTER_VALUE,
+    publicTarget: DEFAULT_FILTER_VALUE,
   });
 
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
@@ -39,9 +40,9 @@ export const useEventFilters = () => {
    */
   const clearFilters = () => {
     setFilters({
-      month: "Tous",
-      discipline: "Tous",
-      public: "Tous",
+      month: DEFAULT_FILTER_VALUE,
+      discipline: DEFAULT_FILTER_VALUE,
+      publicTarget: DEFAULT_FILTER_VALUE,
     });
   };
 
@@ -76,12 +77,12 @@ export const useEventFilters = () => {
   }, [filters]);
 
   /**
-   * Vérifie si des filtres sont actifs (différents de "Tous")
+   * Vérifie si des filtres sont actifs (différents de la valeur par défaut)
    */
   const hasActiveFilters =
-    filters.month !== "Tous" ||
-    filters.discipline !== "Tous" ||
-    filters.public !== "Tous";
+    filters.month !== DEFAULT_FILTER_VALUE ||
+    filters.discipline !== DEFAULT_FILTER_VALUE ||
+    filters.publicTarget !== DEFAULT_FILTER_VALUE;
 
   return {
     // État
