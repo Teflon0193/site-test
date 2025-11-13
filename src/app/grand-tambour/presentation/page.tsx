@@ -11,6 +11,8 @@ export default function GrandTambourPresentation() {
     <div className="min-h-screen bg-background">
       <Header />
 
+      {/* Section Hero */}
+
       <section className="relative h-[70vh] min-h-[500px] sm:h-[80vh] sm:min-h-[600px] lg:h-screen lg:min-h-[700px] flex items-center justify-center mt-20 sm:mt-24">
         <div className="absolute inset-0 z-0">
           <Image
@@ -41,6 +43,7 @@ export default function GrandTambourPresentation() {
         </div>
       </section>
 
+      {/* Section Missions */}
       <section className="py-16 sm:py-20 lg:py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
@@ -115,6 +118,7 @@ export default function GrandTambourPresentation() {
         </div>
       </section>
 
+      {/* Section Valeurs */}
       <section className="py-16 sm:py-20 lg:py-24 bg-muted/10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
@@ -200,6 +204,7 @@ export default function GrandTambourPresentation() {
         </div>
       </section>
 
+      {/* Section Historique */}
       <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-white via-muted/5 to-muted/10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
@@ -230,7 +235,7 @@ export default function GrandTambourPresentation() {
         </div>
       </section>
 
-      {/* Section Symbolique architectural - conservée */}
+      {/* Section Symbolique architectural */}
       <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-muted/5 via-muted/10 to-muted/20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
@@ -277,7 +282,7 @@ export default function GrandTambourPresentation() {
         </div>
       </section>
 
-      {/* Section CTA finale - conservée */}
+      {/* Section CTA */}
       <section className="py-16 sm:py-20 lg:py-24 bg-accent text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
