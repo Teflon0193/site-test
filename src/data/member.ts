@@ -1,4 +1,11 @@
-export const directionGenerale = {
+export interface Member {
+  name: string;
+  position: string;
+  email: string;
+  photo: string;
+}
+
+export const directionGenerale: Member = {
   name: "Balufu Bakupa-Kanyinda",
   position: "Directeur Général",
   email: "b.bakupa-kanyinda@centreculturel.cd",
@@ -152,7 +159,7 @@ export const dramatheque = [
   },
 ];
 
-export const bes = {
+export const bes: Member = {
   name: "Iloo Basele Emmanuel",
   position: "BES",
   email: "emmanuel.ilo@centreculturel.cd",
