@@ -58,7 +58,7 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
           <Label htmlFor="firstName">Prénom</Label>
           <Input
             id="firstName"
-            placeholder="Jean"
+            placeholder="Entrez votre prénom"
             className="h-11"
             aria-invalid={!!errors.firstName}
             aria-describedby={errors.firstName ? "firstName-error" : undefined}
@@ -74,7 +74,7 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
           <Label htmlFor="lastName">Nom</Label>
           <Input
             id="lastName"
-            placeholder="Dupont"
+            placeholder="Entrez votre nom"
             className="h-11"
             aria-invalid={!!errors.lastName}
             aria-describedby={errors.lastName ? "lastName-error" : undefined}
@@ -131,7 +131,7 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
         <Input
           id="password"
           type="password"
-          placeholder="••••••••"
+          placeholder=""
           className="h-11"
           autoComplete="new-password"
           aria-invalid={!!errors.password}

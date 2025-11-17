@@ -69,7 +69,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         <Input
           id="password"
           type="password"
-          placeholder="••••••••"
+          placeholder=""
           className="h-11"
           autoComplete="current-password"
           aria-invalid={!!errors.password}
