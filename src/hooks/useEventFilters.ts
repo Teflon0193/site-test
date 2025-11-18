@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
-import { getFilteredEvents } from "@/services/eventService";
-import { Event } from "@/types/events";
+import { useState } from "react";
 import { DEFAULT_FILTER_VALUE } from "@/data/events";
+import { useFilteredEventsQuery } from "./useEventsQuery";
 
 export interface FilterState {
   month: string;
@@ -21,9 +20,13 @@ export const useEventFilters = () => {
     publicTarget: DEFAULT_FILTER_VALUE,
   });
 
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Chargement des événements filtrés via TanStack Query
+  const {
+    data: filteredEvents = [],
+    isLoading,
+    isError,
+    error,
+  } = useFilteredEventsQuery(filters);
 
   /**
    * Met à jour un filtre spécifique
@@ -47,36 +50,6 @@ export const useEventFilters = () => {
   };
 
   /**
-   * Charge les événements filtrés depuis Strapi quand les filtres changent
-   */
-  useEffect(() => {
-    const loadFilteredEvents = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const events = await getFilteredEvents(filters);
-        setFilteredEvents(events);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Erreur lors du chargement des événements";
-
-        setError(errorMessage);
-        console.error("Erreur filtres:", err);
-
-        // En cas d'erreur, on vide la liste plutôt que de garder d'anciennes données
-        setFilteredEvents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFilteredEvents();
-  }, [filters]);
-
-  /**
    * Vérifie si des filtres sont actifs (différents de la valeur par défaut)
    */
   const hasActiveFilters =
@@ -88,8 +61,8 @@ export const useEventFilters = () => {
     // État
     filters,
     filteredEvents,
-    loading,
-    error,
+    loading: isLoading,
+    error: isError ? (error as Error | null)?.message ?? null : null,
 
     // Actions
     updateFilter,

@@ -1,11 +1,7 @@
-"use client";
-
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
-// import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
 import { FaArrowLeft, FaCalendar, FaClock, FaMapPin } from "react-icons/fa6";
 import Header from "@/app/components/home/header";
 import Footer from "@/app/components/home/footer";
@@ -18,44 +14,16 @@ import {
   isEventOngoing,
 } from "@/lib/dateUtils";
 
-export default function EventDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const [event, setEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
+interface EventDetailPageProps {
+  params: { slug: string };
+}
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const slug = params.slug as string;
-        const eventData = await getEventBySlug(slug);
-        setEvent(eventData[0]);
-      } catch (error) {
-        console.error("Erreur lors du chargement de l'événement:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (params.slug) {
-      fetchEvent();
-    }
-  }, [params.slug]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
-        <Header />
-        <div className="flex items-center justify-center min-h-[60vh] mt-28">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-lg text-muted-foreground">Chargement...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+export default async function EventDetailPage({
+  params,
+}: EventDetailPageProps) {
+  const slug = params.slug;
+  const events = await getEventBySlug(slug);
+  const event: Event | null = events[0] ?? null;
 
   if (!event) {
     return (
@@ -71,13 +39,12 @@ export default function EventDetailPage() {
                 L&apos;événement que vous recherchez n&apos;existe pas ou a été
                 supprimé.
               </p>
-              <Button
-                onClick={() => router.push("/agenda")}
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg"
-              >
-                <FaArrowLeft className="mr-2 h-4 w-4" />
-                Retour à l&apos;agenda
-              </Button>
+              <Link href="/agenda" className="inline-block">
+                <Button className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg">
+                  <FaArrowLeft className="mr-2 h-4 w-4" />
+                  Retour à l&apos;agenda
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -104,18 +71,19 @@ export default function EventDetailPage() {
 
         {/* Back Button */}
         <div className="absolute top-4 sm:top-6 lg:top-8 left-4 sm:left-6 lg:left-8 z-20 mt-10">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/agenda")}
-            className="bg-gradient-to-r from-accent/95 to-accent/90 rounded-xl border-white/30 cursor-pointer hover:from-accent hover:to-accent/90 text-foreground shadow-lg transition-all duration-30 backdrop-blur-sm"
-          >
-            <FaArrowLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4 text-black" />
-            <span className="hidden sm:inline text-black font-semibold">
-              Retour à l&apos;agenda
-            </span>
-            <span className="sm:hidden text-black font-semibold">Retour</span>
-          </Button>
+          <Link href="/agenda" className="inline-block">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-gradient-to-r from-accent/95 to-accent/90 rounded-xl border-white/30 cursor-pointer hover:from-accent hover:to-accent/90 text-foreground shadow-lg transition-all duration-30 backdrop-blur-sm"
+            >
+              <FaArrowLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4 text-black" />
+              <span className="hidden sm:inline text-black font-semibold">
+                Retour à l&apos;agenda
+              </span>
+              <span className="sm:hidden text-black font-semibold">Retour</span>
+            </Button>
+          </Link>
         </div>
 
         {/* Event Title Overlay */}

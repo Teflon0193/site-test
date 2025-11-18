@@ -1,9 +1,4 @@
 import {
-  generateCacheKey,
-  getCachedEventData,
-  setCachedEventData,
-} from "@/lib/cacheData";
-import {
   buildStrapiQuery,
   transformStrapiEvent,
   fetchFromStrapi,
@@ -13,14 +8,6 @@ import { Event, EventFilters } from "@/types/events";
 const fetchEventsFromStrapi = async (
   filters: EventFilters = {}
 ): Promise<Event[]> => {
-  const cacheKey = generateCacheKey(filters);
-
-  // Vérifier le cache
-  const cachedData = getCachedEventData(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
-
   try {
     const queryParams = buildStrapiQuery(filters);
     const transformedData = await fetchFromStrapi(
@@ -28,9 +15,6 @@ const fetchEventsFromStrapi = async (
       queryParams,
       transformStrapiEvent
     );
-
-    // Mettre en cache
-    setCachedEventData(cacheKey, transformedData);
 
     return transformedData;
   } catch (error) {

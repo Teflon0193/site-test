@@ -1,6 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { getMedia } from "@/services/mediaService";
+import { useState, useEffect, useMemo } from "react";
+import {
+  QueryObserverResult,
+  RefetchOptions,
+  RefetchQueryFilters,
+} from "@tanstack/react-query";
 import { Media, MediaFilters } from "@/types/media";
+import { useMediaGalleryQuery } from "./useMediaGalleryQuery";
 
 interface UseMediaGalleryReturn {
   mediaItems: Media[];
@@ -11,7 +16,9 @@ interface UseMediaGalleryReturn {
   paginatedItems: Media[];
   currentPage: number;
   setCurrentPage: (page: number) => void;
-  refetch: () => Promise<void>;
+  refetch: (
+    options?: RefetchOptions & RefetchQueryFilters<Media[]>
+  ) => Promise<QueryObserverResult<Media[], Error>>;
 }
 
 interface UseMediaGalleryProps {
@@ -31,52 +38,28 @@ export const useMediaGallery = ({
   selectedMonth,
   itemsPerPage = 12,
 }: UseMediaGalleryProps): UseMediaGalleryReturn => {
-  const [mediaItems, setMediaItems] = useState<Media[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Chargement des médias depuis Strapi
-  const loadMedia = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const filters: MediaFilters = {
+    search: searchQuery || undefined,
+    category: selectedCategories.includes("Tous")
+      ? undefined
+      : selectedCategories[0],
+    eventType: selectedEventTypes.includes("Tous")
+      ? undefined
+      : selectedEventTypes[0],
+    year: selectedYear || undefined,
+    month: selectedMonth || undefined,
+    limit: 100, // Charger plus d'éléments pour le filtrage côté client
+  };
 
-      const filters: MediaFilters = {
-        search: searchQuery || undefined,
-        category: selectedCategories.includes("Tous")
-          ? undefined
-          : selectedCategories[0],
-        eventType: selectedEventTypes.includes("Tous")
-          ? undefined
-          : selectedEventTypes[0],
-        year: selectedYear || undefined,
-        month: selectedMonth || undefined,
-        limit: 100, // Charger plus d'éléments pour le filtrage côté client
-      };
-
-      const media = await getMedia(filters);
-      setMediaItems(media);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Erreur inconnue";
-      setError(errorMessage);
-      console.error("Erreur lors du chargement des médias:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    searchQuery,
-    selectedCategories,
-    selectedEventTypes,
-    selectedYear,
-    selectedMonth,
-  ]);
-
-  // Effet pour charger les médias
-  useEffect(() => {
-    loadMedia();
-  }, [loadMedia]);
+  const {
+    data: mediaItems = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useMediaGalleryQuery(filters);
 
   // Filtrage des éléments
   const filteredItems = useMemo(() => {
@@ -119,13 +102,13 @@ export const useMediaGallery = ({
 
   return {
     mediaItems,
-    loading,
-    error,
+    loading: isLoading,
+    error: isError ? (error as Error | null)?.message ?? null : null,
     filteredItems,
     totalPages,
     paginatedItems,
     currentPage,
     setCurrentPage,
-    refetch: loadMedia,
+    refetch,
   };
 };
