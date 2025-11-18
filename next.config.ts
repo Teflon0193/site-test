@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
         hostname: "informed-activity-db79c3338c.strapiapp.com",
       },
     ],
-    qualities: [80, 90],
+    qualities: [90],
   },
 };
 
