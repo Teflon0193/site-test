@@ -1,5 +1,3 @@
-"use client";
-
 import { useQuery } from "@tanstack/react-query";
 import {
   getAdminStats,
@@ -13,7 +11,7 @@ import {
 
 export const useAdminStatsQuery = () =>
   useQuery<AdminStatsResponse, Error>({
-    queryKey: ["admin", "stats"],
+    queryKey: ["admin", "stats", "upcomingEvents"],
     queryFn: () => getAdminStats(),
     // Dashboard: données fraîches mais sans spammer le serveur
     staleTime: 15 * 1000,
@@ -39,5 +37,3 @@ export const usePendingApprovalsQuery = () =>
     refetchOnWindowFocus: true,
     refetchInterval: 15 * 1000,
   });
-
-

@@ -8,9 +8,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/components/ui/card";
-import { HiUsers, HiChartBar, HiUserAdd, HiClock } from "react-icons/hi";
+import {
+  HiUsers,
+  HiChartBar,
+  HiUserAdd,
+  HiClock,
+  HiCalendar,
+} from "react-icons/hi";
 import { cn } from "@/lib/utils";
 import { useAdminStatsQuery } from "@/hooks/useAdminDashboardQuery";
+import { useUpcomingEventsQuery } from "@/hooks/useEventsQuery";
 
 interface AdminDashboardClientProps {
   dehydratedState: DehydratedState;
@@ -18,6 +25,12 @@ interface AdminDashboardClientProps {
 
 function AdminDashboardContent() {
   const { data, isLoading, isError, error: queryError } = useAdminStatsQuery();
+  const {
+    data: upcomingEvents = [],
+    isLoading: isLoadingEvents,
+    isError: isErrorEvents,
+    error: eventsError,
+  } = useUpcomingEventsQuery(3);
 
   if (isLoading) {
     return (
@@ -109,7 +122,7 @@ function AdminDashboardContent() {
 
   const {
     totalMembers,
-    approvedMembers,
+    // approvedMembers,
     pendingMembers,
     totalActivities,
     newMembersThisWeek,
@@ -125,14 +138,10 @@ function AdminDashboardContent() {
       color: "bg-blue-50 text-blue-600",
     },
     {
-      title: "Membres Approuvés",
-      value: approvedMembers.toString(),
-      icon: HiUserAdd,
-      description: `${
-        totalMembers > 0
-          ? Math.round((approvedMembers / totalMembers) * 100)
-          : 0
-      }% du total`,
+      title: "Événements à Venir",
+      value: upcomingEvents.length.toString(),
+      icon: HiCalendar,
+      description: `${upcomingEvents.length} événements à venir`,
       color: "bg-green-50 text-green-600",
     },
     {
@@ -262,26 +271,55 @@ function AdminDashboardContent() {
             <CardTitle>Événements à Venir</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: "Concert de Jazz", date: "15 Nov 2024", members: 45 },
-                { name: "Exposition Photo", date: "20 Nov 2024", members: 32 },
-                { name: "Atelier Théâtre", date: "22 Nov 2024", members: 18 },
-              ].map((event) => (
-                <div
-                  key={event.name}
-                  className="flex items-center justify-between border-b pb-3 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{event.name}</p>
-                    <p className="text-xs text-foreground/60">{event.date}</p>
+            {isLoadingEvents ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between border-b pb-3 last:border-0"
+                  >
+                    <div className="space-y-2">
+                      <div className="h-4 w-40 bg-muted rounded animate-pulse" />
+                      <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+                    </div>
+                    <div className="h-6 w-20 bg-muted rounded-full animate-pulse" />
                   </div>
-                  <p className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                    {event.members} inscrits
-                  </p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : isErrorEvents ? (
+              <p className="text-sm text-destructive">
+                Impossible de charger les événements à venir
+                {eventsError?.message ? ` : ${eventsError.message}` : ""}.
+              </p>
+            ) : upcomingEvents.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Aucun événement à venir pour le moment.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {upcomingEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-center justify-between border-b pb-3 last:border-0"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{event.title}</p>
+                      <p className="text-xs text-foreground/60">
+                        {new Date(event.startDate).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}{" "}
+                        • {event.location}
+                      </p>
+                    </div>
+                    <p className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                      {event.discipline}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
