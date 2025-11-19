@@ -62,9 +62,7 @@ export function ApprovalsPageClient() {
             <div className="text-3xl font-bold text-green-600">
               {isLoading ? "..." : approvedCount}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Membres actifs
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Membres actifs</p>
           </CardContent>
         </Card>
 
@@ -88,8 +86,7 @@ export function ApprovalsPageClient() {
       <Card className="rounded-2xl bg-gradient-to-br from-white to-muted/10 border border-muted/20 shadow-lg py-4">
         <CardHeader>
           <CardTitle className="text-xl">
-            Demandes en attente (
-            {isLoading ? "..." : pendingCount})
+            Demandes en attente ({isLoading ? "..." : pendingCount})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -114,10 +111,10 @@ export function ApprovalsPageClient() {
                   key={pendingUser.id}
                   user={{
                     id: pendingUser.id,
-                    name: pendingUser.name,
+                    name: pendingUser.name ?? "",
                     email: pendingUser.email,
                     createdAt: new Date(pendingUser.createdAt),
-                    phone: pendingUser.phone,
+                    phone: pendingUser.phone ?? "",
                   }}
                 />
               ))}
@@ -128,5 +125,3 @@ export function ApprovalsPageClient() {
     </div>
   );
 }
-
-
