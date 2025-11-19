@@ -145,7 +145,9 @@ export async function approveMemberAction(userId: string) {
     // Envoyer l'email
     await transporter.sendMail(mailOptions);
 
-    // Revalider la page pour afficher les données mises à jour
+    // Revalider les pages et layouts admin pour afficher les données mises à jour
+    revalidatePath("/espace-membre");
+    revalidatePath("/espace-membre/admin");
     revalidatePath("/espace-membre/admin/approvals");
 
     return {

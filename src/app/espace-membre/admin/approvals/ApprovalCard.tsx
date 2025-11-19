@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ interface ApprovalCardProps {
 }
 
 export function ApprovalCard({ user }: ApprovalCardProps) {
+  const queryClient = useQueryClient();
   const [isApproving, setIsApproving] = useState(false);
 
   const handleApprove = async () => {
@@ -27,6 +29,11 @@ export function ApprovalCard({ user }: ApprovalCardProps) {
       const result = await approveMemberAction(user.id);
       if (result.success) {
         toast.success(result.message || "Membre approuvé avec succès");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["admin", "approvals"] }),
+          queryClient.invalidateQueries({ queryKey: ["admin", "stats"] }),
+          queryClient.invalidateQueries({ queryKey: ["admin", "members"] }),
+        ]);
       } else {
         toast.error(result.error || "Erreur lors de l'approbation");
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { Trash2, Loader2, AlertTriangle } from "lucide-react";
@@ -35,6 +36,7 @@ interface MembersTableProps {
 }
 
 export function MembersTable({ members }: MembersTableProps) {
+  const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [memberToDelete, setMemberToDelete] = useState<{
     id: string;
@@ -51,6 +53,11 @@ export function MembersTable({ members }: MembersTableProps) {
       const result = await deleteMemberAction(memberToDelete.id);
       if (result.success) {
         toast.success(result.message || "Membre supprimé avec succès");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["admin", "members"] }),
+          queryClient.invalidateQueries({ queryKey: ["admin", "stats"] }),
+          queryClient.invalidateQueries({ queryKey: ["admin", "approvals"] }),
+        ]);
       } else {
         toast.error(result.error || "Erreur lors de la suppression");
       }
