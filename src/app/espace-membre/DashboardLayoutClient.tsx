@@ -19,6 +19,7 @@ import {
   Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { User as PrismaUserType } from "@prisma/client";
 import Image from "next/image";
 import { logoutAction } from "./actions";
 import { toast } from "sonner";
@@ -27,13 +28,7 @@ import { cn } from "@/lib/utils";
 
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: "MEMBER" | "ADMIN";
-    image: string;
-  };
+  user: PrismaUserType;
   pendingApprovalsCount?: number;
 }
 
@@ -225,7 +220,7 @@ export default function DashboardLayoutClient({
         <div className="p-4 border-t bg-muted/10">
           <div className="flex items-center gap-3 mb-4 px-2">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user.image} alt={user.name} />
+              <AvatarImage src={user.image || ""} alt={user.name} />
               <AvatarFallback className="bg-primary/10 text-primary font-bold">
                 {user.name.charAt(0).toUpperCase()}
               </AvatarFallback>
