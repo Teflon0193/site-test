@@ -11,6 +11,8 @@ import { useMembersQuery } from "@/hooks/useAdminDashboardQuery";
 import type { MembersStatusFilter } from "@/services/adminService";
 import { MembersFilters } from "./MembersFilters";
 import { MembersTable } from "./MembersTable";
+import { Users, CheckCircle2, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MembersPageClientProps {
   initialSearch: string;
@@ -37,7 +39,6 @@ export function MembersPageClient({
   const members =
     data?.members.map((member) => ({
       ...member,
-      // Assurer un nom non nul pour respecter le type Member du tableau
       name: member.name ?? "Membre sans nom",
       createdAt: new Date(member.createdAt),
     })) ?? [];
@@ -46,72 +47,103 @@ export function MembersPageClient({
   const approvedMembers = data?.approvedMembers ?? 0;
   const pendingMembers = data?.pendingMembers ?? 0;
 
+  const stats = [
+    {
+      title: "Total Membres",
+      value: isLoading ? "..." : totalMembers,
+      icon: Users,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+    },
+    {
+      title: "Approuvés",
+      value: isLoading ? "..." : approvedMembers,
+      icon: CheckCircle2,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+    },
+    {
+      title: "En Attente",
+      value: isLoading ? "..." : pendingMembers,
+      icon: Clock,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl uppercase font-bold text-foreground">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Gestion des Membres
         </h1>
-        <p className="mt-2 text-sm text-foreground/60">
+        <p className="mt-1 text-sm text-muted-foreground">
           Gérez les inscriptions et suivez les activités des membres
         </p>
       </div>
 
       {isError && (
-        <p className="text-sm text-destructive">
+        <div className="p-4 rounded-lg bg-red-50 text-red-600 text-sm">
           Impossible de charger les membres : {error?.message}
-        </p>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="py-4">
-          <CardContent>
-            <div className="text-sm font-medium text-muted-foreground">
-              Total Membres
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card
+              key={stat.title}
+              className="border-none shadow-sm bg-white hover:shadow-md transition-shadow"
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between space-y-0 pb-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </p>
+                  <div
+                    className={cn("rounded-full p-2", stat.bgColor, stat.color)}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold">{stat.value}</div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="space-y-6">
+        <MembersFilters currentSearch={search} currentStatus={statusParam} />
+
+        <Card className="border-none shadow-sm bg-white overflow-hidden">
+          <CardHeader className="border-b border-gray-50 bg-gray-50/50 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">
+                Liste des membres
+              </CardTitle>
+              {!isLoading && (
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                  {members.length} résultats
+                </span>
+              )}
             </div>
-            <div className="text-2xl font-bold mt-2">
-              {isLoading ? "..." : totalMembers}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="py-4">
-          <CardContent>
-            <div className="text-sm font-medium text-muted-foreground">
-              Approuvés
-            </div>
-            <div className="text-2xl font-bold mt-2 text-green-600">
-              {isLoading ? "..." : approvedMembers}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="py-4">
-          <CardContent>
-            <div className="text-sm font-medium text-muted-foreground">
-              En Attente
-            </div>
-            <div className="text-2xl font-bold mt-2 text-orange-600">
-              {isLoading ? "..." : pendingMembers}
-            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-12 text-center">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-sm text-muted-foreground">
+                  Chargement des membres...
+                </p>
+              </div>
+            ) : (
+              <MembersTable members={members} />
+            )}
           </CardContent>
         </Card>
       </div>
-
-      <MembersFilters currentSearch={search} currentStatus={statusParam} />
-
-      <Card className="py-6">
-        <CardHeader>
-          <CardTitle>Membres {!isLoading && `(${members.length})`}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">
-              Chargement des membres...
-            </p>
-          ) : (
-            <MembersTable members={members} />
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -4,7 +4,14 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "../../../components/ui/badge";
-import { Trash2, Loader2, AlertTriangle } from "lucide-react";
+import {
+  Trash2,
+  Loader2,
+  AlertTriangle,
+  MoreHorizontal,
+  Mail,
+  Shield,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { deleteMemberAction } from "./actions";
 import { toast } from "sonner";
@@ -18,6 +25,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Member {
   id: string;
@@ -116,38 +131,23 @@ export function MembersTable({ members }: MembersTableProps) {
       </AlertDialog>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-3 px-4 font-medium text-foreground/70">
-                Nom
-              </th>
-              <th className="text-left py-3 px-4 font-medium text-foreground/70">
-                Email
-              </th>
-              <th className="text-left py-3 px-4 font-medium text-foreground/70">
-                Type
-              </th>
-              <th className="text-left py-3 px-4 font-medium text-foreground/70">
-                Statut
-              </th>
-              <th className="text-left py-3 px-4 font-medium text-foreground/70">
-                Date d&apos;inscription
-              </th>
-              <th className="text-left py-3 px-4 font-medium text-foreground/70">
-                Activités
-              </th>
-              <th className="text-left py-3 px-4 font-medium text-foreground/70">
-                Actions
-              </th>
+        <table className="w-full text-sm text-left">
+          <thead className="text-xs text-muted-foreground uppercase bg-gray-50/50">
+            <tr>
+              <th className="py-3 px-6 font-medium">Membre</th>
+              <th className="py-3 px-6 font-medium">Rôle</th>
+              <th className="py-3 px-6 font-medium">Statut</th>
+              <th className="py-3 px-6 font-medium">Date d&apos;inscription</th>
+              <th className="py-3 px-6 font-medium text-center">Activités</th>
+              <th className="py-3 px-6 font-medium text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {members.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
-                  className="py-8 text-center text-muted-foreground"
+                  colSpan={6}
+                  className="py-12 text-center text-muted-foreground"
                 >
                   Aucun membre trouvé
                 </td>
@@ -156,63 +156,102 @@ export function MembersTable({ members }: MembersTableProps) {
               members.map((member) => (
                 <tr
                   key={member.id}
-                  className="border-b border-border hover:bg-accent/50"
+                  className="hover:bg-gray-50/50 transition-colors group"
                 >
-                  <td className="py-3 px-4 font-medium">{member.name}</td>
-                  <td className="py-3 px-4 text-foreground/60">
-                    {member.email}
+                  <td className="py-3 px-6">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-foreground">
+                        {member.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {member.email}
+                      </span>
+                    </div>
                   </td>
-                  <td className="py-3 px-4">
-                    <Badge
-                      variant={
-                        member.role === "ADMIN" ? "default" : "secondary"
-                      }
-                      className="text-white"
-                    >
-                      {member.role === "ADMIN" ? "Admin" : "Standard"}
-                    </Badge>
+                  <td className="py-3 px-6">
+                    <div className="flex items-center gap-1.5">
+                      {member.role === "ADMIN" ? (
+                        <Shield className="h-3.5 w-3.5 text-primary" />
+                      ) : null}
+                      <span
+                        className={cn(
+                          "text-xs font-medium",
+                          member.role === "ADMIN"
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {member.role === "ADMIN" ? "Admin" : "Membre"}
+                      </span>
+                    </div>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-6">
                     <Badge
-                      variant={member.isApproved ? "default" : "outline"}
+                      variant={member.isApproved ? "secondary" : "outline"}
                       className={cn(
+                        "text-[10px] font-medium border-0 px-2 py-0.5 h-5",
                         member.isApproved
-                          ? "bg-green-100 text-green-800 border-green-200"
-                          : "bg-orange-100 text-orange-800 border-orange-200"
+                          ? "bg-green-50 text-green-700 hover:bg-green-100"
+                          : "bg-orange-50 text-orange-700 hover:bg-orange-100"
                       )}
                     >
                       {member.isApproved ? "Approuvé" : "En attente"}
                     </Badge>
                   </td>
-                  <td className="py-3 px-4 text-foreground/60">
+                  <td className="py-3 px-6 text-muted-foreground">
                     {new Date(member.createdAt).toLocaleDateString("fr-FR", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
                     })}
                   </td>
-                  <td className="py-3 px-4">{member._count.activities}</td>
-                  <td className="py-3 px-4">
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          setMemberToDelete({
-                            id: member.id,
-                            name: member.name,
-                          })
-                        }
-                        disabled={deletingId === member.id}
-                        className="text-red-600 cursor-pointer hover:bg-red-50 disabled:opacity-50"
-                      >
-                        {deletingId === member.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                  <td className="py-3 px-6 text-center">
+                    <span className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+                      {member._count.activities}
+                    </span>
+                  </td>
+                  <td className="py-3 px-6 text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => {
+                            window.location.href = `mailto:${member.email}`;
+                          }}
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          Envoyer un email
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                          onClick={() =>
+                            setMemberToDelete({
+                              id: member.id,
+                              name: member.name,
+                            })
+                          }
+                          disabled={deletingId === member.id}
+                        >
+                          {deletingId === member.id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="mr-2 h-4 w-4" />
+                          )}
+                          Supprimer le compte
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))

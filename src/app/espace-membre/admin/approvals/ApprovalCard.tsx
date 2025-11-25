@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, User, Calendar, Loader2 } from "lucide-react";
+import { Mail, User, Calendar, Loader2, Check, X, Phone } from "lucide-react";
 import { approveMemberAction } from "./actions";
 import { toast } from "sonner";
 
@@ -46,43 +46,40 @@ export function ApprovalCard({ user }: ApprovalCardProps) {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow py-4">
-      <CardContent className="pt-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-3 flex-1">
-            {/* Infos utilisateur */}
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-6 h-6 text-primary" />
+    <Card className="border-none shadow-sm bg-white hover:shadow-md transition-all duration-200">
+      <CardContent className="p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h3 className="font-semibold text-lg text-foreground">
+                  {user.name}
+                </h3>
+                <Badge
+                  variant="secondary"
+                  className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-0"
+                >
+                  En attente
+                </Badge>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-lg truncate">
-                    {user.name}
-                  </h3>
-                  <Badge
-                    variant="outline"
-                    className="bg-orange-50 text-orange-600 border-orange-200"
-                  >
-                    En attente
-                  </Badge>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground mt-2">
+                <div className="flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5" />
+                  <span className="truncate">{user.email}</span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                {user.phone && (
                   <div className="flex items-center gap-1.5">
-                    <Mail className="w-4 h-4" />
-                    <span className="truncate">{user.email}</span>
+                    <Phone className="w-3.5 h-3.5" />
+                    <span className="truncate">{user.phone}</span>
                   </div>
-                  {user.phone && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="hidden sm:inline">•</span>
-                      <span className="truncate">{user.phone}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
+                )}
+                <div className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
                   <span>
-                    Inscription le{" "}
                     {new Date(user.createdAt).toLocaleDateString("fr-FR", {
                       day: "numeric",
                       month: "long",
@@ -94,27 +91,30 @@ export function ApprovalCard({ user }: ApprovalCardProps) {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex items-center gap-3 w-full lg:w-auto pl-16 lg:pl-0">
             <Button
               onClick={handleApprove}
               disabled={isApproving}
-              className="w-full sm:w-auto cursor-pointer bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 lg:flex-none bg-green-600 hover:bg-green-700 text-white shadow-sm"
             >
               {isApproving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Envoi en cours...
+                  Traitement...
                 </>
               ) : (
-                "Approuver et envoyer l'email"
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Approuver
+                </>
               )}
             </Button>
             <Button
               variant="outline"
-              className="w-full cursor-pointer sm:w-auto border-red-200 text-red-600 hover:bg-red-50"
+              className="flex-1 lg:flex-none border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
               disabled={isApproving}
             >
+              <X className="w-4 h-4 mr-2" />
               Refuser
             </Button>
           </div>

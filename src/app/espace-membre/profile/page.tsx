@@ -1,20 +1,15 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
-  HiMail,
-  HiPhone,
-  HiLocationMarker,
-  HiCalendar,
-  HiUser,
-  HiCheckCircle,
-  HiClock,
-} from "react-icons/hi";
+  Mail,
+  Calendar,
+  User,
+  CheckCircle2,
+  Clock,
+  Globe,
+  Shield,
+} from "lucide-react";
 import { getUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -38,275 +33,199 @@ export default async function ProfilePage() {
   });
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background rounded-xl md:rounded-2xl p-4 md:p-8 shadow-sm border border-primary/10 md:mt-0 mt-4">
-        <h1 className="text-2xl md:text-4xl font-bold text-foreground uppercase">
-          Mon Profil
-        </h1>
-        <p className="text-muted-foreground text-sm md:text-lg mt-1">
-          Consultez vos informations personnelles
-        </p>
-      </div>
+    <div className="space-y-8 max-w-5xl mx-auto">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 pb-6 border-b">
+        <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
+          <AvatarImage src={user.image || ""} />
+          <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+            {user.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
 
-      {/* Profile Header Card */}
-      <Card className="overflow-hidden py-3 md:py-4">
-        <CardHeader className="pb-4 md:pb-8 px-4 md:px-6">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6">
-            <Avatar className="w-16 h-16 md:w-24 md:h-24">
-              <AvatarImage src={user.image || ""} />
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 text-center md:text-left">
-              <h2 className="text-xl md:text-3xl font-bold mb-2">
-                {user.name}
-              </h2>
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                <Badge
-                  variant={user.isApproved ? "default" : "secondary"}
-                  className="text-xs md:text-sm"
-                >
-                  {user.isApproved ? (
-                    <span className="flex items-center gap-1">
-                      <HiCheckCircle className="h-3 w-3 md:h-4 md:w-4" />
-                      Membre Actif
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1">
-                      <HiClock className="h-3 w-3 md:h-4 md:w-4" />
-                      En Attente
-                    </span>
-                  )}
-                </Badge>
-                <Badge variant="outline" className="text-xs md:text-sm">
-                  {userIsMember}
-                </Badge>
-              </div>
-              <p className="text-xs md:text-sm text-muted-foreground mt-2 md:mt-3">
-                Membre depuis le {memberSince}
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Personal Information */}
-      <Card className="py-3 md:py-4">
-        <CardHeader className="px-4 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <HiUser className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-            Informations Personnelles
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {/* Nom complet */}
-            <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
-              <div className="p-1.5 md:p-2 bg-blue-50 text-blue-600 rounded-lg">
-                <HiUser className="h-4 w-4 md:h-5 md:w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                  Nom complet
-                </p>
-                <p className="font-semibold text-sm md:text-lg truncate">
-                  {user.name}
-                </p>
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
-              <div className="p-1.5 md:p-2 bg-green-50 text-green-600 rounded-lg">
-                <HiMail className="h-4 w-4 md:h-5 md:w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                  Email
-                </p>
-                <p className="font-semibold text-sm md:text-base break-all">
-                  {user.email}
-                </p>
-                {user.emailVerified && (
-                  <Badge variant="outline" className="mt-1.5 md:mt-2 text-xs">
-                    <HiCheckCircle className="h-3 w-3 mr-1" />
-                    Vérifié
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            {/* Téléphone */}
-            {user.phone && (
-              <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
-                <div className="p-1.5 md:p-2 bg-purple-50 text-purple-600 rounded-lg">
-                  <HiPhone className="h-4 w-4 md:h-5 md:w-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                    Téléphone
-                  </p>
-                  <p className="font-semibold text-sm md:text-base">
-                    {user.phone}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Adresse */}
-            {user.address && (
-              <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
-                <div className="p-1.5 md:p-2 bg-orange-50 text-orange-600 rounded-lg">
-                  <HiLocationMarker className="h-4 w-4 md:h-5 md:w-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                    Adresse
-                  </p>
-                  <p className="font-semibold text-sm md:text-base">
-                    {user.address}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Membership Information */}
-      <Card className="py-3 md:py-4">
-        <CardHeader className="px-4 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <HiCalendar className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-            Informations d&apos;Adhésion
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {/* Date d'inscription */}
-            <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
-              <div className="p-1.5 md:p-2 bg-blue-50 text-blue-600 rounded-lg">
-                <HiCalendar className="h-4 w-4 md:h-5 md:w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                  Date d&apos;adhésion
-                </p>
-                <p className="font-semibold text-sm md:text-base">
-                  {memberSince}
-                </p>
-              </div>
-            </div>
-
-            {/* Statut d'approbation */}
-            <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
-              <div
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              {user.name}
+            </h1>
+            <div className="flex gap-2">
+              <Badge
+                variant={user.isApproved ? "default" : "secondary"}
                 className={cn(
-                  "p-1.5 md:p-2 rounded-lg",
+                  "px-2 py-0.5 text-xs font-medium",
                   user.isApproved
-                    ? "bg-green-50 text-green-600"
-                    : "bg-orange-50 text-orange-600"
+                    ? "bg-green-100 text-green-700 hover:bg-green-100"
+                    : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
                 )}
               >
                 {user.isApproved ? (
-                  <HiCheckCircle className="h-4 w-4 md:h-5 md:w-5" />
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 size={12} />
+                    Membre Actif
+                  </span>
                 ) : (
-                  <HiClock className="h-4 w-4 md:h-5 md:w-5" />
+                  <span className="flex items-center gap-1">
+                    <Clock size={12} />
+                    En Attente
+                  </span>
                 )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                  Statut du compte
-                </p>
-                <p className="font-semibold text-sm md:text-base">
-                  {user.isApproved ? "Approuvé" : "En attente d'approbation"}
-                </p>
-                {!user.isApproved && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Votre compte sera activé après validation par un
-                    administrateur
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Newsletter */}
-            <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
-              <div
-                className={cn(
-                  "p-1.5 md:p-2 rounded-lg",
-                  user.newsletterOptIn
-                    ? "bg-purple-50 text-purple-600"
-                    : "bg-gray-50 text-gray-600"
-                )}
-              >
-                <HiMail className="h-4 w-4 md:h-5 md:w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                  Newsletter
-                </p>
-                <p className="font-semibold text-sm md:text-base">
-                  {user.newsletterOptIn ? "Activée" : "Désactivée"}
-                </p>
-              </div>
-            </div>
-
-            {/* Rôle */}
-            <div className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-lg transition-colors">
-              <div className="p-1.5 md:p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                <HiUser className="h-4 w-4 md:h-5 md:w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                  Rôle
-                </p>
-                <p className="font-semibold text-sm md:text-base">
-                  {userIsMember}
-                </p>
-              </div>
+              </Badge>
+              <Badge variant="outline" className="text-xs font-medium">
+                {userIsMember}
+              </Badge>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Additional Info if profile exists */}
-      {(user.city || user.country) && (
-        <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20 py-3 md:py-4">
-          <CardHeader className="px-4 md:px-6">
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <HiLocationMarker className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-              Localisation
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 md:px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              {user.city && (
-                <div>
-                  <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                    Ville
-                  </p>
-                  <p className="font-semibold text-sm md:text-base">
-                    {user.city}
-                  </p>
-                </div>
-              )}
-              {user.country && (
-                <div>
-                  <p className="text-xs md:text-sm text-muted-foreground mb-1">
-                    Pays
-                  </p>
-                  <p className="font-semibold text-sm md:text-base">
-                    {user.country}
-                  </p>
-                </div>
-              )}
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Calendar size={14} />
+              <span>Membre depuis le {memberSince}</span>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            {user.email && (
+              <div className="flex items-center gap-1.5">
+                <Mail size={14} />
+                <span>{user.email}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Main Info Column */}
+        <div className="md:col-span-2 space-y-6">
+          {/* Personal Information */}
+          <Card className="border-none shadow-sm bg-white py-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <User className="h-5 w-5 text-primary" />
+                Informations Personnelles
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Nom complet
+                  </p>
+                  <p className="text-sm font-medium">{user.name}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Email
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{user.email}</p>
+                    {user.emailVerified && (
+                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                    )}
+                  </div>
+                </div>
+
+                {user.phone && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Téléphone
+                    </p>
+                    <p className="text-sm font-medium">{user.phone}</p>
+                  </div>
+                )}
+
+                {user.address && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Adresse
+                    </p>
+                    <p className="text-sm font-medium">{user.address}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Location Info */}
+          {(user.city || user.country) && (
+            <Card className="border-none shadow-sm bg-white py-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                  <Globe className="h-5 w-5 text-primary" />
+                  Localisation
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {user.city && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Ville
+                      </p>
+                      <p className="text-sm font-medium">{user.city}</p>
+                    </div>
+                  )}
+                  {user.country && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Pays
+                      </p>
+                      <p className="text-sm font-medium">{user.country}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Sidebar Column */}
+        <div className="space-y-6">
+          {/* Account Status */}
+          <Card className="border-none shadow-sm bg-muted/30 py-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <Shield className="h-4 w-4 text-primary" />
+                État du compte
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-muted/50">
+                <span className="text-sm text-muted-foreground">Statut</span>
+                <Badge
+                  variant={user.isApproved ? "default" : "secondary"}
+                  className={cn(
+                    "text-xs",
+                    user.isApproved
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  )}
+                >
+                  {user.isApproved ? "Approuvé" : "En attente"}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-muted/50">
+                <span className="text-sm text-muted-foreground">Rôle</span>
+                <span className="text-sm font-medium">{userIsMember}</span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-muted/50">
+                <span className="text-sm text-muted-foreground">
+                  Newsletter
+                </span>
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    user.newsletterOptIn
+                      ? "text-green-600"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {user.newsletterOptIn ? "Abonné" : "Non abonné"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -29,7 +29,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </div>
 
       <div className="hidden md:flex items-center justify-center bg-primary/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/50 via-transparent to-secondary/50" />
+        <div className="absolute inset-0 bg-black/40 z-10" />
         <Image
           src="/images/grand-tambour-fond.jpg"
           alt="Grand Tambour CCAPAC"

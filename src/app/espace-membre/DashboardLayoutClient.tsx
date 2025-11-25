@@ -4,24 +4,26 @@ import type React from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  HiMenu,
-  HiX,
-  HiLogout,
-  HiUser,
-  HiCalendar,
-  HiBell,
-  HiCog,
-  HiUsers,
-  HiChartBar,
-  HiHome,
-} from "react-icons/hi";
-import { Loader2 } from "lucide-react";
+  LayoutDashboard,
+  Bell,
+  Users,
+  BarChart3,
+  Calendar,
+  User,
+  LogOut,
+  Menu,
+  X,
+  Loader2,
+  Home,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { logoutAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
@@ -30,6 +32,7 @@ interface DashboardLayoutClientProps {
     name: string;
     email: string;
     role: "MEMBER" | "ADMIN";
+    image: string;
   };
   pendingApprovalsCount?: number;
 }
@@ -48,45 +51,49 @@ export default function DashboardLayoutClient({
   const menuItems =
     user.role === "ADMIN"
       ? [
-          { href: "/espace-membre/admin", label: "Dashboard", icon: HiHome },
+          {
+            href: "/espace-membre/admin",
+            label: "Dashboard",
+            icon: LayoutDashboard,
+          },
           {
             href: "/espace-membre/admin/approvals",
             label: "Approbations",
-            icon: HiBell,
+            icon: Bell,
             badge: pendingApprovalsCount,
           },
           {
             href: "/espace-membre/admin/members",
             label: "Membres",
-            icon: HiUsers,
+            icon: Users,
           },
           {
             href: "/espace-membre/admin/activities",
             label: "Activités",
-            icon: HiChartBar,
+            icon: BarChart3,
           },
           {
             href: "/espace-membre/admin/events",
             label: "Événements",
-            icon: HiCalendar,
+            icon: Calendar,
           },
         ]
       : [
-          { href: "/espace-membre", label: "Accueil", icon: HiUser },
+          { href: "/espace-membre", label: "Accueil", icon: Home },
           {
             href: "/espace-membre/events",
             label: "Événements",
-            icon: HiCalendar,
+            icon: Calendar,
           },
           {
             href: "/espace-membre/activities",
             label: "Mes activités",
-            icon: HiBell,
+            icon: BarChart3,
           },
           {
             href: "/espace-membre/profile",
             label: "Mon profil",
-            icon: HiCog,
+            icon: User,
           },
         ];
 
@@ -120,21 +127,25 @@ export default function DashboardLayoutClient({
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-background via-muted/10 to-background">
+    <div className="flex h-screen bg-muted/30">
       {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 lg:hidden bg-primary text-primary-foreground shadow-lg">
-        <div className="flex items-center justify-between p-4">
-          <Link href="/" className="font-bold text-lg uppercase">
-            <Image src="/logo.png" alt="CCAPAC" width={200} height={100} />
-          </Link>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 hover:bg-primary-foreground/10 rounded-lg transition-colors"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
-          </button>
-        </div>
+      <div className="fixed top-0 left-0 right-0 z-50 lg:hidden bg-primary border-b px-4 h-16 flex items-center justify-between">
+        <Link href="/" className="font-bold text-lg uppercase">
+          <Image
+            src="/logo.png"
+            alt="CCAPAC"
+            width={120}
+            height={60}
+            className="h-10 w-auto object-contain"
+          />
+        </Link>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
 
       {/* Mobile Overlay */}
@@ -147,93 +158,107 @@ export default function DashboardLayoutClient({
 
       {/* Sidebar */}
       <aside
-        className={`${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-primary text-primary-foreground transition-transform duration-300 flex flex-col shadow-xl border-r border-primary-foreground/10 lg:flex`}
+        className={cn(
+          "fixed lg:static inset-y-0 left-0 z-40 w-72 bg-primary border-r transition-transform duration-300 flex flex-col",
+          mobileMenuOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
+        )}
       >
         {/* Header Sidebar - Desktop only */}
-        <div className="hidden lg:flex p-6 border-b border-primary-foreground/20 items-center justify-between">
-          <Link href="/" className="font-bold text-xl uppercase drop-shadow-sm">
-            <Image src="/logo.png" alt="CCAPAC" width={300} height={100} />
+        <div className="hidden lg:flex h-20 items-center px-6 border-b">
+          <Link href="/" className="block">
+            <Image
+              src="/logo.png"
+              alt="CCAPAC"
+              width={160}
+              height={80}
+              className="h-12 w-auto object-contain"
+            />
           </Link>
         </div>
 
         {/* Mobile Sidebar Header */}
-        <div className="lg:hidden p-6 border-b border-primary-foreground/20">
-          <Link
-            href="/"
-            className="font-bold text-xl uppercase drop-shadow-sm"
-            onClick={closeMobileMenu}
-          >
-            <Image src="/logo.png" alt="CCAPAC" width={200} height={100} />
-          </Link>
+        <div className="lg:hidden h-16 flex items-center px-6 border-b">
+          <span className="font-semibold text-lg">Menu</span>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <Link key={item.href} href={item.href} onClick={closeMobileMenu}>
-                <span
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    active
-                      ? "bg-primary-foreground/20 shadow-md font-semibold"
-                      : "hover:bg-primary-foreground/10 font-semibold lg:hover:translate-x-1"
-                  }`}
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMobileMenu}
                 >
-                  <div className="relative">
-                    <Icon size={20} />
-                    {"badge" in item &&
-                      typeof item.badge === "number" &&
-                      item.badge > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                          {item.badge > 9 ? "9+" : item.badge}
-                        </span>
-                      )}
-                  </div>
-                  <span className="text-sm">{item.label}</span>
-                </span>
-              </Link>
-            );
-          })}
+                  <span
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition-all duration-200",
+                      active
+                        ? "bg-muted text-foreground"
+                        : "text-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <div className="relative">
+                      <Icon size={18} />
+                      {"badge" in item &&
+                        typeof item.badge === "number" &&
+                        item.badge > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                            {item.badge > 9 ? "9+" : item.badge}
+                          </span>
+                        )}
+                    </div>
+                    <span>{item.label}</span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
         {/* User Info & Logout */}
-        <div className="border-t border-primary-foreground/20">
-          <div className="p-4 border-b border-primary-foreground/20 bg-primary-foreground/5">
-            <p className="text-sm font-semibold truncate">{user.name}</p>
-            <p className="text-xs text-primary-foreground/70 truncate mt-0.5">
-              {user.email}
-            </p>
-            {user.role === "ADMIN" && (
-              <span className="inline-block mt-2 px-2 py-0.5 bg-accent text-accent-foreground text-xs font-medium rounded-md">
-                Administrateur
-              </span>
+        <div className="p-4 border-t bg-muted/10">
+          <div className="flex items-center gap-3 mb-4 px-2">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user.image} alt={user.name} />
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                {user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate text-foreground">
+                {user.name}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {user.email}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            disabled={isLoggingOut}
+            className="w-full justify-start gap-2 text-muted-foreground font-bold hover:text-destructive hover:bg-destructive/10"
+          >
+            {isLoggingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut size={18} />
             )}
-          </div>
-          <div className="p-4">
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              disabled={isLoggingOut}
-              className="w-full cursor-pointer font-bold bg-white justify-start gap-2 text-primary border-primary-foreground/30 hover:bg-primary-foreground/10 hover:border-primary-foreground/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoggingOut ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <HiLogout size={20} />
-              )}
-              <span>{isLoggingOut ? "Déconnexion..." : "Déconnexion"}</span>
-            </Button>
-          </div>
+            <span>{isLoggingOut ? "Déconnexion..." : "Déconnexion"}</span>
+          </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-gradient-to-br from-muted/5 via-background to-muted/10 pt-16 lg:pt-0">
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">{children}</div>
+      <main className="flex-1 overflow-auto pt-16 lg:pt-0">
+        <div className="max-w-7xl mx-auto p-6 lg:p-10">{children}</div>
       </main>
     </div>
   );

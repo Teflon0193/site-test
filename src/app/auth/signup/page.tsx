@@ -24,21 +24,22 @@ import { toast } from "sonner";
 export default function RegisterPage() {
   const router = useRouter();
   const handleSignupSubmit = async (values: SignupFormValues) => {
-    await signUp.email(
-      {
-        email: values.email,
-        password: values.password,
-        name: values.firstName + " " + values.lastName,
-      },
-      {
-        onSuccess: () => {
-          router.push("/espace-membre");
+      await signUp.email(
+        {
+          email: values.email,
+          password: values.password,
+          name: values.firstName + " " + values.lastName,
         },
-        onError: (error) => {
+        {
+          onSuccess: () => {
+            toast.success("Compte créé avec succès !");
+            router.push("/espace-membre");
+          },
+          onError: (error) => {
           toast.error(error.error.message);
-        },
-      }
-    );
+          },
+        }
+      );
   };
 
   return (

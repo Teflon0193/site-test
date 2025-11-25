@@ -9,15 +9,17 @@ import {
   CardTitle,
 } from "@/app/components/ui/card";
 import {
-  HiUsers,
-  HiChartBar,
-  HiUserAdd,
-  HiClock,
-  HiCalendar,
-} from "react-icons/hi";
+  Users,
+  BarChart3,
+  UserPlus,
+  Clock,
+  Calendar,
+  AlertCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminStatsQuery } from "@/hooks/useAdminDashboardQuery";
 import { useUpcomingEventsQuery } from "@/hooks/useEventsQuery";
+import { Badge } from "../../components/ui/badge";
 
 interface AdminDashboardClientProps {
   dehydratedState: DehydratedState;
@@ -29,7 +31,7 @@ function AdminDashboardContent() {
     data: upcomingEvents = [],
     isLoading: isLoadingEvents,
     isError: isErrorEvents,
-    error: eventsError,
+    // error: eventsError,
   } = useUpcomingEventsQuery(3);
 
   if (isLoading) {
@@ -42,13 +44,13 @@ function AdminDashboardContent() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index} className="py-4">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                <div className="h-10 w-10 bg-muted rounded-lg animate-pulse" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-7 w-16 bg-muted rounded animate-pulse" />
+            <Card key={index} className="border-none shadow-sm bg-white py-4">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between space-y-0 pb-2">
+                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                  <div className="h-8 w-8 bg-muted rounded-full animate-pulse" />
+                </div>
+                <div className="h-7 w-16 bg-muted rounded animate-pulse mt-2" />
                 <div className="h-3 w-24 bg-muted rounded mt-2 animate-pulse" />
               </CardContent>
             </Card>
@@ -56,16 +58,16 @@ function AdminDashboardContent() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="py-4">
+          <Card className="border-none shadow-sm bg-white py-4">
             <CardHeader>
-              <CardTitle>Derniers Membres Inscrits</CardTitle>
+              <div className="h-6 w-48 bg-muted rounded animate-pulse" />
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between border-b pb-3 last:border-0"
+                    className="flex items-center justify-between border-b border-gray-50 pb-3 last:border-0"
                   >
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="h-4 w-40 bg-muted rounded animate-pulse" />
@@ -78,16 +80,16 @@ function AdminDashboardContent() {
             </CardContent>
           </Card>
 
-          <Card className="py-4">
+          <Card className="border-none shadow-sm bg-white py-4">
             <CardHeader>
-              <CardTitle>Événements à Venir</CardTitle>
+              <div className="h-6 w-48 bg-muted rounded animate-pulse" />
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between border-b pb-3 last:border-0"
+                    className="flex items-center justify-between border-b border-gray-50 pb-3 last:border-0"
                   >
                     <div className="space-y-2">
                       <div className="h-4 w-40 bg-muted rounded animate-pulse" />
@@ -107,22 +109,26 @@ function AdminDashboardContent() {
   if (isError || !data) {
     return (
       <div className="space-y-4">
-        <h1 className="text-3xl uppercase font-bold text-foreground">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Dashboard Administrateur
         </h1>
-        <p className="text-sm text-destructive">
-          Impossible de charger les statistiques admin.
-        </p>
-        {queryError && (
-          <p className="text-xs text-destructive/80">{queryError.message}</p>
-        )}
+        <div className="p-4 rounded-lg bg-red-50 text-red-600 flex items-center gap-2">
+          <AlertCircle className="h-5 w-5" />
+          <p className="text-sm">
+            Impossible de charger les statistiques admin.
+            {queryError && (
+              <span className="block text-xs opacity-80 mt-1">
+                {queryError.message}
+              </span>
+            )}
+          </p>
+        </div>
       </div>
     );
   }
 
   const {
     totalMembers,
-    // approvedMembers,
     pendingMembers,
     totalActivities,
     newMembersThisWeek,
@@ -133,40 +139,44 @@ function AdminDashboardContent() {
     {
       title: "Membres Totaux",
       value: totalMembers.toString(),
-      icon: HiUsers,
+      icon: Users,
       description: `${newMembersThisWeek} nouveaux cette semaine`,
-      color: "bg-blue-50 text-blue-600",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
     },
     {
       title: "Événements à Venir",
       value: upcomingEvents.length.toString(),
-      icon: HiCalendar,
-      description: `${upcomingEvents.length} événements à venir`,
-      color: "bg-green-50 text-green-600",
+      icon: Calendar,
+      description: "Prochains événements",
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
       title: "En Attente",
       value: pendingMembers.toString(),
-      icon: HiClock,
+      icon: Clock,
       description: "Demandes à traiter",
-      color: "bg-orange-50 text-orange-600",
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
     },
     {
       title: "Activités",
       value: totalActivities.toString(),
-      icon: HiChartBar,
+      icon: BarChart3,
       description: "Actions enregistrées",
-      color: "bg-purple-50 text-purple-600",
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
     },
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl uppercase font-bold text-foreground">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Dashboard Administrateur
         </h1>
-        <p className="mt-2 text-sm text-foreground/60">
+        <p className="mt-1 text-sm text-muted-foreground">
           Bienvenue dans l&apos;espace de gestion du CCAPAC
         </p>
       </div>
@@ -175,18 +185,23 @@ function AdminDashboardContent() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} className="py-4">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
-                <div className={cn("rounded-lg p-2", stat.color)}>
-                  <Icon className="h-6 w-6" />
+            <Card
+              key={stat.title}
+              className="border-none shadow-sm bg-white hover:shadow-md transition-shadow py-4"
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between space-y-0 pb-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </p>
+                  <div
+                    className={cn("rounded-full p-2", stat.bgColor, stat.color)}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-foreground/60 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {stat.description}
                 </p>
               </CardContent>
@@ -196,17 +211,26 @@ function AdminDashboardContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="py-4">
-          <CardHeader>
-            <CardTitle>Derniers Membres Inscrits</CardTitle>
+        {/* Recent Members */}
+        <Card className="border-none shadow-sm bg-white py-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Derniers Membres
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {recentMembers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Aucun membre pour le moment
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                  <Users className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Aucun membre pour le moment
+                </p>
+              </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-1">
                 {recentMembers.map((member) => {
                   const now = new Date();
                   const memberDate = new Date(member.createdAt);
@@ -232,32 +256,36 @@ function AdminDashboardContent() {
                   return (
                     <div
                       key={member.id}
-                      className="flex items-center justify-between border-b pb-3 last:border-0"
+                      className="flex items-center justify-between p-3 hover:bg-muted/30 rounded-lg transition-colors group"
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium truncate">
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-medium truncate text-foreground group-hover:text-primary transition-colors">
                             {member.name}
                           </p>
                           {member.isApproved ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                              <HiUserAdd className="w-3 h-3 mr-1" />
+                            <Badge
+                              variant="secondary"
+                              className="bg-green-50 text-green-700 hover:bg-green-100 border-0 text-[10px] px-1.5 py-0 h-5"
+                            >
                               Approuvé
-                            </span>
+                            </Badge>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                              <HiClock className="w-3 h-3 mr-1" />
+                            <Badge
+                              variant="secondary"
+                              className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-0 text-[10px] px-1.5 py-0 h-5"
+                            >
                               En attente
-                            </span>
+                            </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-foreground/60 truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {member.email}
                         </p>
                       </div>
-                      <p className="text-xs text-foreground/50 ml-2 whitespace-nowrap">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
                         {dateLabel}
-                      </p>
+                      </span>
                     </div>
                   );
                 })}
@@ -266,9 +294,13 @@ function AdminDashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="py-4">
-          <CardHeader>
-            <CardTitle>Événements à Venir</CardTitle>
+        {/* Upcoming Events */}
+        <Card className="border-none shadow-sm bg-white py-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Événements à Venir
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoadingEvents ? (
@@ -276,7 +308,7 @@ function AdminDashboardContent() {
                 {Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between border-b pb-3 last:border-0"
+                    className="flex items-center justify-between border-b border-gray-50 pb-3 last:border-0"
                   >
                     <div className="space-y-2">
                       <div className="h-4 w-40 bg-muted rounded animate-pulse" />
@@ -287,35 +319,50 @@ function AdminDashboardContent() {
                 ))}
               </div>
             ) : isErrorEvents ? (
-              <p className="text-sm text-destructive">
-                Impossible de charger les événements à venir
-                {eventsError?.message ? ` : ${eventsError.message}` : ""}.
-              </p>
+              <div className="p-4 rounded-lg bg-red-50 text-red-600 text-sm">
+                Impossible de charger les événements
+              </div>
             ) : upcomingEvents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Aucun événement à venir pour le moment.
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Aucun événement à venir
+                </p>
+              </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-1">
                 {upcomingEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="flex items-center justify-between border-b pb-3 last:border-0"
+                    className="flex items-center justify-between p-3 hover:bg-muted/30 rounded-lg transition-colors group"
                   >
-                    <div>
-                      <p className="text-sm font-medium">{event.title}</p>
-                      <p className="text-xs text-foreground/60">
-                        {new Date(event.startDate).toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}{" "}
-                        • {event.location}
+                    <div className="flex-1 min-w-0 mr-4">
+                      <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                        {event.title}
                       </p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        <span>
+                          {new Date(event.startDate).toLocaleDateString(
+                            "fr-FR",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                        <span className="truncate">{event.location}</span>
+                      </div>
                     </div>
-                    <p className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                    <Badge
+                      variant="outline"
+                      className="text-xs font-normal text-muted-foreground bg-white"
+                    >
                       {event.discipline}
-                    </p>
+                    </Badge>
                   </div>
                 ))}
               </div>
