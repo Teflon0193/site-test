@@ -48,7 +48,7 @@ export default function EventFilters({
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6">
-            Filtrer les Événements
+            Filtrer les événements
           </h2>
 
           {/* Results Count */}
