@@ -41,11 +41,12 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 z-10">
           <div className="space-y-4 text-white drop-shadow-lg">
             <h2 className="text-4xl uppercase font-bold text-balance">
-              Centre Culturel et Artistique des Pays d&apos;Afrique Centrale
+              Centre Culturel et Artistique pour les Pays d&apos;Afrique
+              Centrale
             </h2>
             <p className="text-xl font-bold text-white/90">Grand Tambour</p>
             <p className="text-lg text-white/80">
-              Rejoignez notre communauté culturelle
+              Rejoignez notre communauté culturelle et artistique
             </p>
           </div>
         </div>
