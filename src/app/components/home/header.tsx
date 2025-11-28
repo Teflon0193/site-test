@@ -9,6 +9,7 @@ import {
   FaInstagram,
   FaYoutube,
   FaTiktok,
+  FaLinkedinIn,
   FaChevronDown,
   FaUser,
 } from "react-icons/fa";
@@ -69,6 +70,11 @@ const SOCIAL_LINKS: SocialLink[] = [
     href: "https://web.facebook.com/centrecapac",
     icon: FaFacebook,
     label: "Facebook",
+  },
+  {
+    href: "https://www.linkedin.com/company/centrecapac/",
+    icon: FaLinkedinIn,
+    label: "LinkedIn",
   },
   {
     href: "https://www.twitter.com/centrecapac/",
