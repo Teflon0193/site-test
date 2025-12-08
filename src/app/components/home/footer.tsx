@@ -1,11 +1,9 @@
 import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock } from "react-icons/fa";
-import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import { SOCIAL_LINKS } from "@/lib/header/constants";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Footer() {
-  // Navigation simple et directe
   const navigation = [
     { label: "Accueil", href: "/" },
     { label: "Programmes", href: "/programmes" },
@@ -13,7 +11,6 @@ export default function Footer() {
     { label: "Infos pratiques", href: "/infos" },
   ];
 
-  // Programmes
   const programmes = [
     {
       label: "Musique & Arts vivants",
@@ -27,36 +24,6 @@ export default function Footer() {
     { label: "Littérature & Pensée", href: "/programmes/litterature-pensee" },
   ];
 
-  // Réseaux sociaux avec icônes
-  const socialNetworks = [
-    {
-      name: "Facebook",
-      icon: FaFacebook,
-      url: "https://web.facebook.com/centrecapac",
-    },
-    {
-      name: "Twitter",
-      icon: FaXTwitter,
-      url: "https://www.twitter.com/centrecapac/",
-    },
-    {
-      name: "Instagram",
-      icon: FaInstagram,
-      url: "https://www.instagram.com/centrecapac/",
-    },
-    {
-      name: "YouTube",
-      icon: FaYoutube,
-      url: "https://www.youtube.com/@Centrecapac",
-    },
-    {
-      name: "Tiktok",
-      icon: FaTiktok,
-      url: "https://www.tiktok.com/@centreculturelaac",
-    },
-  ];
-
-  // Liens légaux
   const legalLinks = [
     { label: "Politique de confidentialité", href: "#" },
     { label: "Mentions légales", href: "#" },
@@ -64,10 +31,8 @@ export default function Footer() {
 
   return (
     <footer className="bg-gradient-to-br from-primary via-primary/95 to-primary/90 text-white">
-      {/* Main footer content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
-          {/* Logo and description */}
           <div className="lg:col-span-1">
             <div className="flex items-center mb-4 sm:mb-6">
               <Image
@@ -83,23 +48,21 @@ export default function Footer() {
               Centrale.
             </p>
             <div className="flex space-x-3 sm:space-x-4">
-              {socialNetworks.map((social) => {
-                const IconComponent = social.icon;
+              {SOCIAL_LINKS.map((social) => {
                 return (
                   <Link
-                    key={social.name}
-                    href={social.url}
-                    className="w-10 h-10 sm:w-10 sm:h-10 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-xl flex items-center justify-center hover:from-secondary hover:to-secondary/80 hover:text-white transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl"
-                    aria-label={social.name}
+                    key={social.label}
+                    href={social.href}
+                    className="w-8 h-8 sm:w-8 sm:h-8 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-xl flex items-center justify-center hover:from-secondary hover:to-secondary/80 hover:text-white transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl"
+                    aria-label={social.label}
                   >
-                    <IconComponent size={18} className="sm:w-5 sm:h-5" />
+                    <social.icon className="sm:w-6 sm:h-6" />
                   </Link>
                 );
               })}
             </div>
           </div>
 
-          {/* Navigation links */}
           <div>
             <h4 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 text-white drop-shadow-sm">
               Navigation
@@ -118,7 +81,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Programs */}
           <div>
             <h4 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 text-white drop-shadow-sm">
               Programmes
@@ -137,7 +99,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact info */}
           <div>
             <h4 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 text-white drop-shadow-sm">
               Contact
@@ -174,7 +135,8 @@ export default function Footer() {
                 </div>
                 <div className="text-sm sm:text-base opacity-90">
                   <p className="font-medium">Lun - Ven: 8h - 16h</p>
-                  <p>Sam: 13h - 17h</p>
+                  <p className="font-medium">Sam: 13h - 17h</p>
+                  <p className="font-medium">Dim: 15h - 18h</p>
                 </div>
               </div>
             </div>
@@ -182,7 +144,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="border-t border-white/20 bg-gradient-to-r from-primary/50 to-primary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 sm:space-y-4 md:space-y-0">
