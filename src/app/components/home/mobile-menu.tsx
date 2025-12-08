@@ -6,7 +6,7 @@ import { BiX } from "react-icons/bi";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { menuItems } from "./header";
+import { menuItems } from "@/lib/header";
 import { FaXTwitter } from "react-icons/fa6";
 
 interface MobileMenuProps {
