@@ -117,6 +117,7 @@ export const transformStrapiEvent = (strapiEvent: StrapiEvent): Event => {
     requirements: strapiEvent.requirements,
     accessibility: strapiEvent.accessibility,
     tags: strapiEvent.tags || [],
+    isRegistrationOpen: strapiEvent.isRegistrationOpen ?? false,
     // Propriétés de compatibilité pour le code existant
     date: strapiEvent.startDate,
     time: strapiEvent.startTime,

@@ -13,17 +13,20 @@ import {
   formatEventDateShort,
   isEventOngoing,
 } from "@/lib/dateUtils";
+import RegisterButton from "@/app/components/events/RegisterButton";
+import { getUser } from "@/lib/auth-server";
 
 interface EventDetailPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default async function EventDetailPage({
   params,
 }: EventDetailPageProps) {
-  const slug = params.slug;
+  const { slug } = await params;
   const events = await getEventBySlug(slug);
   const event: Event | null = events[0] ?? null;
+  const user = await getUser();
 
   if (!event) {
     return (
@@ -327,33 +330,16 @@ export default async function EventDetailPage({
         </div>
       </article>
 
-      {/* Floating Action Button */}
-      {/* <div className="fixed bottom-6 right-6 z-50 sm:hidden">
-        <Button
-          size="lg"
-          className="h-14 w-14 rounded-full shadow-2xl bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-110"
-          onClick={() => {
-            // Action pour réserver ou contacter
-            if (event.contact) {
-              window.open(`mailto:${event.contact}`, "_blank");
-            }
-          }}
-        >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-        </Button>
-      </div> */}
+      {/* Floating Action Button - Affiché uniquement si l'inscription est ouverte */}
+      {event.isRegistrationOpen && (
+        <RegisterButton
+          eventId={event.id.toString()}
+          eventTitle={event.title}
+          eventSlug={event.slug}
+          isRegistrationOpen={event.isRegistrationOpen}
+          user={user ? { id: user.id, isApproved: user.isApproved } : null}
+        />
+      )}
 
       <Footer />
     </div>

@@ -118,7 +118,7 @@ export default function ProgrammesPage() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex text-base items-center justify-center px-8 py-3 bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-black font-bold cursor-pointer rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+            className="inline-flex text-base items-center justify-center px-8 py-3 bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-black font-bold cursor-pointer rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
           >
             Nous contacter
           </Link>

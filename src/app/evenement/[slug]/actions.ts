@@ -1,0 +1,203 @@
+"use server";
+
+import prisma from "@/lib/prisma";
+import { getUser } from "@/lib/auth-server";
+
+interface RegisterForEventResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  redirectTo?: string;
+}
+
+/**
+ * Inscription à un événement pour un utilisateur connecté
+ */
+export async function registerEventAction(
+  eventId: string
+): Promise<RegisterForEventResult> {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return {
+        success: false,
+        error: "Vous devez être connecté pour vous inscrire",
+        redirectTo: `/auth/login?redirect=/evenement/${eventId}`,
+      };
+    }
+
+    if (!user.isApproved) {
+      return {
+        success: false,
+        error:
+          "Votre compte est en attente d'approbation. Votre inscription sera confirmée une fois votre compte approuvé.",
+      };
+    }
+
+    // Vérifier si l'utilisateur est déjà inscrit
+    const existingRegistration = await prisma.eventRegistration.findUnique({
+      where: {
+        userId_eventId: {
+          userId: user.id,
+          eventId: eventId,
+        },
+      },
+    });
+
+    if (existingRegistration) {
+      return {
+        success: false,
+        error: "Vous êtes déjà inscrit à cet événement",
+      };
+    }
+
+    // Créer l'inscription
+    await prisma.eventRegistration.create({
+      data: {
+        userId: user.id,
+        eventId: eventId,
+        status: "PENDING",
+      },
+    });
+
+    // Créer une activité
+    await prisma.memberActivity.create({
+      data: {
+        userId: user.id,
+        type: "EVENT_REGISTER",
+        metadata: {
+          eventId: eventId,
+        },
+      },
+    });
+
+    return {
+      success: true,
+      message: "Vous êtes inscrit à cet événement !",
+    };
+  } catch (error) {
+    console.error("Erreur lors de l'inscription à l'événement:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de l'inscription",
+    };
+  }
+}
+
+/**
+ * Créer une inscription à un événement pour un utilisateur
+ * Utilisé après la création de compte via signUp.email()
+ */
+export async function createEventRegistrationAction(
+  eventId: string,
+  userEmail: string,
+  phone?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Récupérer l'utilisateur créé
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        error: "Utilisateur non trouvé",
+      };
+    }
+
+    // Mettre à jour le téléphone si fourni
+    if (phone) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { phone: phone },
+      });
+    }
+
+    // Vérifier si l'utilisateur est déjà inscrit
+    const existingRegistration = await prisma.eventRegistration.findUnique({
+      where: {
+        userId_eventId: {
+          userId: user.id,
+          eventId: eventId,
+        },
+      },
+    });
+
+    if (existingRegistration) {
+      return {
+        success: true, // Déjà inscrit, pas d'erreur
+      };
+    }
+
+    // Créer l'inscription à l'événement (même si isApproved = false)
+    await prisma.eventRegistration.create({
+      data: {
+        userId: user.id,
+        eventId: eventId,
+        status: "PENDING",
+      },
+    });
+
+    // Créer une activité
+    await prisma.memberActivity.create({
+      data: {
+        userId: user.id,
+        type: "EVENT_REGISTER",
+        metadata: {
+          eventId: eventId,
+          eventTitle: "Événement",
+        },
+      },
+    });
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("Erreur lors de la création de l'inscription:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de l'inscription",
+    };
+  }
+}
+
+/**
+ * Vérifier si l'utilisateur est déjà inscrit à un événement
+ */
+export async function checkEventRegistration(
+  eventId: string
+): Promise<{ isRegistered: boolean; status?: string }> {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return { isRegistered: false };
+    }
+
+    const registration = await prisma.eventRegistration.findUnique({
+      where: {
+        userId_eventId: {
+          userId: user.id,
+          eventId: eventId,
+        },
+      },
+    });
+
+    return {
+      isRegistered: !!registration,
+      status: registration?.status,
+    };
+  } catch (error) {
+    console.error("Erreur lors de la vérification de l'inscription:", error);
+    return { isRegistered: false };
+  }
+}
