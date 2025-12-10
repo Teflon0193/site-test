@@ -1,30 +1,20 @@
-import Header from "@/app/components/home/header";
-import HeroSlider from "@/app/components/home/hero";
-import DirectorMessage from "@/app/components/home/director-message";
-import QuickAgenda from "@/app/components/home/agenda";
-import VideoFocus from "@/app/components/home/video-focus";
-import Partners from "@/app/components/home/partners";
-import Footer from "@/app/components/home/footer";
-import Programmes from "@/app/components/home/programme";
+import MainLayout from "./components/layouts/MainLayout";
+import HeroSlider from "./components/home/hero";
+import DirectorMessage from "./components/home/director-message";
+import QuickAgenda from "./components/home/agenda";
+import VideoFocus from "./components/home/video-focus";
+import Partners from "./components/home/partners";
+import Programmes from "./components/home/programme";
 
 export default async function Page() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Header />
-
+    <MainLayout>
       <HeroSlider />
-
       <Programmes />
-
       <DirectorMessage />
-
       <QuickAgenda />
-
       <VideoFocus />
-
       <Partners />
-
-      <Footer />
-    </div>
+    </MainLayout>
   );
 }

@@ -13,10 +13,6 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  turbopack: {
-    resolveExtensions: [".foo", ".bar"],
-  },
   images: {
     remotePatterns: [
       { protocol: "http", hostname: "localhost" },

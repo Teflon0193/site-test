@@ -1,5 +1,4 @@
-import Header from "@/app/components/home/header";
-import Footer from "@/app/components/home/footer";
+import MainLayout from "@/app/components/layouts/MainLayout";
 import { FaArrowLeft } from "react-icons/fa6";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,9 +9,7 @@ import MissionCard from "@/app/components/grand-tambour/MissionCard";
 
 export default function EquipeGouvernancePage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
+    <MainLayout>
       <main className="pt-5">
         {/* Hero Section */}
         <section className="relative lg:h-[50vh] h-[40vh] lg:mt-12 flex items-center justify-center overflow-hidden">
@@ -77,8 +74,6 @@ export default function EquipeGouvernancePage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </div>
+    </MainLayout>
   );
 }

@@ -1,5 +1,4 @@
-import Header from "../../components/home/header";
-import Footer from "../../components/home/footer";
+import MainLayout from "@/app/components/layouts/MainLayout";
 import Link from "next/link";
 import Image from "next/image";
 import { FaGlobe, FaPeopleGroup, FaBookOpen } from "react-icons/fa6";
@@ -8,9 +7,7 @@ import { MdFlashOn } from "react-icons/md";
 
 export default function GrandTambourPresentation() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
+    <MainLayout>
       {/* Section Hero */}
 
       <section className="relative h-[70vh] min-h-[500px] sm:h-[80vh] sm:min-h-[600px] lg:h-screen lg:min-h-[700px] flex items-center justify-center mt-20 sm:mt-24">
@@ -316,8 +313,6 @@ export default function GrandTambourPresentation() {
           </div>
         </div>
       </section>
-
-      <Footer />
-    </div>
+    </MainLayout>
   );
 }
