@@ -1,6 +1,7 @@
 "use client";
 
-import { FaChevronDown, FaUser } from "react-icons/fa";
+import { FaChevronDown } from "react-icons/fa";
+import { MemberButton } from "./header/MemberButton";
 import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 import { BiX } from "react-icons/bi";
 import { useState } from "react";
@@ -8,13 +9,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { menuItems } from "@/lib/header";
 import { FaXTwitter } from "react-icons/fa6";
+import type { User } from "@prisma/client";
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  user: User | null;
 }
 
-export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
+export default function MobileMenu({ isOpen, onClose, user }: MobileMenuProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const handleLinkClick = () => {
@@ -119,15 +122,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           </nav>
 
           {/* Espace Membres Button */}
-          <div className="px-4 sm:px-6 mt-6">
-            <Link
-              href="/espace-membre"
-              className="flex items-center justify-center gap-3 bg-gradient-to-r from-accent to-accent/90 cursor-pointer text-black px-4 py-3 font-bold text-sm hover:from-accent/90 hover:to-accent hover:text-black transition-all duration-300 hover:scale-105 shadow-lg rounded-xl"
-            >
-              <FaUser className="w-4 h-4" />
-              <span>Espace Membres</span>
-            </Link>
-          </div>
+          <MemberButton user={user} />
         </div>
 
         {/* Footer */}

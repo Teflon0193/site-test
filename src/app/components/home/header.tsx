@@ -1,57 +1,7 @@
-"use client";
+import { getUser } from "@/lib/auth-server";
+import Header from "./header/Header";
 
-import { useState } from "react";
-import MobileMenu from "./mobile-menu";
-import { SocialBar, Logo, DesktopNavigation, HeaderActions } from "./header/";
-import { useScrollDetection } from "@/hooks/useScrollDetection";
-import { useDropdown } from "@/hooks/useDropdown";
-import { useActiveMenuItem } from "@/hooks/useActiveMenuItem";
-
-export default function Header() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const isScrolled = useScrollDetection({ threshold: 10 });
-  const { activeDropdown, openDropdown, closeDropdownDelayed } = useDropdown();
-  const { isMenuItemActive, isSubmenuItemActive } = useActiveMenuItem();
-
-  const handleMobileMenuToggle = () => {
-    setIsMobileMenuOpen((prev) => !prev);
-  };
-
-  const handleMobileMenuClose = () => {
-    setIsMobileMenuOpen(false);
-  };
-
-  return (
-    <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? "shadow-lg" : ""
-        }`}
-      >
-        <SocialBar />
-
-        <div
-          className={`bg-primary text-white transition-all duration-300 ${
-            isScrolled ? "h-16 md:h-20" : "h-20 md:h-24"
-          }`}
-        >
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 h-full flex items-center justify-between gap-2 md:gap-4">
-            <Logo />
-
-            <DesktopNavigation
-              isMenuItemActive={isMenuItemActive}
-              isSubmenuItemActive={isSubmenuItemActive}
-              activeDropdown={activeDropdown}
-              onDropdownEnter={openDropdown}
-              onDropdownLeave={closeDropdownDelayed}
-            />
-
-            <HeaderActions onMobileMenuToggle={handleMobileMenuToggle} />
-          </div>
-        </div>
-      </header>
-
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={handleMobileMenuClose} />
-    </>
-  );
+export default async function HeaderWrapper() {
+  const user = await getUser();
+  return <Header user={user} />;
 }

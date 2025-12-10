@@ -20,7 +20,7 @@ export function useActiveMenuItem() {
   );
 
   const isSubmenuItemActive = useCallback(
-    (subItem: SubmenuItem, item: MenuItem): boolean => {
+    (subItem: SubmenuItem): boolean => {
       return pathname === subItem.href;
     },
     [pathname]

@@ -7,7 +7,7 @@ import Partners from "@/app/components/home/partners";
 import Footer from "@/app/components/home/footer";
 import Programmes from "@/app/components/home/programme";
 
-export default function Page() {
+export default async function Page() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
