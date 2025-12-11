@@ -28,7 +28,6 @@ export default function MediaPopup({
   onClose,
   onNext,
   onPrev,
-  onGoToImage,
 }: MediaPopupProps) {
   // Handle keyboard navigation
   useEffect(() => {
