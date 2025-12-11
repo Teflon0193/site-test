@@ -26,27 +26,27 @@ export default function Footer() {
 
   return (
     <footer className="bg-secondary border-t border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-8">
           {/* Brand Column */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <Link href="/" className="inline-block">
-              <div className="relative h-12 w-auto items-center flex">
+              <div className="relative h-10 sm:h-12 w-auto items-center flex">
                 <Image
                   src="/logo.png"
                   alt="CCAPAC Logo"
                   width={180}
                   height={60}
-                  className="h-12 w-auto object-contain brightness-0 invert opacity-90"
+                  className="h-10 sm:h-12 w-auto object-contain brightness-0 invert opacity-90"
                 />
               </div>
             </Link>
-            <p className="text-sm leading-relaxed max-w-sm text-white">
+            <p className="text-xs sm:text-sm leading-relaxed text-white">
               Le Centre Culturel et Artistique pour les pays d&apos;Afrique
               Centrale est un lieu d&apos;échange, de création et de diffusion
               artistique au cœur de Kinshasa.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-3 sm:gap-4">
               {SOCIAL_LINKS.map((social) => (
                 <Link
                   key={social.label}
@@ -54,23 +54,23 @@ export default function Footer() {
                   className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white hover:text-white transition-all duration-300"
                   aria-label={social.label}
                 >
-                  <social.icon className="w-4 h-4" />
+                  <social.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Link>
               ))}
             </div>
           </div>
 
           {/* Navigation Column */}
-          <div className="lg:col-span-2 lg:col-start-6">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider mb-4 sm:mb-6">
               Navigation
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-2.5 sm:space-y-3">
               {navigation.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm hover:text-white cursor-pointer text-white transition-colors duration-200"
+                    className="text-xs sm:text-sm hover:text-white cursor-pointer text-white/80 transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -80,16 +80,16 @@ export default function Footer() {
           </div>
 
           {/* Programmes Column */}
-          <div className="lg:col-span-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider mb-4 sm:mb-6">
               Programmes
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-2.5 sm:space-y-3">
               {programmes.map((program) => (
                 <li key={program.label}>
                   <Link
                     href={program.href}
-                    className="text-sm hover:text-white cursor-pointer text-white transition-colors duration-200"
+                    className="text-xs sm:text-sm hover:text-white cursor-pointer text-white/80 transition-colors duration-200"
                   >
                     {program.label}
                   </Link>
@@ -99,35 +99,35 @@ export default function Footer() {
           </div>
 
           {/* Contact Column */}
-          <div className="lg:col-span-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider mb-4 sm:mb-6">
               Contact
             </h4>
-            <div className="space-y-4 text-sm">
-              <div className="flex gap-3">
-                <FaMapMarkerAlt className="w-5 h-5 text-white flex-shrink-0" />
-                <span className="leading-relaxed text-white">
+            <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
+              <div className="flex gap-2.5 sm:gap-3">
+                <FaMapMarkerAlt className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0 mt-0.5" />
+                <span className="leading-relaxed text-white/90">
                   Boulevard Triomphal
                   <br />
                   Kinshasa, RDC
                 </span>
               </div>
-              <div className="flex gap-3 items-center">
-                <FaPhone className="w-4 h-4 text-white flex-shrink-0" />
-                <span className="text-white">+243 995 505 050</span>
+              <div className="flex gap-2.5 sm:gap-3 items-center">
+                <FaPhone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />
+                <span className="text-white/90">+243 995 505 050</span>
               </div>
-              <div className="flex gap-3 items-center">
-                <FaEnvelope className="w-4 h-4 text-white flex-shrink-0" />
-                <span className="break-all text-white">
+              <div className="flex gap-2.5 sm:gap-3 items-center">
+                <FaEnvelope className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />
+                <span className="break-all text-white/90">
                   info@centreculturel.cd
                 </span>
               </div>
-              <div className="flex gap-3 items-start">
-                <FaClock className="w-4 h-4 text-white flex-shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-white">Lun-Ven: 8h-16h</p>
-                  <p className="text-white">Sam: 9h-16h</p>
-                  <p className="text-white">Dim: 9h-16h</p>
+              <div className="flex gap-2.5 sm:gap-3 items-start">
+                <FaClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0 mt-0.5" />
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-white/90">Lun-Ven: 8h-16h</p>
+                  <p className="text-white/90">Sam: 9h-16h</p>
+                  <p className="text-white/90">Dim: 9h-16h</p>
                 </div>
               </div>
             </div>
