@@ -32,16 +32,16 @@ export default function Calendar({ filters }: CalendarProps) {
   const hasMoreEvents = visibleEvents < filteredEvents.length;
 
   return (
-    <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-muted/5 to-background">
+    <section className="py-8 sm:py-10 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-muted/5 to-background">
       <div className="max-w-7xl mx-auto">
         {filteredEvents.length === 0 && (
-          <div className="text-center py-16 sm:py-20">
-            <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-2xl p-12 sm:p-16 max-w-lg mx-auto border border-muted/20 shadow-lg">
-              <FaMagnifyingGlass className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-6" />
-              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4">
+          <div className="text-center py-12 sm:py-16 md:py-20">
+            <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12 lg:p-16 max-w-lg mx-auto border border-muted/20 shadow-lg">
+              <FaMagnifyingGlass className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-muted-foreground mx-auto mb-4 sm:mb-5 md:mb-6" />
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2 sm:mb-3 md:mb-4">
                 Aucun événement trouvé
               </h3>
-              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+              <p className="text-muted-foreground text-xs sm:text-sm md:text-base leading-relaxed px-2">
                 Essayez de modifier vos critères de recherche pour découvrir nos
                 événements
               </p>
@@ -50,14 +50,14 @@ export default function Calendar({ filters }: CalendarProps) {
         )}
 
         {filteredEvents.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-8 xl:gap-10">
             {displayedEvents.map((event) => (
               <Card
                 key={event.id}
-                className="group cursor-pointer transition-all duration-300 hover:shadow-xl border-muted/20 rounded-2xl hover:border-primary/50 overflow-hidden bg-gradient-to-br from-white to-muted/10"
+                className="group cursor-pointer transition-all duration-300 hover:shadow-xl border-muted/20 rounded-xl sm:rounded-2xl hover:border-primary/50 overflow-hidden bg-gradient-to-br from-white to-muted/10"
                 onClick={() => router.push(`/evenement/${event.slug}`)}
               >
-                <div className="relative h-52 sm:h-60 overflow-hidden">
+                <div className="relative h-48 sm:h-52 md:h-56 lg:h-60 overflow-hidden">
                   <Image
                     src={event.image}
                     alt={event.title}
@@ -69,48 +69,52 @@ export default function Calendar({ filters }: CalendarProps) {
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
-                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg">
-                      {event.discipline}
+                  <div className="absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 flex flex-col gap-1.5 sm:gap-2">
+                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+                      <span className="truncate max-w-[80px] sm:max-w-none">
+                        {event.discipline}
+                      </span>
                     </Badge>
-                    <Badge className="bg-gradient-to-r from-muted/80 to-muted/60 text-foreground shadow-lg">
-                      {event.public}
+                    <Badge className="bg-gradient-to-r from-muted/80 to-muted/60 text-foreground shadow-lg text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+                      <span className="truncate max-w-[80px] sm:max-w-none">
+                        {event.public}
+                      </span>
                     </Badge>
                   </div>
                 </div>
 
-                <div className="p-6 sm:p-7">
-                  <CardHeader className="p-0 mb-5">
-                    <CardTitle className="text-lg sm:text-xl font-bold uppercase text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                <div className="p-4 sm:p-5 md:p-6 lg:p-7">
+                  <CardHeader className="p-0 mb-3 sm:mb-4 md:mb-5">
+                    <CardTitle className="text-base sm:text-lg md:text-xl font-bold uppercase text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                       {event.title}
                     </CardTitle>
                   </CardHeader>
 
                   <CardContent className="p-0">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
-                          <FaCalendar className="h-4 w-4 text-primary" />
+                    <div className="space-y-2.5 sm:space-y-3 md:space-y-4">
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                          <FaCalendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
-                        <span className="line-clamp-1 font-medium">
+                        <span className="line-clamp-1 font-medium truncate">
                           {formatEventDateTime(event.startDate, event.endDate)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
-                          <FaClock className="h-4 w-4 text-primary" />
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                          <FaClock className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
-                        <span className="font-medium">
+                        <span className="font-medium truncate">
                           {formatTimePeriod(event.startTime, event.endTime)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
-                          <FaMapPin className="h-4 w-4 text-primary" />
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                          <FaMapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
-                        <span className="line-clamp-1 font-medium">
+                        <span className="line-clamp-1 font-medium truncate">
                           {event.location}
                         </span>
                       </div>
@@ -123,10 +127,10 @@ export default function Calendar({ filters }: CalendarProps) {
         )}
 
         {filteredEvents.length > 0 && hasMoreEvents && (
-          <div className="text-center mt-16 sm:mt-20">
+          <div className="text-center mt-12 sm:mt-14 md:mt-16 lg:mt-20">
             <button
               onClick={loadMoreEvents}
-              className="justify-center cursor-pointer space-x-2 bg-gradient-to-r from-accent to-accent/90 text-black px-6 sm:px-8 py-3 sm:py-4 font-bold text-sm sm:text-base hover:from-accent/90 hover:to-accent transition-all duration-300 shadow-lg hover:shadow-xl rounded-xl hover:scale-105"
+              className="justify-center cursor-pointer space-x-2 bg-gradient-to-r from-accent to-accent/90 text-black px-4 sm:px-5 md:px-6 lg:px-8 py-2.5 sm:py-3 md:py-4 font-bold text-xs sm:text-sm md:text-base hover:from-accent/90 hover:to-accent transition-all duration-300 shadow-lg hover:shadow-xl rounded-lg sm:rounded-xl hover:scale-105"
             >
               Charger plus d&apos;événements
             </button>
