@@ -182,3 +182,16 @@ export function getEventDuration(startDate: string, endDate?: string): number {
 
   return diffDays;
 }
+
+/**
+ * Formate une date d'inscription (ex: 12 janv., 14:30)
+ */
+export function formatRegistrationDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

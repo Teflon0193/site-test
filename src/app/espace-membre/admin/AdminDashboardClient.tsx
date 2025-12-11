@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminStatsQuery } from "@/hooks/useAdminDashboardQuery";
-import { useUpcomingEventsQuery } from "@/hooks/useEventsQuery";
+import { useEventsWithRegistrationsQuery } from "@/hooks/useEventsQuery";
 import { Badge } from "../../components/ui/badge";
 
 interface AdminDashboardClientProps {
@@ -28,11 +28,11 @@ interface AdminDashboardClientProps {
 function AdminDashboardContent() {
   const { data, isLoading, isError, error: queryError } = useAdminStatsQuery();
   const {
-    data: upcomingEvents = [],
+    data: eventsWithRegistrations = [],
     isLoading: isLoadingEvents,
     isError: isErrorEvents,
     // error: eventsError,
-  } = useUpcomingEventsQuery(3);
+  } = useEventsWithRegistrationsQuery();
 
   if (isLoading) {
     return (
@@ -146,7 +146,7 @@ function AdminDashboardContent() {
     },
     {
       title: "Événements à Venir",
-      value: upcomingEvents.length.toString(),
+      value: eventsWithRegistrations.length.toString(),
       icon: Calendar,
       description: "Prochains événements",
       color: "text-green-600",
@@ -322,7 +322,7 @@ function AdminDashboardContent() {
               <div className="p-4 rounded-lg bg-red-50 text-red-600 text-sm">
                 Impossible de charger les événements
               </div>
-            ) : upcomingEvents.length === 0 ? (
+            ) : eventsWithRegistrations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
@@ -333,7 +333,7 @@ function AdminDashboardContent() {
               </div>
             ) : (
               <div className="space-y-1">
-                {upcomingEvents.map((event) => (
+                {eventsWithRegistrations.map((event) => (
                   <div
                     key={event.id}
                     className="flex items-center justify-between p-3 hover:bg-muted/30 rounded-lg transition-colors group"

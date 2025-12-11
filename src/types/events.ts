@@ -90,3 +90,16 @@ export interface StrapiResponse {
     };
   };
 }
+
+export interface EventRegistration {
+  id: string;
+  userName: string;
+  userEmail: string;
+  status: string;
+  registeredAt: string;
+}
+
+export interface EventWithRegistrations extends Event {
+  registrationsCount: number;
+  registrations: EventRegistration[];
+}

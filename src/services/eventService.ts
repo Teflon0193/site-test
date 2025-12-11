@@ -3,7 +3,7 @@ import {
   transformStrapiEvent,
   fetchFromStrapi,
 } from "@/lib/strapi";
-import { Event, EventFilters } from "@/types/events";
+import { Event, EventFilters, EventWithRegistrations } from "@/types/events";
 
 const fetchEventsFromStrapi = async (
   filters: EventFilters = {}
@@ -86,4 +86,39 @@ export const getEventsByCategory = async (
   category: string
 ): Promise<Event[]> => {
   return fetchEventsFromStrapi({ category });
+};
+
+/**
+ * Récupère les événements avec inscription ouverte et leurs inscriptions
+ * (Pour l'administration uniquement)
+ */
+export const getEventsWithRegistrations = async (): Promise<
+  EventWithRegistrations[]
+> => {
+  try {
+    const response = await fetch("/api/admin/events", {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new Error(
+        text || `Erreur API admin (${response.status} ${response.statusText})`
+      );
+    }
+
+    const data = await response.json();
+    return data.events || [];
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des événements avec inscriptions:",
+      error
+    );
+    throw new Error(
+      `Impossible de récupérer les événements avec inscriptions: ${
+        error instanceof Error ? error.message : "Erreur inconnue"
+      }`
+    );
+  }
 };
