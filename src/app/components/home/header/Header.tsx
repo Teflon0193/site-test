@@ -12,10 +12,6 @@ interface MainHeaderProps {
   user: User | null;
 }
 
-/**
- * Main Header component (Client Component)
- * Handles scroll detection, dropdown state, and mobile menu state
- */
 export default function Header({ user }: MainHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isScrolled = useScrollDetection({ threshold: 10 });
@@ -41,10 +37,10 @@ export default function Header({ user }: MainHeaderProps) {
 
         <div
           className={`bg-primary text-white transition-all duration-300 ${
-            isScrolled ? "h-16 md:h-20" : "h-20 md:h-24"
+            isScrolled ? "h-14 sm:h-16 md:h-20" : "h-16 sm:h-20 md:h-20 lg:h-24"
           }`}
         >
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 h-full flex items-center justify-between gap-2 md:gap-4">
+          <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 h-full flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">
             <Logo />
 
             <DesktopNavigation

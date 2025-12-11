@@ -13,7 +13,7 @@ export function Logo() {
           alt="Logo Grand Tambour"
           width={100}
           height={100}
-          className="w-auto h-10 sm:h-12 md:h-14 lg:h-16 xl:h-12 transition-all duration-300 drop-shadow-lg flex-shrink-0"
+          className="w-auto h-8 sm:h-10 md:h-12 lg:h-14 xl:h-12 transition-all duration-300 drop-shadow-lg flex-shrink-0"
         />
       </Link>
     </div>

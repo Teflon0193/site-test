@@ -7,16 +7,12 @@ interface HeaderActionsProps {
   onMobileMenuToggle: () => void;
 }
 
-/**
- * Header actions orchestrator component
- * Composes MemberButton and MobileMenuToggle
- */
 export function HeaderActions({
   user,
   onMobileMenuToggle,
 }: HeaderActionsProps) {
   return (
-    <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+    <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 flex-shrink-0">
       <MemberButton user={user} />
       <MobileMenuToggle onToggle={onMobileMenuToggle} />
     </div>

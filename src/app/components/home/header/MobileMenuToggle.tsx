@@ -4,18 +4,14 @@ interface MobileMenuToggleProps {
   onToggle: () => void;
 }
 
-/**
- * Mobile menu toggle button component
- * Single Responsibility: Only handles mobile menu toggle
- */
 export function MobileMenuToggle({ onToggle }: MobileMenuToggleProps) {
   return (
     <button
-      className="lg:hidden text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-105"
+      className="lg:hidden text-white p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-105 active:scale-95"
       onClick={onToggle}
       aria-label="Toggle mobile menu"
     >
-      <BiMenu className="w-6 h-6" />
+      <BiMenu className="w-5 h-5 sm:w-6 sm:h-6" />
     </button>
   );
 }
