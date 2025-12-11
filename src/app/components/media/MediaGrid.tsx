@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Calendar, MapPin, Camera } from "lucide-react";
 import { Media } from "@/types/media";
 import { formatDate } from "@/lib/mediaUtils";
 
@@ -16,83 +15,70 @@ export default function MediaGrid({
 }: MediaGridProps) {
   if (loading) {
     return (
-      <div className="text-center py-20">
-        <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-2xl p-12 max-w-lg mx-auto border border-muted/20 shadow-lg">
-          <div className="flex items-center justify-center gap-3 text-muted-foreground">
-            <div className="w-6 h-6 border-2 border-primary border-r-transparent rounded-full animate-spin"></div>
-            <span className="text-lg font-medium">
-              Chargement des médias...
-            </span>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={i}
+            className="aspect-[3/2] bg-muted/20 animate-pulse rounded-lg sm:rounded-xl"
+          />
+        ))}
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-20">
-        <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-2xl p-12 max-w-lg mx-auto border border-muted/20 shadow-lg">
-          <p className="text-xl text-foreground font-semibold mb-3">
-            Aucun résultat trouvé
-          </p>
-          <p className="text-muted-foreground leading-relaxed">
-            Essayez de modifier vos filtres ou votre recherche
-          </p>
-        </div>
+      <div className="py-12 sm:py-16 md:py-20 text-center border border-dashed border-border rounded-lg sm:rounded-xl">
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Aucun média trouvé
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-x-8 lg:gap-y-12">
       {items.map((item, index) => (
         <button
           key={item.id}
           onClick={() => onItemClick(index)}
-          className="group cursor-pointer rounded-2xl relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-white to-muted/10 shadow-lg hover:shadow-xl transition-all duration-300 border border-muted/20"
+          className="group block w-full text-left"
         >
-          <Image
-            src={item.image || "/placeholder.svg"}
-            alt={item.title}
-            fill
-            className="object-cover transition-transform duration-500"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Image Container */}
+          <div className="relative aspect-[3/2] overflow-hidden rounded-lg sm:rounded-xl bg-muted mb-3 sm:mb-4 cursor-pointer">
+            <Image
+              src={item.image || "/placeholder.svg"}
+              alt={item.title}
+              fill
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
 
-          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="inline-block px-3 py-1 bg-gradient-to-r from-primary to-primary/80 rounded-full text-xs font-semibold shadow-lg">
+            {/* Category Badge - visible on hover or always visible? Let's keep it subtle */}
+            <div className="absolute top-2 sm:top-3 left-2 sm:left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-black/60 backdrop-blur-sm text-white text-[9px] sm:text-[10px] uppercase font-bold tracking-wider rounded">
                 {item.category}
-              </div>
+              </span>
+            </div>
+          </div>
+
+          {/* Metadata */}
+          <div className="space-y-1 sm:space-y-1.5">
+            <div className="flex items-center justify-between text-[10px] sm:text-xs text-muted-foreground">
+              <span className="truncate flex-1 min-w-0">{formatDate(item.eventDate)}</span>
               {item.eventType && (
-                <div className="inline-block px-3 py-1 bg-gradient-to-r from-accent/90 to-accent/80 rounded-full text-xs font-semibold shadow-lg">
-                  {item.eventType}
-                </div>
+                <span className="ml-2 truncate flex-shrink-0">{item.eventType}</span>
               )}
             </div>
-            <h3 className="font-bold text-sm sm:text-base mb-2 line-clamp-2 drop-shadow-md">
+            <h3 className="font-bold text-sm sm:text-base md:text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2">
               {item.title}
             </h3>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xs text-gray-300">
-                <Calendar className="w-3 h-3" />
-                <span>{formatDate(item.eventDate)}</span>
-              </div>
-              {item.location && (
-                <div className="flex items-center gap-2 text-xs text-gray-300">
-                  <MapPin className="w-3 h-3" />
-                  <span className="line-clamp-1">{item.location}</span>
-                </div>
-              )}
-              {item.photographer && (
-                <div className="flex items-center gap-2 text-xs text-gray-300">
-                  <Camera className="w-3 h-3" />
-                  <span className="line-clamp-1">{item.photographer}</span>
-                </div>
-              )}
-            </div>
+            {item.location && (
+              <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
+                {item.location}
+              </p>
+            )}
           </div>
         </button>
       ))}

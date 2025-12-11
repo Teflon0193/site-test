@@ -72,11 +72,11 @@ export default function MediaPageClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
-      <main className="pt-20">
+    <div className="min-h-screen bg-background text-foreground">
+      <main className="pb-12 sm:pb-16 md:pb-20">
         {/* Hero Section */}
-        <section className="relative lg:h-[40vh] h-[30vh] lg:mt-5 flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/30 z-10" />
+        <section className="relative h-[35vh] min-h-[280px] sm:h-[40vh] sm:min-h-[350px] lg:h-[45vh] lg:min-h-[400px] mt-16 sm:mt-20 lg:mt-24 flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 bg-black/60 z-10" />
           <Image
             src="/motif-luba.png"
             alt="Médiathèque CCAPAC"
@@ -85,21 +85,21 @@ export default function MediaPageClient() {
             priority
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
-          <div className="relative z-20 text-center text-white px-4 sm:px-6 lg:px-8">
-            <h1 className="uppercase text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 text-balance drop-shadow-lg">
+          <div className="relative z-20 text-center px-4 sm:px-6 w-full">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 md:mb-6 text-white tracking-tight uppercase drop-shadow-2xl">
               Médiathèque
             </h1>
-            <p className="text-sm sm:text-lg lg:text-xl max-w-3xl mx-auto text-balance text-white/90 leading-relaxed drop-shadow-md">
-              Découvrez nos moments forts de nos événements culturels à travers
-              notre collection d&apos;images et de souvenirs
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 font-light leading-relaxed max-w-2xl mx-auto drop-shadow-md px-2">
+              Explorez les moments forts de nos événements culturels. Une
+              fenêtre ouverte sur la créativité et l&apos;expression artistique.
             </p>
           </div>
         </section>
 
         {/* Filter and Gallery Section */}
-        <section className="py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+        <section className="py-8 sm:py-10 md:py-12 lg:py-16">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-12 xl:gap-16">
               <MediaFilters
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
@@ -115,7 +115,7 @@ export default function MediaPageClient() {
               />
 
               {/* Gallery Grid */}
-              <div className="flex-1">
+              <div className="flex-1 w-full min-w-0">
                 <MediaGrid
                   items={paginatedItems}
                   loading={loading}
@@ -132,7 +132,7 @@ export default function MediaPageClient() {
         </section>
       </main>
 
-      {/* Popup Slider Modal */}
+      {/* Popup / Lightbox */}
       <MediaPopup
         isOpen={isPopupOpen}
         mediaItems={mediaItems}
