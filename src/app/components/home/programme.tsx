@@ -9,74 +9,65 @@ export default function Programmes() {
   const featuredProgrammes = getFeaturedProgrammes();
 
   return (
-    <section className="py-16 sm:py-20 px-4 md:px-8 bg-gradient-to-br from-background via-muted/5 to-background">
+    <section className="py-20 px-4 md:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-2xl sm:text-4xl md:text-4xl uppercase font-bold text-foreground drop-shadow-sm">
+        <div className="text-center mb-12 space-y-4">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground uppercase">
             Vivez la Culture Congolaise
           </h2>
-          <p className="text-sm lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Découvrez nos programmes culturels qui célèbrent la richesse
             artistique du Congo à travers la musique, le théâtre, le cinéma et
-            le patrimoine
+            le patrimoine.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
           {featuredProgrammes.map((programme, index) => {
-            // Premier programme prend 2x2 (grande carte)
             const isLarge = index === 0;
             const gridClass = isLarge
-              ? "md:col-span-2 md:row-span-2 h-[400px] md:h-full rounded-2xl"
-              : "h-[300px] rounded-2xl";
+              ? "md:col-span-2 md:row-span-2 min-h-[400px]"
+              : "min-h-[250px]";
 
             return (
               <Link
                 key={programme.id}
                 href={`/programmes/${programme.categorySlug}/${programme.slug}`}
-                className={`group relative overflow-hidden ${gridClass} shadow-lg hover:shadow-xl transition-all duration-300 border border-muted/20`}
+                className={`group relative overflow-hidden rounded-xl border border-border/40 bg-muted/10 ${gridClass} transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`}
               >
                 <Image
                   src={programme.image || "/placeholder.svg"}
                   alt={programme.title}
                   fill
                   quality={90}
-                  className="object-cover transition-transform duration-500"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-50 group-hover:opacity-90 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-                <div className="absolute inset-0 p-6 flex flex-col justify-end rounded-2xl">
-                  <div className="transform transition-transform duration-300 group-hover:translate-y-0 translate-y-2 rounded-2xl">
-                    {/* Badge catégorie */}
-                    <span className="inline-block px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-xs font-semibold rounded-full mb-3 shadow-lg">
+                <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-end">
+                  <div className="mb-auto">
+                    <span className="inline-flex px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs md:text-sm font-medium text-white border border-white/10 shadow-sm">
                       {programme.category}
                     </span>
+                  </div>
 
-                    {/* Titre */}
+                  <div className="space-y-2 transform transition-transform duration-300 translate-y-2 group-hover:translate-y-0">
                     <h3
-                      className={`font-bold uppercase text-white mb-2 rounded-2xl drop-shadow-lg ${
-                        isLarge ? "text-lg sm:text-2xl md:text-3xl" : "text-lg"
+                      className={`font-bold text-white uppercase tracking-tight ${
+                        isLarge ? "text-2xl md:text-3xl" : "text-lg md:text-xl"
                       }`}
                     >
                       {programme.title}
                     </h3>
 
-                    {/* Slogan - visible au survol */}
-                    <p
-                      className={`text-white/90 mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md ${
-                        isLarge
-                          ? "text-base line-clamp-2"
-                          : "text-sm line-clamp-2"
-                      }`}
-                    >
+                    <p className="text-white/80 text-sm line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
                       {programme.slogan}
                     </p>
 
-                    {/* Bouton découvrir */}
-                    <div className="flex items-center gap-2 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="text-sm font-semibold">Découvrir</span>
-                      <FaArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
+                    <div className="pt-2 flex items-center text-primary text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                      <span>Découvrir</span>
+                      <FaArrowRight className="ml-2 w-3 h-3 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>
@@ -88,10 +79,10 @@ export default function Programmes() {
         <div className="text-center">
           <Link
             href="/programmes"
-            className="inline-flex items-center text-base gap-2 px-8 py-4 bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-black font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-lg border border-input bg-background hover:bg-accent hover:text-black transition-colors duration-300 font-bold text-sm shadow-sm"
           >
-            Découvrir tous nos programmes
-            <FaArrowRight className="w-4 h-4" />
+            Voir tous les programmes
+            <FaArrowRight className="w-3 h-3" />
           </Link>
         </div>
       </div>
