@@ -2,15 +2,6 @@
 
 import type React from "react";
 import Link from "next/link";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/app/components/auth/AuthLayout";
 import LoginForm, {
@@ -43,54 +34,45 @@ export default function LoginPage() {
 
   return (
     <AuthLayout title="Connexion">
-      <Card className="rounded-2xl bg-gradient-to-br from-white to-muted/10 border border-muted/20 shadow-lg py-4">
-        <CardHeader className="space-y-1 py-4">
-          <CardTitle className="text-2xl uppercase font-bold drop-shadow-sm text-center">
-            Connexion
-          </CardTitle>
-          <CardDescription className="text-base">
-            Entrez vos identifiants pour accéder à votre espace membre
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Bon retour parmi nous
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Entrez vos identifiants pour accéder à votre espace
+          </p>
+        </div>
+
+        <div className="space-y-4">
           <GoogleAuthButton />
 
-          <div className="relative mb-4">
+          <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-muted"></div>
+              <span className="w-full border-t border-muted/50" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-background text-muted-foreground">
-                OU
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                ou continuer avec
               </span>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="sr-only">Mot de passe</span>
-            </div>
-          </div>
-
           <LoginForm onSubmit={handleLoginSubmit} />
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center text-muted-foreground">
+        </div>
+
+        <div className="text-center text-sm">
+          <p className="text-muted-foreground">
             Vous n&apos;avez pas de compte ?{" "}
             <Link
               href="/auth/signup"
-              className="text-primary font-semibold hover:underline"
+              className="font-medium text-primary hover:text-primary/90 underline-offset-4 hover:underline transition-all"
             >
               Créer un compte
             </Link>
-          </div>
-          <div className="text-sm text-center">
-            <Link href="/" className="text-muted-foreground hover:text-primary">
-              ← Retour à l&apos;accueil
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+          </p>
+        </div>
+      </div>
     </AuthLayout>
   );
 }

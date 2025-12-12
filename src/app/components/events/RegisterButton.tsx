@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "../ui/button";
 import EventRegistrationModal from "./EventRegistrationModal";
 import {
@@ -36,6 +36,7 @@ export default function RegisterButton({
     null
   );
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Vérifier si l'utilisateur est déjà inscrit
   useEffect(() => {
@@ -46,6 +47,18 @@ export default function RegisterButton({
       });
     }
   }, [user, eventId, isRegistrationOpen]);
+
+  // Vérifier l'inscription après une redirection depuis le callback Google
+  useEffect(() => {
+    const registered = searchParams.get("registered");
+    if (registered === "true" && user && isRegistrationOpen) {
+      // Re-vérifier l'inscription pour mettre à jour l'état du bouton
+      checkEventRegistration(eventId).then((result) => {
+        setIsRegistered(result.isRegistered);
+        setRegistrationStatus(result.status || null);
+      });
+    }
+  }, [searchParams, user, eventId, isRegistrationOpen]);
 
   const handleDirectRegister = async () => {
     if (!user) {
@@ -126,7 +139,7 @@ export default function RegisterButton({
     );
   }
 
-  // Bouton d'inscription normal
+  // Bouton d'inscription
   return (
     <>
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">

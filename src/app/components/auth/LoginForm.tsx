@@ -8,12 +8,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 const schema = z.object({
-  email: z.string().min(1, "Email requis").email("Email invalide"),
-  password: z
-    .string()
-    .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  email: z.string().min(1, "L'email est requis").email("Email invalide"),
+  password: z.string().min(1, "Le mot de passe est requis"),
 });
 
 export type LoginFormValues = z.infer<typeof schema>;
@@ -34,15 +33,13 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
   });
 
   const defaultSubmit = useCallback((values: LoginFormValues) => {
-    // À connecter au flux d'auth (BetterAuth) ultérieurement
-
     console.log("Login submit:", values);
   }, []);
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit ?? defaultSubmit)}
-      className="space-y-4"
+      className="space-y-5"
       noValidate
     >
       <div className="space-y-2">
@@ -50,45 +47,63 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         <Input
           id="email"
           type="email"
-          placeholder="votre.email@exemple.com"
-          className="h-11"
+          placeholder="nom@exemple.com"
           autoComplete="email"
+          className="h-11"
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
           {...register("email")}
         />
-        {errors.email ? (
-          <p id="email-error" className="text-sm text-red-600">
+        {errors.email && (
+          <p id="email-error" className="text-sm text-destructive font-medium">
             {errors.email.message}
           </p>
-        ) : null}
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Mot de passe</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Mot de passe</Label>
+          {/* <a
+            href="#"
+            className="text-xs text-primary hover:underline font-medium tab-index-[-1]"
+          >
+            Mot de passe oublié ?
+          </a> */}
+        </div>
         <Input
           id="password"
           type="password"
           placeholder=""
-          className="h-11"
           autoComplete="current-password"
+          className="h-11"
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? "password-error" : undefined}
           {...register("password")}
         />
-        {errors.password ? (
-          <p id="password-error" className="text-sm text-red-600">
+        {errors.password && (
+          <p
+            id="password-error"
+            className="text-sm text-destructive font-medium"
+          >
             {errors.password.message}
           </p>
-        ) : null}
+        )}
       </div>
 
       <Button
         type="submit"
-        className="w-full h-11 cursor-pointer text-base font-semibold"
+        className="w-full h-11 cursor-pointer text-base font-semibold shadow-md active:scale-[0.98] transition-all"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Connexion..." : "Se connecter"}
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Connexion...
+          </>
+        ) : (
+          "Se connecter"
+        )}
       </Button>
     </form>
   );

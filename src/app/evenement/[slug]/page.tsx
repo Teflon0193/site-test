@@ -13,6 +13,7 @@ import {
   isEventOngoing,
 } from "@/lib/dateUtils";
 import RegisterButton from "@/app/components/events/RegisterButton";
+import EventRegistrationStatus from "@/app/components/events/EventRegistrationStatus";
 import { getUser } from "@/lib/auth-server";
 
 interface EventDetailPageProps {
@@ -55,6 +56,7 @@ export default async function EventDetailPage({
 
   return (
     <MainLayout>
+      <EventRegistrationStatus />
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
         <section className="relative h-[40vh] min-h-[300px] sm:h-[45vh] sm:min-h-[400px] md:h-[50vh] md:min-h-[500px] lg:h-[55vh] lg:min-h-[600px] xl:min-h-[700px] mt-16 sm:mt-20 md:mt-24 overflow-hidden">
           <Image

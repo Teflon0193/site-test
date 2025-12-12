@@ -7,23 +7,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 const schema = z
   .object({
     firstName: z.string().min(1, "Prénom requis"),
     lastName: z.string().min(1, "Nom requis"),
     email: z.string().min(1, "Email requis").email("Email invalide"),
-    phone: z
-      .string()
-      .min(6, "Téléphone invalide")
-      .max(20, "Téléphone invalide"),
-    password: z
-      .string()
-      .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+    phone: z.string().min(6, "Numéro invalide").max(20, "Numéro invalide"),
+    password: z.string().min(8, "8 caractères minimum"),
     confirmPassword: z.string().min(1, "Confirmation requise"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
+    message: "Mots de passe différents",
     path: ["confirmPassword"],
   });
 
@@ -53,38 +49,36 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">Prénom</Label>
           <Input
             id="firstName"
-            placeholder="Entrez votre prénom"
-            className="h-11"
+            placeholder="votre prénom"
+            className="h-10"
             aria-invalid={!!errors.firstName}
-            aria-describedby={errors.firstName ? "firstName-error" : undefined}
             {...register("firstName")}
           />
-          {errors.firstName ? (
-            <p id="firstName-error" className="text-sm text-red-600">
+          {errors.firstName && (
+            <p className="text-xs text-destructive font-medium mt-1">
               {errors.firstName.message}
             </p>
-          ) : null}
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="lastName">Nom</Label>
           <Input
             id="lastName"
-            placeholder="Entrez votre nom"
-            className="h-11"
+            placeholder="votre nom"
+            className="h-10"
             aria-invalid={!!errors.lastName}
-            aria-describedby={errors.lastName ? "lastName-error" : undefined}
             {...register("lastName")}
           />
-          {errors.lastName ? (
-            <p id="lastName-error" className="text-sm text-red-600">
+          {errors.lastName && (
+            <p className="text-xs text-destructive font-medium mt-1">
               {errors.lastName.message}
             </p>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -93,18 +87,17 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
         <Input
           id="email"
           type="email"
-          placeholder="votre.email@exemple.com"
-          className="h-11"
+          placeholder="jean.dupont@exemple.com"
           autoComplete="email"
+          className="h-10"
           aria-invalid={!!errors.email}
-          aria-describedby={errors.email ? "email-error" : undefined}
           {...register("email")}
         />
-        {errors.email ? (
-          <p id="email-error" className="text-sm text-red-600">
+        {errors.email && (
+          <p className="text-xs text-destructive font-medium mt-1">
             {errors.email.message}
           </p>
-        ) : null}
+        )}
       </div>
 
       <div className="space-y-2">
@@ -112,66 +105,70 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
         <Input
           id="phone"
           type="tel"
-          placeholder="+243 XXX XXX XXX"
-          className="h-11"
+          placeholder="+243 000 000 000"
           autoComplete="tel"
+          className="h-10"
           aria-invalid={!!errors.phone}
-          aria-describedby={errors.phone ? "phone-error" : undefined}
           {...register("phone")}
         />
-        {errors.phone ? (
-          <p id="phone-error" className="text-sm text-red-600">
+        {errors.phone && (
+          <p className="text-xs text-destructive font-medium mt-1">
             {errors.phone.message}
           </p>
-        ) : null}
+        )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Mot de passe</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder=""
-          className="h-11"
-          autoComplete="new-password"
-          aria-invalid={!!errors.password}
-          aria-describedby={errors.password ? "password-error" : undefined}
-          {...register("password")}
-        />
-        {errors.password ? (
-          <p id="password-error" className="text-sm text-red-600">
-            {errors.password.message}
-          </p>
-        ) : null}
-      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="password">Mot de passe</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder=""
+            autoComplete="new-password"
+            className="h-10"
+            aria-invalid={!!errors.password}
+            {...register("password")}
+          />
+          {errors.password && (
+            <p className="text-xs text-destructive font-medium mt-1">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          placeholder="••••••••"
-          className="h-11"
-          autoComplete="new-password"
-          aria-invalid={!!errors.confirmPassword}
-          aria-describedby={
-            errors.confirmPassword ? "confirmPassword-error" : undefined
-          }
-          {...register("confirmPassword")}
-        />
-        {errors.confirmPassword ? (
-          <p id="confirmPassword-error" className="text-sm text-red-600">
-            {errors.confirmPassword.message}
-          </p>
-        ) : null}
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirmer</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder=""
+            autoComplete="new-password"
+            className="h-10"
+            aria-invalid={!!errors.confirmPassword}
+            {...register("confirmPassword")}
+          />
+          {errors.confirmPassword && (
+            <p className="text-xs text-destructive font-medium mt-1">
+              {errors.confirmPassword.message}
+            </p>
+          )}
+        </div>
       </div>
 
       <Button
         type="submit"
-        className="w-full h-11 cursor-pointer text-base font-semibold"
+        className="w-full cursor-pointer h-11 text-base font-semibold shadow-md active:scale-[0.98] transition-all mt-4"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Création en cours..." : "Créer mon compte"}
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Création...
+          </>
+        ) : (
+          "Créer mon compte"
+        )}
       </Button>
     </form>
   );

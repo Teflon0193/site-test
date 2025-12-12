@@ -2,91 +2,90 @@
 
 import type React from "react";
 import Link from "next/link";
-//
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/app/components/auth/AuthLayout";
-//
 import SignupForm, {
   type SignupFormValues,
 } from "@/app/components/auth/SignupForm";
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
 import { signUp } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export default function RegisterPage() {
   const router = useRouter();
+
   const handleSignupSubmit = async (values: SignupFormValues) => {
-      await signUp.email(
-        {
-          email: values.email,
-          password: values.password,
-          name: values.firstName + " " + values.lastName,
+    await signUp.email(
+      {
+        email: values.email,
+        password: values.password,
+        name: values.firstName + " " + values.lastName,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Compte créé avec succès !");
+          router.push("/espace-membre");
         },
-        {
-          onSuccess: () => {
-            toast.success("Compte créé avec succès !");
-            router.push("/espace-membre");
-          },
-          onError: (error) => {
+        onError: (error) => {
           toast.error(error.error.message);
-          },
-        }
-      );
+        },
+      }
+    );
   };
 
   return (
     <AuthLayout title="Créer un compte">
-      <Card className="rounded-2xl bg-gradient-to-br from-white to-muted/10 border border-muted/20 shadow-lg py-4">
-        <CardHeader className="space-y-1 py-4">
-          <CardTitle className="text-2xl uppercase font-bold drop-shadow-sm text-center">
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Créer un compte
-          </CardTitle>
-          <CardDescription>
-            Rejoignez la communauté CCAPAC et profitez d&apos;avantages
-            exclusifs
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </h1>
+        </div>
+
+        <div className="space-y-4">
           <GoogleAuthButton />
 
-          <div className="relative mb-4">
+          <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-muted"></div>
+              <span className="w-full border-t border-muted/50" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-background text-muted-foreground">
-                OU
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                ou s&apos;inscrire avec
               </span>
             </div>
           </div>
 
           <SignupForm onSubmit={handleSignupSubmit} />
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center text-muted-foreground">
+        </div>
+
+        <div className="text-center text-sm">
+          <p className="text-muted-foreground">
             Vous avez déjà un compte ?{" "}
             <Link
               href="/auth/login"
-              className="text-primary font-semibold hover:underline"
+              className="font-medium text-primary hover:text-primary/90 underline-offset-4 hover:underline transition-all"
             >
               Se connecter
             </Link>
-          </div>
-          <div className="text-sm text-center">
-            <Link href="/" className="text-muted-foreground hover:text-primary">
-              ← Retour à l&apos;accueil
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+          </p>
+        </div>
+
+        <div className="text-center text-xs text-muted-foreground/60 px-4">
+          En créant un compte, vous acceptez nos{" "}
+          <Link href="#" className="underline hover:text-foreground">
+            Conditions d&apos;utilisation
+          </Link>{" "}
+          et notre{" "}
+          <Link
+            href="#"
+            className="underline hover:text-foreground"
+          >
+            Politique de confidentialité
+          </Link>
+          .
+        </div>
+      </div>
     </AuthLayout>
   );
 }

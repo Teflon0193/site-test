@@ -171,6 +171,80 @@ export async function createEventRegistrationAction(
 }
 
 /**
+ * Créer une inscription à un événement après authentification Google
+ * Utilisé dans la route callback après l'authentification Google réussie
+ */
+export async function createEventRegistrationAfterGoogleAuth(
+  eventId: string
+): Promise<{ success: boolean; error?: string; message?: string }> {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return {
+        success: false,
+        error: "Utilisateur non authentifié",
+      };
+    }
+
+    // Vérifier si l'utilisateur est déjà inscrit
+    const existingRegistration = await prisma.eventRegistration.findUnique({
+      where: {
+        userId_eventId: {
+          userId: user.id,
+          eventId: eventId,
+        },
+      },
+    });
+
+    if (existingRegistration) {
+      return {
+        success: true,
+        message: "Vous êtes déjà inscrit à cet événement",
+      };
+    }
+
+    // Créer l'inscription à l'événement (même si isApproved = false)
+    await prisma.eventRegistration.create({
+      data: {
+        userId: user.id,
+        eventId: eventId,
+        status: "PENDING",
+      },
+    });
+
+    // Créer une activité
+    await prisma.memberActivity.create({
+      data: {
+        userId: user.id,
+        type: "EVENT_REGISTER",
+        metadata: {
+          eventId: eventId,
+          eventTitle: "Événement",
+        },
+      },
+    });
+
+    return {
+      success: true,
+      message: "Inscription à l'événement créée avec succès",
+    };
+  } catch (error) {
+    console.error(
+      "Erreur lors de la création de l'inscription après auth Google:",
+      error
+    );
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de l'inscription",
+    };
+  }
+}
+
+/**
  * Vérifier si l'utilisateur est déjà inscrit à un événement
  */
 export async function checkEventRegistration(
