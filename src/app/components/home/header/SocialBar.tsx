@@ -12,9 +12,9 @@ export function SocialBar() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={label}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300 hover:scale-110"
+              className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white hover:text-white transition-all duration-300 hover:scale-110"
             >
-              <Icon className="w-4 h-4 text-white hover:text-primary/70 cursor-pointer transition-all duration-200" />
+              <Icon className="w-4 h-4 text-white cursor-pointer transition-all duration-200" />
             </a>
           ))}
         </div>
