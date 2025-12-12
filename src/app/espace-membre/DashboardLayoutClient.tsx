@@ -9,7 +9,7 @@ import {
   LayoutDashboard,
   Bell,
   Users,
-  BarChart3,
+  // BarChart3,
   Calendar,
   User,
   LogOut,
@@ -80,11 +80,11 @@ export default function DashboardLayoutClient({
             label: "Événements",
             icon: Calendar,
           },
-          {
-            href: "/espace-membre/activities",
-            label: "Mes activités",
-            icon: BarChart3,
-          },
+          // {
+          //   href: "/espace-membre/activities",
+          //   label: "Mes activités",
+          //   icon: BarChart3,
+          // },
           {
             href: "/espace-membre/profile",
             label: "Mon profil",
