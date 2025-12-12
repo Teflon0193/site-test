@@ -87,7 +87,7 @@ export async function approveMemberAction(userId: string) {
               
               <!-- Header -->
               <div style="margin-bottom: 40px; text-align: center;">
-                 <img src="${baseUrl}/logo-primary.png" alt="CCAPAC" style="width: 120px; height: auto;" />
+                 <img src="${baseUrl}/images/logo-primary.png" alt="CCAPAC" style="width: 120px; height: auto;" />
               </div>
             
               <!-- Content -->
