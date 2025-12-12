@@ -35,7 +35,8 @@ export default function EquipeGouvernancePage() {
             </h1>
             <p className="text-xs sm:text-sm md:text-base lg:text-lg text-white/90 font-light leading-relaxed max-w-2xl mx-auto drop-shadow-md px-2">
               Découvrez les visages et les talents qui donnent vie au Centre
-              Culturel et Artistique pour l&apos;Afrique Centrale.
+              Culturel et Artistique pour les pays de l&apos;Afrique Centrale -
+              Grand Tambour.
             </p>
           </div>
         </section>
