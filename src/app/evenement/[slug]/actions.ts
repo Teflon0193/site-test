@@ -57,7 +57,7 @@ export async function registerEventAction(
       data: {
         userId: user.id,
         eventId: eventId,
-        status: "PENDING",
+        status: "CONFIRMED",
       },
     });
 
@@ -139,7 +139,7 @@ export async function createEventRegistrationAction(
       data: {
         userId: user.id,
         eventId: eventId,
-        status: "PENDING",
+        status: "CONFIRMED",
       },
     });
 
@@ -209,7 +209,7 @@ export async function createEventRegistrationAfterGoogleAuth(
       data: {
         userId: user.id,
         eventId: eventId,
-        status: "PENDING",
+        status: "CONFIRMED",
       },
     });
 
