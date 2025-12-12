@@ -62,11 +62,11 @@ export default function DashboardLayoutClient({
             label: "Membres",
             icon: Users,
           },
-          {
-            href: "/espace-membre/admin/activities",
-            label: "Activités",
-            icon: BarChart3,
-          },
+          // {
+          //   href: "/espace-membre/admin/activities",
+          //   label: "Activités",
+          //   icon: BarChart3,
+          // },
           {
             href: "/espace-membre/admin/events",
             label: "Événements",
