@@ -49,15 +49,19 @@ export default function InfosPratiquesPage() {
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 border-b border-border/40 pb-2.5 sm:pb-3 last:border-0 last:pb-0">
-                    <span className="font-medium text-sm sm:text-base">Samedi</span>
+                    <span className="font-medium text-sm sm:text-base">
+                      Samedi
+                    </span>
                     <span className="font-bold text-primary text-sm sm:text-base">
                       09h00 - 16h00
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 border-b border-border/40 pb-2.5 sm:pb-3 last:border-0 last:pb-0">
-                    <span className="font-medium text-sm sm:text-base">Dimanche</span>
+                    <span className="font-medium text-sm sm:text-base">
+                      Dimanche
+                    </span>
                     <span className="font-bold text-primary text-sm sm:text-base">
-                      13h00 - 17h00
+                      14h00 - 18h00
                     </span>
                   </div>
                 </div>

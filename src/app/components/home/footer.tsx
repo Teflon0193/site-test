@@ -127,7 +127,7 @@ export default function Footer() {
                 <div className="space-y-0.5 sm:space-y-1">
                   <p className="text-white/90">Lun-Ven: 8h-16h</p>
                   <p className="text-white/90">Sam: 9h-16h</p>
-                  <p className="text-white/90">Dim: 9h-16h</p>
+                  <p className="text-white/90">Dim: 14h-18h</p>
                 </div>
               </div>
             </div>
