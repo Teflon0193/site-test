@@ -37,7 +37,7 @@ export default function Header({ user }: MainHeaderProps) {
 
         <div
           className={`bg-primary text-white transition-all duration-300 ${
-            isScrolled ? "h-14 sm:h-16 md:h-20" : "h-16 sm:h-20 md:h-20 lg:h-24"
+            isScrolled ? "h-14 sm:h-20 md:h-20" : "h-16 sm:h-24 md:h-24 lg:h-24"
           }`}
         >
           <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 h-full flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">

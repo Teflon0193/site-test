@@ -33,11 +33,11 @@ export default function Footer() {
             <Link href="/" className="inline-block">
               <div className="relative h-10 sm:h-12 w-auto items-center flex">
                 <Image
-                  src="/logo.png"
+                  src="/logo-grand-tambour.png"
                   alt="CCAPAC Logo"
                   width={180}
                   height={60}
-                  className="h-10 sm:h-12 w-auto object-contain brightness-0 invert opacity-90"
+                  className="h-24 sm:h-24 md:h-24 lg:h-24 xl:h-24 w-auto object-contain brightness-0 invert opacity-90"
                 />
               </div>
             </Link>
