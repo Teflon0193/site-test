@@ -7,6 +7,9 @@ import type { Event } from "@/types/events";
 
 export const runtime = "nodejs";
 
+// Revalidate every 30 seconds for better caching
+export const revalidate = 30;
+
 interface EventWithRegistrations extends Event {
   registrationsCount: number;
   registrations: Array<{
@@ -26,7 +29,7 @@ export async function GET() {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    // Récupérer les événements avec isRegistrationOpen: true depuis Strapi
+    // Récupérer les événements depuis Strapi
     const queryParams = new URLSearchParams();
     queryParams.append("filters[isRegistrationOpen][$eq]", "true");
     queryParams.append("populate", "image");
@@ -41,7 +44,14 @@ export async function GET() {
       headers.Authorization = `Bearer ${STRAPI_TOKEN}`;
     }
 
-    const response = await fetch(url, { headers });
+    // Lancer la requête Strapi
+    const strapiPromise = fetch(url, {
+      headers,
+      next: { revalidate: 30 }, // Cache côté serveur
+    });
+
+    // Attendre la réponse Strapi
+    const response = await strapiPromise;
 
     if (!response.ok) {
       throw new Error(
@@ -52,34 +62,49 @@ export async function GET() {
     const strapiData = await response.json();
     const events: Event[] = strapiData.data.map(transformStrapiEvent);
 
-    // Pour chaque événement, récupérer les inscriptions depuis Prisma
-    const eventsWithRegistrations: EventWithRegistrations[] = await Promise.all(
-      events.map(async (event) => {
-        const registrations = await prisma.eventRegistration.findMany({
-          where: {
-            eventId: event.id.toString(),
-            status: {
-              not: "CANCELLED",
-            },
-          },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-        });
+    // Si pas d'événements, retourner directement
+    if (events.length === 0) {
+      return NextResponse.json({ events: [] });
+    }
 
+    // Récupérer TOUTES les inscriptions en UNE SEULE requête
+    const eventIds = events.map((e) => e.id.toString());
+
+    const allRegistrations = await prisma.eventRegistration.findMany({
+      where: {
+        eventId: { in: eventIds },
+        status: { not: "CANCELLED" },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Grouper les inscriptions par eventId
+    const registrationsByEvent = new Map<string, typeof allRegistrations>();
+    for (const reg of allRegistrations) {
+      const existing = registrationsByEvent.get(reg.eventId) || [];
+      existing.push(reg);
+      registrationsByEvent.set(reg.eventId, existing);
+    }
+
+    // Mapper les événements avec leurs inscriptions
+    const eventsWithRegistrations: EventWithRegistrations[] = events.map(
+      (event) => {
+        const eventRegs = registrationsByEvent.get(event.id.toString()) || [];
         return {
           ...event,
-          registrationsCount: registrations.length,
-          registrations: registrations.map((reg) => ({
+          registrationsCount: eventRegs.length,
+          registrations: eventRegs.map((reg) => ({
             id: reg.id,
             userName: reg.user.name,
             userEmail: reg.user.email,
@@ -87,7 +112,7 @@ export async function GET() {
             registeredAt: reg.createdAt.toISOString(),
           })),
         };
-      })
+      }
     );
 
     return NextResponse.json({
