@@ -12,9 +12,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
-      sendPasswordResetEmail(user.email, user.name, url).catch((error) => {
+      try {
+        await sendPasswordResetEmail(user.email, user.name, url);
+      } catch (error) {
+        // Log l'erreur mais ne pas la propager pour éviter timing attacks
         console.error("[Auth] Échec envoi email de réinitialisation:", error);
-      });
+      }
     },
     onPasswordReset: async ({ user }) => {
       console.log(`[Auth] Mot de passe réinitialisé pour: ${user.email}`);
