@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-} from "@/app/components/ui/card";
+import { Card, CardContent } from "@/app/components/ui/card";
 import { Clock, CheckCircle2, Users, Inbox } from "lucide-react";
 import { usePendingApprovalsQuery } from "@/hooks/useAdminDashboardQuery";
 import { ApprovalCard } from "./ApprovalCard";
@@ -12,7 +9,10 @@ import { cn } from "@/lib/utils";
 export function ApprovalsPageClient() {
   const { data, isLoading, isError, error } = usePendingApprovalsQuery();
 
-  const pendingUsers = data?.pendingUsers ?? [];
+  // Trier par date de création décroissante (plus récent en premier)
+  const pendingUsers = [...(data?.pendingUsers ?? [])].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
   const approvedCount = data?.approvedCount ?? 0;
   const pendingCount = pendingUsers.length;
   const total = approvedCount + pendingCount;
