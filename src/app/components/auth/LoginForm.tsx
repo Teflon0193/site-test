@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 const schema = z.object({
   email: z.string().min(1, "L'email est requis").email("Email invalide"),
@@ -64,12 +65,12 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Mot de passe</Label>
-          {/* <a
-            href="#"
+          <Link
+            href="/auth/forgot-password"
             className="text-xs text-primary hover:underline font-medium tab-index-[-1]"
           >
             Mot de passe oublié ?
-          </a> */}
+          </Link>
         </div>
         <Input
           id="password"
