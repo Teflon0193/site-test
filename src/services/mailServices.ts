@@ -21,9 +21,9 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: process.env.NODE_ENV === "production",
   },
   // Timeouts pour éviter les blocages
-  connectionTimeout: 10000, // 10 secondes
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  // connectionTimeout: 10000, // 10 secondes
+  // greetingTimeout: 10000,
+  // socketTimeout: 10000,
 });
 
 const EMAIL_FROM =
