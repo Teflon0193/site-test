@@ -21,7 +21,7 @@ export function GoogleAuthButton({
     await signIn.social(
       {
         provider: "google",
-        callbackURL,
+        callbackURL: callbackURL || "/auth/callback",
       },
       {
         onSuccess: () => {
