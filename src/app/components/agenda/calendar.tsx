@@ -12,29 +12,32 @@ import {
   FaMagnifyingGlass,
 } from "react-icons/fa6";
 import Image from "next/image";
-import type { useEventFilters } from "../../../hooks/useEventFilters";
+import type { Event } from "@/types/events";
 
 interface CalendarProps {
-  filters: ReturnType<typeof useEventFilters>;
+  events: Event[];
 }
 
-export default function Calendar({ filters }: CalendarProps) {
+export default function Calendar({ events }: CalendarProps) {
   const router = useRouter();
   const [visibleEvents, setVisibleEvents] = useState(6);
 
-  const { filteredEvents } = filters;
+  // Trie les événements du plus récent au plus ancien
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+  );
 
   const loadMoreEvents = () => {
     setVisibleEvents((prev) => prev + 6);
   };
 
-  const displayedEvents = filteredEvents.slice(0, visibleEvents);
-  const hasMoreEvents = visibleEvents < filteredEvents.length;
+  const displayedEvents = sortedEvents.slice(0, visibleEvents);
+  const hasMoreEvents = visibleEvents < sortedEvents.length;
 
   return (
     <section className="py-8 sm:py-10 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-muted/5 to-background">
       <div className="max-w-7xl mx-auto">
-        {filteredEvents.length === 0 && (
+        {sortedEvents.length === 0 && (
           <div className="text-center py-12 sm:py-16 md:py-20">
             <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12 lg:p-16 max-w-lg mx-auto border border-muted/20 shadow-lg">
               <FaMagnifyingGlass className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-muted-foreground mx-auto mb-4 sm:mb-5 md:mb-6" />
@@ -49,7 +52,7 @@ export default function Calendar({ filters }: CalendarProps) {
           </div>
         )}
 
-        {filteredEvents.length > 0 && (
+        {sortedEvents.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-8 xl:gap-10">
             {displayedEvents.map((event) => (
               <Card
@@ -126,7 +129,7 @@ export default function Calendar({ filters }: CalendarProps) {
           </div>
         )}
 
-        {filteredEvents.length > 0 && hasMoreEvents && (
+        {sortedEvents.length > 0 && hasMoreEvents && (
           <div className="text-center mt-12 sm:mt-14 md:mt-16 lg:mt-20">
             <button
               onClick={loadMoreEvents}

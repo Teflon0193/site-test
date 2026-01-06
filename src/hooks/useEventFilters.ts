@@ -20,7 +20,7 @@ export const useEventFilters = () => {
     publicTarget: DEFAULT_FILTER_VALUE,
   });
 
-  // Chargement des événements filtrés via TanStack Query
+  // Chargement des événements filtrés
   const {
     data: filteredEvents = [],
     isLoading,
@@ -71,7 +71,6 @@ export const useEventFilters = () => {
     // Computed
     hasActiveFilters,
 
-    // Stats utiles
     eventCount: filteredEvents.length,
   };
 };

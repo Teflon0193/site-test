@@ -32,8 +32,12 @@ export async function GET() {
     // Récupérer les événements depuis Strapi
     const queryParams = new URLSearchParams();
     queryParams.append("filters[isRegistrationOpen][$eq]", "true");
+    queryParams.append(
+      "filters[startDate][$gte]",
+      new Date().toISOString().split("T")[0] // yyyy-mm-dd
+    );
     queryParams.append("populate", "image");
-    queryParams.append("sort", "startDate:asc");
+    queryParams.append("sort", "startDate:desc");
 
     const url = `${STRAPI_BASE_URL}/api/events?${queryParams.toString()}`;
     const headers: HeadersInit = {
