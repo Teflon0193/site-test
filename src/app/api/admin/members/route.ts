@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const searchTerm = searchParams.get("search") ?? "";
-  const filterStatus = searchParams.get("status") ?? "all";
 
   const whereClause: Prisma.UserWhereInput = {
     role: "MEMBER",
@@ -25,12 +24,6 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  if (filterStatus === "validated") {
-    whereClause.isApproved = true;
-  } else if (filterStatus === "pending") {
-    whereClause.isApproved = false;
-  }
-
   const members = await prisma.user.findMany({
     where: whereClause,
     orderBy: { createdAt: "desc" },
@@ -39,7 +32,7 @@ export async function GET(req: NextRequest) {
       name: true,
       email: true,
       role: true,
-      isApproved: true,
+      emailVerified: true,
       createdAt: true,
       _count: {
         select: {
@@ -49,11 +42,9 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  const [totalMembers, approvedMembers, pendingMembers] = await Promise.all([
-    prisma.user.count({ where: { role: "MEMBER" } }),
-    prisma.user.count({ where: { role: "MEMBER", isApproved: true } }),
-    prisma.user.count({ where: { role: "MEMBER", isApproved: false } }),
-  ]);
+  const totalMembers = await prisma.user.count({
+    where: { role: "MEMBER" },
+  });
 
   return NextResponse.json({
     members: members.map((m) => ({
@@ -61,7 +52,5 @@ export async function GET(req: NextRequest) {
       createdAt: m.createdAt.toISOString(),
     })),
     totalMembers,
-    approvedMembers,
-    pendingMembers,
   });
 }

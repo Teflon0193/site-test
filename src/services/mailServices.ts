@@ -53,7 +53,7 @@ function baseEmailLayout(content: string): string {
         .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; }
         h1, h2 { color: #1a1a1a; margin-top: 0; }
         p { line-height: 1.6; margin-bottom: 20px; color: #4a4a4a; }
-        .button { display: inline-block; background-color: #804423; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 14px; }
+        .button { display: inline-block; background-color: #ffc107; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 14px; }
         .alt-link { margin-top: 30px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
         .alt-link a { color: #804423; text-decoration: none; word-break: break-all; }
       </style>
@@ -138,30 +138,30 @@ export const emailTemplates = {
   },
 
   /**
-   * Email d'approbation de compte membre
+   * Email de vérification d'adresse email
    */
-  memberApproval: (userName: string, validationUrl: string): string => {
+  emailVerification: (userName: string, verificationUrl: string): string => {
     const content = `
       <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Bienvenue au CCAPAC</h2>
 
       <p>Bonjour ${userName},</p>
 
       <p>
-        Nous avons le plaisir de vous informer que votre demande d'adhésion a été approuvée. 
-        Vous faites désormais partie de notre communauté.
+        Merci de vous être inscrit au Centre Culturel Pour les Pays d'Afrique Centrale (CCAPAC).
+        Pour finaliser votre inscription et accéder à votre espace membre, veuillez vérifier votre adresse email.
       </p>
 
       <p>
-        Pour finaliser votre inscription et accéder à votre espace membre, veuillez activer votre compte via le bouton ci-dessous :
+        Cliquez sur le bouton ci-dessous pour vérifier votre adresse email :
       </p>
 
-      ${ctaButton(validationUrl, "Activer mon compte")}
+      ${ctaButton(verificationUrl, "Vérifier mon email")}
 
       <p style="font-size: 13px; color: #666; margin-top: 20px;">
-        Ce lien d'activation est valable pendant 48 heures.
+        Ce lien de vérification est valable pendant 24 heures.
       </p>
 
-      ${alternativeLink(validationUrl)}
+      ${alternativeLink(verificationUrl)}
     `;
     return baseEmailLayout(content);
   },
@@ -251,17 +251,17 @@ export async function sendPasswordResetEmail(
 }
 
 /**
- * Envoie un email d'approbation de membre
+ * Envoie un email de vérification d'adresse email
  */
-export async function sendMemberApprovalEmail(
+export async function sendEmailVerification(
   userEmail: string,
   userName: string,
-  validationUrl: string
+  verificationUrl: string
 ): Promise<boolean> {
   return sendEmail({
     to: userEmail,
-    subject: "Votre compte CCAPAC a été approuvé",
-    html: emailTemplates.memberApproval(userName, validationUrl),
+    subject: "Vérifiez votre adresse email - CCAPAC",
+    html: emailTemplates.emailVerification(userName, verificationUrl),
   });
 }
 

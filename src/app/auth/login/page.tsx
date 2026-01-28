@@ -25,9 +25,13 @@ export default function LoginPage() {
           router.push("/espace-membre/admin");
         },
 
-        onError: (error) => {
-          toast.error(error.error.message);
+        onError: (ctx) => {
+          if (ctx.error.status === 403) {
+          toast.error("Veillez à vérifier votre email pour accéder à votre espace.") 
+        }
+          toast.error(ctx.error.message);
         },
+        
       }
     );
   };

@@ -53,33 +53,6 @@ export function MembersFilters({
             />
           </form>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mr-2">
-              <Filter className="h-4 w-4" />
-              <span className="hidden md:inline">Filtres :</span>
-            </div>
-            {[
-              { label: "Tous", value: "all" },
-              { label: "Approuvés", value: "validated" },
-              { label: "En attente", value: "pending" },
-            ].map((status) => (
-              <Button
-                key={status.value}
-                variant={currentStatus === status.value ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => updateFilters("status", status.value)}
-                disabled={isPending}
-                className={`text-xs font-medium ${
-                  currentStatus === status.value
-                    ? "bg-primary/10 text-primary hover:bg-primary/20"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {status.label}
-              </Button>
-            ))}
-          </div>
         </div>
       </CardContent>
     </Card>

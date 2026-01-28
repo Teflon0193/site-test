@@ -7,9 +7,7 @@ import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   LayoutDashboard,
-  Bell,
   Users,
-  // BarChart3,
   Calendar,
   User,
   LogOut,
@@ -29,20 +27,17 @@ import { cn } from "@/lib/utils";
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
   user: PrismaUserType;
-  pendingApprovalsCount?: number;
 }
 
 export default function DashboardLayoutClient({
   children,
   user,
-  pendingApprovalsCount = 0,
 }: DashboardLayoutClientProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Navigation différente selon le rôle
   const menuItems =
     user.role === "ADMIN"
       ? [
@@ -52,21 +47,10 @@ export default function DashboardLayoutClient({
             icon: LayoutDashboard,
           },
           {
-            href: "/espace-membre/admin/approvals",
-            label: "Approbations",
-            icon: Bell,
-            badge: pendingApprovalsCount,
-          },
-          {
             href: "/espace-membre/admin/members",
             label: "Membres",
             icon: Users,
           },
-          // {
-          //   href: "/espace-membre/admin/activities",
-          //   label: "Activités",
-          //   icon: BarChart3,
-          // },
           {
             href: "/espace-membre/admin/events",
             label: "Événements",
@@ -80,11 +64,6 @@ export default function DashboardLayoutClient({
             label: "Événements",
             icon: Calendar,
           },
-          // {
-          //   href: "/espace-membre/activities",
-          //   label: "Mes activités",
-          //   icon: BarChart3,
-          // },
           {
             href: "/espace-membre/profile",
             label: "Mon profil",
@@ -102,10 +81,8 @@ export default function DashboardLayoutClient({
 
       if (result.success) {
         toast.success(result.message || "Déconnexion réussie");
-        setTimeout(() => {
-          router.push("/");
-          router.refresh();
-        }, 500);
+        router.push("/");
+        router.refresh();
       } else {
         toast.error(result.error || "Erreur lors de la déconnexion");
         setIsLoggingOut(false);

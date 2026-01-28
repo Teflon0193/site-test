@@ -339,7 +339,9 @@ export default async function EventDetailPage({
             eventTitle={event.title}
             eventSlug={event.slug}
             isRegistrationOpen={event.isRegistrationOpen}
-            user={user ? { id: user.id, isApproved: user.isApproved } : null}
+            user={
+              user ? { id: user.id, emailVerified: user.emailVerified } : null
+            }
           />
         )}
       </div>

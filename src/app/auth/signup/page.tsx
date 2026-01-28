@@ -18,13 +18,14 @@ export default function RegisterPage() {
     await signUp.email(
       {
         email: values.email,
+        phone: values.phone,
         password: values.password,
         name: values.firstName + " " + values.lastName,
       },
       {
         onSuccess: () => {
           toast.success("Compte créé avec succès !");
-          router.push("/espace-membre");
+          router.push("/auth/verify-email");
         },
         onError: (error) => {
           toast.error(error.error.message);

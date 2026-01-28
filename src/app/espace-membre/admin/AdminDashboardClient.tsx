@@ -12,7 +12,6 @@ import {
   Users,
   BarChart3,
   UserPlus,
-  Clock,
   Calendar,
   AlertCircle,
 } from "lucide-react";
@@ -127,13 +126,8 @@ function AdminDashboardContent() {
     );
   }
 
-  const {
-    totalMembers,
-    pendingMembers,
-    totalActivities,
-    newMembersThisWeek,
-    recentMembers,
-  } = data;
+  const { totalMembers, totalActivities, newMembersThisWeek, recentMembers } =
+    data;
 
   const stats = [
     {
@@ -151,14 +145,6 @@ function AdminDashboardContent() {
       description: "Prochains événements",
       color: "text-green-600",
       bgColor: "bg-green-50",
-    },
-    {
-      title: "En Attente",
-      value: pendingMembers.toString(),
-      icon: Clock,
-      description: "Demandes à traiter",
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
     },
     {
       title: "Activités",
@@ -263,19 +249,12 @@ function AdminDashboardContent() {
                           <p className="text-sm font-medium truncate text-foreground group-hover:text-primary transition-colors">
                             {member.name}
                           </p>
-                          {member.isApproved ? (
+                          {member.emailVerified && (
                             <Badge
                               variant="secondary"
                               className="bg-green-50 text-green-700 hover:bg-green-100 border-0 text-[10px] px-1.5 py-0 h-5"
                             >
-                              Approuvé
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="secondary"
-                              className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-0 text-[10px] px-1.5 py-0 h-5"
-                            >
-                              En attente
+                              Vérifié
                             </Badge>
                           )}
                         </div>

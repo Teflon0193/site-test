@@ -50,15 +50,15 @@ export default async function ProfilePage() {
             </h1>
             <div className="flex gap-2">
               <Badge
-                variant={user.isApproved ? "default" : "secondary"}
+                variant={user.emailVerified ? "default" : "secondary"}
                 className={cn(
                   "px-2 py-0.5 text-xs font-medium",
-                  user.isApproved
+                  user.emailVerified
                     ? "bg-green-100 text-green-700 hover:bg-green-100"
                     : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
                 )}
               >
-                {user.isApproved ? (
+                {user.emailVerified ? (
                   <span className="flex items-center gap-1">
                     <CheckCircle2 size={12} />
                     Membre Actif
@@ -66,7 +66,7 @@ export default async function ProfilePage() {
                 ) : (
                   <span className="flex items-center gap-1">
                     <Clock size={12} />
-                    En Attente
+                    Email non vérifié
                   </span>
                 )}
               </Badge>
@@ -190,15 +190,15 @@ export default async function ProfilePage() {
               <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-muted/50">
                 <span className="text-sm text-muted-foreground">Statut</span>
                 <Badge
-                  variant={user.isApproved ? "default" : "secondary"}
+                  variant={user.emailVerified ? "default" : "secondary"}
                   className={cn(
                     "text-xs",
-                    user.isApproved
+                    user.emailVerified
                       ? "bg-green-100 text-green-700"
                       : "bg-yellow-100 text-yellow-700"
                   )}
                 >
-                  {user.isApproved ? "Approuvé" : "En attente"}
+                  {user.emailVerified ? "Email vérifié" : "Email non vérifié"}
                 </Badge>
               </div>
 

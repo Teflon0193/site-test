@@ -21,7 +21,12 @@ import { cn } from "@/lib/utils";
 export default async function DashboardPage() {
   const user = await getUser();
 
-  if (user!.role === "ADMIN") {
+  // Vérifier que l'utilisateur existe (devrait être géré par le layout, mais sécurité supplémentaire)
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  if (user.role === "ADMIN") {
     redirect("/espace-membre/admin");
   }
 
@@ -29,13 +34,13 @@ export default async function DashboardPage() {
     // Nombre d'événements inscrits
     prisma.eventRegistration.count({
       where: {
-        userId: user!.id,
+        userId: user.id,
         status: { in: ["CONFIRMED", "PENDING"] },
       },
     }),
     // 5 dernières activités
     prisma.memberActivity.findMany({
-      where: { userId: user!.id },
+      where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
@@ -48,7 +53,7 @@ export default async function DashboardPage() {
   //   },
   // });
 
-  const memberSince = new Date(user!.createdAt).toLocaleDateString("fr-FR", {
+  const memberSince = new Date(user.createdAt).toLocaleDateString("fr-FR", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -78,7 +83,7 @@ export default async function DashboardPage() {
     },
     {
       title: "Statut Membre",
-      value: user!.isApproved ? "Actif" : "En attente",
+      value: user.emailVerified ? "Actif" : "Email non vérifié",
       icon: User,
       description: `Membre depuis ${memberSince.split(" ")[2]}`,
       className: "text-orange-600 bg-orange-50",
@@ -91,7 +96,7 @@ export default async function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Bienvenue, {user!.name}
+            Bienvenue, {user.name}
           </h1>
           <p className="text-muted-foreground mt-1">
             Heureux de vous revoir. Voici un aperçu de votre activité.
@@ -136,7 +141,7 @@ export default async function DashboardPage() {
         <div
           className={cn(
             "space-y-4",
-            user!.newsletterOptIn ? "lg:col-span-2" : "lg:col-span-3"
+            user.newsletterOptIn ? "lg:col-span-2" : "lg:col-span-3"
           )}
         >
           <h2 className="text-xl font-semibold tracking-tight">
@@ -241,7 +246,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Sidebar / Extra Info - Only rendered if needed */}
-        {user!.newsletterOptIn && (
+        {user.newsletterOptIn && (
           <div className="space-y-6 lg:col-span-1">
             <div className="lg:pt-11">
               {" "}

@@ -39,7 +39,7 @@ interface Member {
   name: string;
   email: string;
   role: "MEMBER" | "ADMIN";
-  isApproved: boolean;
+  emailVerified: boolean;
   createdAt: Date;
   _count: {
     activities: number;
@@ -71,7 +71,6 @@ export function MembersTable({ members }: MembersTableProps) {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["admin", "members"] }),
           queryClient.invalidateQueries({ queryKey: ["admin", "stats"] }),
-          queryClient.invalidateQueries({ queryKey: ["admin", "approvals"] }),
         ]);
       } else {
         toast.error(result.error || "Erreur lors de la suppression");
@@ -136,7 +135,6 @@ export function MembersTable({ members }: MembersTableProps) {
             <tr>
               <th className="py-3 px-6 font-medium">Membre</th>
               <th className="py-3 px-6 font-medium">Rôle</th>
-              <th className="py-3 px-6 font-medium">Statut</th>
               <th className="py-3 px-6 font-medium">Date d&apos;inscription</th>
               <th className="py-3 px-6 font-medium text-center">Activités</th>
               <th className="py-3 px-6 font-medium text-right">Actions</th>
@@ -146,7 +144,7 @@ export function MembersTable({ members }: MembersTableProps) {
             {members.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={5}
                   className="py-12 text-center text-muted-foreground"
                 >
                   Aucun membre trouvé
@@ -184,19 +182,6 @@ export function MembersTable({ members }: MembersTableProps) {
                         {member.role === "ADMIN" ? "Admin" : "Membre"}
                       </span>
                     </div>
-                  </td>
-                  <td className="py-3 px-6">
-                    <Badge
-                      variant={member.isApproved ? "secondary" : "outline"}
-                      className={cn(
-                        "text-[10px] font-medium border-0 px-2 py-0.5 h-5",
-                        member.isApproved
-                          ? "bg-green-50 text-green-700 hover:bg-green-100"
-                          : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                      )}
-                    >
-                      {member.isApproved ? "Approuvé" : "En attente"}
-                    </Badge>
                   </td>
                   <td className="py-3 px-6 text-muted-foreground">
                     {new Date(member.createdAt).toLocaleDateString("fr-FR", {

@@ -3,19 +3,17 @@ export interface AdminRecentMember {
   name: string | null;
   email: string;
   createdAt: string;
-  isApproved: boolean;
+  emailVerified: boolean;
 }
 
 export interface AdminStatsResponse {
   totalMembers: number;
-  approvedMembers: number;
-  pendingMembers: number;
   totalActivities: number;
   newMembersThisWeek: number;
   recentMembers: AdminRecentMember[];
 }
 
-export type MembersStatusFilter = "all" | "validated" | "pending";
+export type MembersStatusFilter = "all";
 
 export interface MembersQueryParams {
   search?: string;
@@ -27,7 +25,7 @@ export interface MemberWithActivities {
   name: string | null;
   email: string;
   role: "MEMBER" | "ADMIN";
-  isApproved: boolean;
+  emailVerified: boolean;
   createdAt: string;
   _count: {
     activities: number;
@@ -37,21 +35,6 @@ export interface MemberWithActivities {
 export interface MembersResponse {
   members: MemberWithActivities[];
   totalMembers: number;
-  approvedMembers: number;
-  pendingMembers: number;
-}
-
-export interface PendingUser {
-  id: string;
-  name: string | null;
-  email: string;
-  createdAt: string;
-  phone: string | null;
-}
-
-export interface ApprovalsResponse {
-  pendingUsers: PendingUser[];
-  approvedCount: number;
 }
 
 async function handleJsonResponse<T>(res: Response): Promise<T> {
@@ -96,12 +79,4 @@ export async function getMembers(
   });
 
   return handleJsonResponse<MembersResponse>(res);
-}
-
-export async function getPendingApprovals(): Promise<ApprovalsResponse> {
-  const res = await fetch("/api/admin/approvals", {
-    method: "GET",
-    cache: "no-store",
-  });
-  return handleJsonResponse<ApprovalsResponse>(res);
 }

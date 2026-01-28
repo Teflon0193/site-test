@@ -11,7 +11,7 @@ import { useMembersQuery } from "@/hooks/useAdminDashboardQuery";
 import type { MembersStatusFilter } from "@/services/adminService";
 import { MembersFilters } from "./MembersFilters";
 import { MembersTable } from "./MembersTable";
-import { Users, CheckCircle2, Clock } from "lucide-react";
+import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MembersPageClientProps {
@@ -44,8 +44,6 @@ export function MembersPageClient({
     })) ?? [];
 
   const totalMembers = data?.totalMembers ?? 0;
-  const approvedMembers = data?.approvedMembers ?? 0;
-  const pendingMembers = data?.pendingMembers ?? 0;
 
   const stats = [
     {
@@ -54,20 +52,6 @@ export function MembersPageClient({
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-    },
-    {
-      title: "Approuvés",
-      value: isLoading ? "..." : approvedMembers,
-      icon: CheckCircle2,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-    },
-    {
-      title: "En Attente",
-      value: isLoading ? "..." : pendingMembers,
-      icon: Clock,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
     },
   ];
 

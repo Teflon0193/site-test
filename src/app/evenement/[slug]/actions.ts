@@ -27,11 +27,11 @@ export async function registerEventAction(
       };
     }
 
-    if (!user.isApproved) {
+    if (!user.emailVerified) {
       return {
         success: false,
         error:
-          "Votre compte est en attente d'approbation. Votre inscription sera confirmée une fois votre compte approuvé.",
+          "Veuillez vérifier votre adresse email avant de vous inscrire. Consultez votre boîte de réception pour le lien de vérification.",
       };
     }
 
@@ -134,7 +134,7 @@ export async function createEventRegistrationAction(
       };
     }
 
-    // Créer l'inscription à l'événement (même si isApproved = false)
+    // Créer l'inscription à l'événement
     await prisma.eventRegistration.create({
       data: {
         userId: user.id,
@@ -204,7 +204,7 @@ export async function createEventRegistrationAfterGoogleAuth(
       };
     }
 
-    // Créer l'inscription à l'événement (même si isApproved = false)
+    // Créer l'inscription à l'événement
     await prisma.eventRegistration.create({
       data: {
         userId: user.id,

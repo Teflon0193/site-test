@@ -18,7 +18,7 @@ interface RegisterButtonProps {
   isRegistrationOpen: boolean;
   user: {
     id: string;
-    isApproved: boolean;
+    emailVerified: boolean;
   } | null;
 }
 
@@ -97,8 +97,8 @@ export default function RegisterButton({
     return null;
   }
 
-  // Si l'utilisateur est connecté mais non approuvé
-  if (user && !user.isApproved) {
+  // Si l'utilisateur est connecté mais email non vérifié
+  if (user && !user.emailVerified) {
     return (
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 max-w-[calc(100vw-2rem)] sm:max-w-sm">
         <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 sm:p-4 shadow-lg">
@@ -106,11 +106,11 @@ export default function RegisterButton({
             <FaClock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-xs sm:text-sm font-semibold text-amber-900 dark:text-amber-100">
-                Compte en attente
+                Email non vérifié
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                Votre compte est en attente d&apos;approbation. Votre
-                inscription sera confirmée une fois votre compte approuvé.
+                Veuillez vérifier votre adresse email avant de vous inscrire.
+                Consultez votre boîte de réception pour le lien de vérification.
               </p>
             </div>
           </div>

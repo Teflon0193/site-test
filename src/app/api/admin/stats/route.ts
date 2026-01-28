@@ -9,21 +9,9 @@ export async function GET() {
     return new NextResponse("Non autorisé", { status: 401 });
   }
 
-  const [
-    totalMembers,
-    approvedMembers,
-    pendingMembers,
-    totalActivities,
-    recentMembers,
-  ] = await Promise.all([
+  const [totalMembers, totalActivities, recentMembers] = await Promise.all([
     prisma.user.count({
       where: { role: "MEMBER" },
-    }),
-    prisma.user.count({
-      where: { role: "MEMBER", isApproved: true },
-    }),
-    prisma.user.count({
-      where: { role: "MEMBER", isApproved: false },
     }),
     prisma.memberActivity.count(),
     prisma.user.findMany({
@@ -35,7 +23,7 @@ export async function GET() {
         name: true,
         email: true,
         createdAt: true,
-        isApproved: true,
+        emailVerified: true,
       },
     }),
   ]);
@@ -51,8 +39,6 @@ export async function GET() {
 
   return NextResponse.json({
     totalMembers,
-    approvedMembers,
-    pendingMembers,
     totalActivities,
     newMembersThisWeek,
     recentMembers: recentMembers.map((m) => ({
