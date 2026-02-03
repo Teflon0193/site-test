@@ -37,13 +37,13 @@ export default function VideoFocus() {
   };
 
   return (
-    <section className="relative h-[60vh] min-h-[500px] lg:h-[80vh] w-full overflow-hidden bg-black">
+    <section className="relative h-[80vh] min-h-[600px] w-full overflow-hidden bg-black group">
       {/* Background avec image ou vidéo locale */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 transition-transform duration-[20s] ease-linear group-hover:scale-105">
         {!hasVideoError ? (
           // Essayer d'abord la vidéo locale
           <video
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover opacity-60"
             autoPlay
             muted
             loop
@@ -60,57 +60,71 @@ export default function VideoFocus() {
               src={videoConfig.posterImage}
               alt="Grand Tambour"
               fill
-              className="object-cover"
+              className="object-cover opacity-60"
               priority
               sizes="100vw"
             />
           </div>
         )}
-        {/* Overlay sombre pour la lisibilité du texte - Simple et efficace */}
-        <div className="absolute inset-0 bg-black/40"></div>
+        {/* Overlay sophistiqué */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+        <div className="absolute inset-0 bg-[url('/pattern-grid.png')] opacity-10 mix-blend-overlay" />
       </div>
 
       {/* Contenu principal */}
       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight drop-shadow-md">
+        <div className="max-w-5xl mx-auto space-y-12">
+          <div className="space-y-6">
+            {/* <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-white/30 backdrop-blur-md text-white text-xs font-bold tracking-[0.3em] uppercase mb-4">
+              <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
+              Focus Vidéo
+            </div> */}
+
+            <h1 className="text-3xl sm:text-3xl md:text-[4rem] leading-[0.8] font-black text-white tracking-tighter uppercase drop-shadow-2xl">
               {videoConfig.title}
             </h1>
-            <p className="text-xl sm:text-2xl text-white/90 font-medium tracking-wide">
+            <p className="text-xl sm:text-2xl text-white/80 font-light italic tracking-wide max-w-2xl mx-auto border-t border-white/20 pt-6 mt-6">
               {videoConfig.subtitle}
             </p>
           </div>
 
-          {/* Bouton play - Design sobre et accessible */}
+          {/* Bouton play - Design Sharp */}
           <button
             onClick={handlePlayVideo}
-            className="group relative inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full transition-transform duration-300 hover:scale-110 shadow-xl focus:outline-none focus:ring-4 focus:ring-white/30"
+            className="group/btn relative inline-flex items-center gap-4 px-8 py-5 bg-white text-black hover:bg-accent transition-all duration-300"
             aria-label="Lire la vidéo de présentation"
           >
-            {/* Pulsation subtile */}
-            <span className="absolute inset-0 rounded-full bg-white opacity-20 animate-ping group-hover:animate-none"></span>
+            {/* Play Icon Box */}
+            <div className="w-8 h-8 flex items-center justify-center border-2 border-current">
+              <FaPlay className="w-3 h-3 ml-0.5" />
+            </div>
 
-            <FaPlay className="w-8 h-8 sm:w-10 sm:h-10 text-black ml-1.5" />
+            <span className="text-sm font-bold uppercase tracking-[0.2em]">
+              Regarder la vidéo
+            </span>
+
+            {/* Hover effect bar */}
+            <div className="absolute top-0 left-0 w-1 h-full bg-accent transform origin-bottom scale-y-0 group-hover/btn:scale-y-100 transition-transform duration-300" />
           </button>
-
-          <p className="text-sm font-medium text-white/80 uppercase tracking-widest">
-            Regarder la vidéo
-          </p>
         </div>
       </div>
 
       {/* Modal YouTube Video */}
       {isVideoPlaying && (
-        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-6xl aspect-video bg-black rounded-lg shadow-2xl overflow-hidden">
-            {/* Bouton fermer - Clair et accessible */}
+        <div className="fixed inset-0 z-50 bg-black/98 flex items-center justify-center p-0 md:p-8 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-7xl aspect-video bg-black shadow-2xl border border-white/10">
+            {/* Bouton fermer - Sharp */}
             <button
               onClick={handleCloseVideo}
-              className="absolute top-4 right-4 z-10 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+              className="absolute -top-12 right-0 z-10 flex items-center gap-2 text-white/60 hover:text-white transition-colors group/close"
               aria-label="Fermer la vidéo"
             >
-              <FaTimes className="w-6 h-6" />
+              <span className="text-xs uppercase tracking-widest font-bold">
+                Fermer
+              </span>
+              <div className="p-2 border border-white/20 group-hover/close:border-white transition-colors bg-black">
+                <FaTimes className="w-4 h-4" />
+              </div>
             </button>
 
             {/* YouTube iframe */}

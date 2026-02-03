@@ -18,7 +18,7 @@ export function DesktopNavigation({
   onDropdownLeave,
 }: DesktopNavigationProps) {
   return (
-    <nav className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-6 xl:space-x-8 justify-center flex-1 max-w-3xl md:max-w-4xl lg:max-w-5xl mx-2 md:mx-4">
+    <nav className="hidden lg:flex items-center space-x-12 ml-16 flex-1">
       {menuItems.map((item) => {
         const isActive = isMenuItemActive(item);
         const isDropdownOpen = activeDropdown === item.title;

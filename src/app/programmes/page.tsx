@@ -8,62 +8,74 @@ export default function ProgrammesPage() {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="relative h-[35vh] min-h-[280px] sm:h-[40vh] sm:min-h-[350px] lg:h-[45vh] lg:min-h-[400px] mt-16 sm:mt-20 lg:mt-24 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-black/60 z-10" />
-        <Image
-          src="/motif-luba.png"
-          alt="Programmes culturels CCAPAC"
-          fill
-          className="object-cover"
-          priority
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-        />
-        <div className="relative z-20 text-center px-4 sm:px-6 w-full">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 md:mb-6 text-white tracking-tight uppercase drop-shadow-2xl">
+      <section className="relative h-[65vh] min-h-[500px] flex items-center justify-center overflow-hidden bg-black pb-16">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/media/visit2.jpg"
+            alt="Programmes CCAPAC"
+            fill
+            className="object-cover opacity-60"
+            priority
+            sizes="100vw"
+          />
+          {/* Gradient for text readability, but sharper */}
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-50" />
+        </div>
+
+        <div className="relative z-10 text-center px-4 w-full max-w-5xl mx-auto pt-28">
+          <span className="inline-block mb-6 px-4 py-1.5 bg-white text-black text-xs font-black tracking-[0.2em] uppercase transform -skew-x-6 border border-white hover:bg-black hover:text-white transition-colors duration-300 backdrop-blur-sm">
+            Découverte & Formation
+          </span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 text-white tracking-tighter uppercase leading-[0.8] drop-shadow-2xl">
             Nos Programmes
           </h1>
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 font-light leading-relaxed max-w-2xl mx-auto drop-shadow-md px-2">
-            Une fenêtre ouverte sur la richesse du patrimoine africain.
-            Découvrez, apprenez et vivez la culture.
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="h-[2px] w-12 bg-accent"></div>
+            <div className="h-[2px] w-12 bg-accent"></div>
+          </div>
+          <p className="text-xl sm:text-2xl text-zinc-200 font-medium max-w-3xl mx-auto leading-relaxed border-l-4 border-accent pl-6 text-left md:text-center md:border-l-0 md:pl-0">
+            Explorez notre offre culturelle et éducative, conçue pour inspirer
+            et former les talents de demain.
           </p>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+      <section className="py-20 px-4 sm:px-6 md:px-8">
+        <div className="max-w-[1300px] mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-t-2 border-l-2 border-black">
             {categories.map((category, index) => (
               <Link
                 key={category.id}
                 href={`/programmes/${category.id}`}
-                className="group relative h-[300px] sm:h-[350px] md:h-[400px] lg:h-[500px] rounded-xl sm:rounded-2xl overflow-hidden block shadow-lg sm:shadow-xl transition-all duration-500 hover:shadow-2xl"
+                className="group relative h-[400px] sm:h-[500px] overflow-hidden block bg-zinc-900 border-r-2 border-b-2 border-black"
               >
                 <Image
                   src={category.image || "/placeholder.svg"}
                   alt={category.title}
                   fill
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105 opacity-60 group-hover:opacity-40"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 50vw"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
-
-                <div className="absolute inset-0 p-4 sm:p-6 md:p-8 flex flex-col justify-end">
-                  <div className="transform transition-transform duration-500 translate-y-2 sm:translate-y-4 group-hover:translate-y-0">
-                    <span className="text-white/60 text-xs sm:text-sm font-mono mb-1 sm:mb-2 block uppercase tracking-widest">
-                      0{index + 1}
+                <div className="absolute inset-0 p-8 flex flex-col justify-between z-10">
+                  <div className="flex justify-between items-start">
+                    <span className="text-white text-4xl font-black opacity-20 group-hover:opacity-100 transition-opacity duration-500">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-3 uppercase tracking-tight leading-tight">
+                    <div className="w-10 h-10 bg-white text-black flex items-center justify-center transform -translate-y-4 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                      <FaArrowRight className="-rotate-45 group-hover:rotate-0 transition-transform duration-500" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4 leading-[0.9] uppercase tracking-tighter">
                       {category.title}
                     </h2>
-                    <p className="text-white/80 text-sm sm:text-base md:text-lg line-clamp-2 sm:line-clamp-3 font-light leading-relaxed mb-3 sm:mb-4 md:mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                    <p className="text-white/80 text-lg font-light leading-relaxed max-w-md opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
                       {category.description}
                     </p>
-
-                    <div className="inline-flex items-center text-white font-semibold text-xs sm:text-sm uppercase tracking-wider group-hover:text-accent transition-colors">
-                      <span className="mr-2">Explorer</span>
-                      <FaArrowRight className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:translate-x-2" />
-                    </div>
                   </div>
                 </div>
               </Link>
@@ -73,18 +85,30 @@ export default function ProgrammesPage() {
       </section>
 
       {/* Quote Section */}
-      <section className="py-12 sm:py-14 md:py-16 px-4 sm:px-6 bg-muted/5 border-t border-muted/10">
-        <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-light text-muted-foreground italic px-2">
-            &quot;La culture est ce qui reste quand on a tout oublié.&quot;
-          </p>
-          <div className="w-12 sm:w-16 h-0.5 bg-primary/40 mx-auto"></div>
-          <Link
-            href="/contact"
-            className="inline-block pt-2 sm:pt-4 text-xs sm:text-sm font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
-          >
-            Rejoindre l&apos;aventure
-          </Link>
+      <section className="py-24 px-4 bg-primary text-white border-t border-white/10">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="relative inline-block">
+            <span className="text-6xl absolute -top-8 -left-8 text-accent opacity-50 font-serif">
+              &quot;
+            </span>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-tight text-white">
+              La culture est ce qui reste quand on a tout oublié.
+            </p>
+            <span className="text-6xl absolute -bottom-12 -right-8 text-accent opacity-50 font-serif">
+              &quot;
+            </span>
+          </div>
+
+          <div className="w-24 h-2 bg-accent mx-auto"></div>
+
+          <div className="pt-8">
+            <Link
+              href="/contact"
+              className="inline-block px-12 py-5 bg-white text-black text-sm font-black uppercase tracking-[0.2em] hover:bg-accent hover:text-white transition-all duration-300 transform hover:scale-105"
+            >
+              Rejoindre l&apos;aventure
+            </Link>
+          </div>
         </div>
       </section>
     </MainLayout>

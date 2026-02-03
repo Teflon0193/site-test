@@ -57,7 +57,7 @@
   --secondary-foreground: #804423;
   --muted: #e8e6dd;
   --muted-foreground: #6b5b4f;
-  --accent: #ffcc02;
+  --accent: #ed702d;
   --accent-foreground: #804423;
   --destructive: #dc2626;
   --border: #ffffff;
@@ -76,6 +76,38 @@
   --sidebar-accent-foreground: #804423;
   --sidebar-border: #d4d1c7;
   --sidebar-ring: #cd935b;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out forwards;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+
+.pause-marquee:hover .animate-marquee {
+  animation-play-state: paused;
 }
 
 .dark {

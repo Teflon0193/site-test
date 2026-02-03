@@ -29,16 +29,21 @@ export function NavigationItem({
       >
         <div className="flex items-center gap-1 cursor-pointer py-2">
           <span
-            className={`font-bold uppercase transition-all duration-300 text-xs md:text-sm whitespace-nowrap flex items-center px-2 md:px-3 py-2 rounded-lg ${
-              isActive
-                ? "text-foreground bg-white/10 border-b-2 border-foreground pb-1 shadow-lg"
-                : "text-white hover:text-secondary hover:bg-white/5"
+            className={`font-bold uppercase tracking-[0.2em] transition-all duration-300 text-xs md:text-sm whitespace-nowrap flex items-center py-2 relative group ${
+              isActive || isDropdownOpen
+                ? "text-white"
+                : "text-white hover:text-white"
             }`}
           >
             {item.title}
+            <span
+              className={`absolute bottom-0 left-0 h-[2px] bg-white transition-all duration-300 ${isActive || isDropdownOpen ? "w-full" : "w-0 group-hover:w-full"}`}
+            ></span>
             <FaChevronDown
               className={`ml-2 w-3 h-3 transition-all duration-300 group-hover:rotate-180 ${
-                isActive ? "text-foreground" : "text-white"
+                isActive || isDropdownOpen
+                  ? "text-white"
+                  : "text-white/50 group-hover:text-white"
               }`}
             />
           </span>
@@ -57,13 +62,14 @@ export function NavigationItem({
   return (
     <Link
       href={item.href}
-      className={`font-bold uppercase transition-all duration-300 text-xs md:text-sm py-2 px-2 md:px-3 rounded-lg block whitespace-nowrap ${
-        isActive
-          ? "text-foreground bg-white/10 border-b-2 border-foreground pb-1 shadow-lg"
-          : "text-white hover:text-secondary hover:bg-white/5"
+      className={`font-bold uppercase tracking-[0.2em] transition-all duration-300 text-xs md:text-sm py-2 block whitespace-nowrap relative group ${
+        isActive ? "text-white" : "text-white hover:text-white"
       }`}
     >
       {item.title}
+      <span
+        className={`absolute bottom-0 left-0 h-[2px] bg-white transition-all duration-300 ${isActive ? "w-full" : "w-0 group-hover:w-full"}`}
+      ></span>
     </Link>
   );
 }
