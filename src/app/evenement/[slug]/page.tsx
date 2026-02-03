@@ -67,9 +67,6 @@ export default async function EventDetailPage({
               priority
               sizes="100vw"
             />
-            {/* Gradient for text readability, but sharper */}
-            <div className="absolute inset-0 bg-black/40" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90" />
           </div>
 
           <div className="relative z-10 text-center px-4 w-full max-w-5xl mx-auto pt-20">
@@ -98,25 +95,25 @@ export default async function EventDetailPage({
         <article className="py-16 md:py-24 bg-primary text-black">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Event Meta Information */}
-            <div className="mb-16 border-t border-black">
+            <div className="mb-16 border-t border-white">
               <div className="grid grid-cols-1 md:grid-cols-3">
-                <div className="flex items-start gap-6 p-8 border-r border-black/10">
+                <div className="flex items-start gap-6 p-8 border-r border-white/10">
                   <div>
-                    <span className="block text-xs font-black uppercase tracking-widest text-black mb-2">
+                    <span className="block text-xs font-black uppercase tracking-widest text-white mb-2">
                       {event.endDate ? "Période" : "Date"}
                     </span>
-                    <span className="text-lg font-black uppercase tracking-tight">
+                    <span className="text-lg font-black text-white uppercase tracking-tight">
                       {formatEventDateTime(event.startDate, event.endDate)}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-6 p-8 border-r border-black/10">
+                <div className="flex items-start gap-6 p-8 border-r border-white/10">
                   <div>
-                    <span className="block text-xs font-black uppercase tracking-widest text-black mb-2">
+                    <span className="block text-xs font-black uppercase tracking-widest text-white mb-2">
                       Horaires
                     </span>
-                    <span className="text-lg font-black uppercase tracking-tight">
+                    <span className="text-lg font-black text-white uppercase tracking-tight">
                       {formatTimePeriod(event.startTime, event.endTime)}
                     </span>
                   </div>
@@ -124,10 +121,10 @@ export default async function EventDetailPage({
 
                 <div className="flex items-start gap-6 p-8">
                   <div>
-                    <span className="block text-xs font-black uppercase tracking-widest text-black mb-2">
+                    <span className="block text-xs font-black uppercase tracking-widest text-white mb-2">
                       Lieu
                     </span>
-                    <span className="text-lg font-black uppercase tracking-tight">
+                    <span className="text-lg text-white font-black uppercase tracking-tight">
                       {event.location}
                     </span>
                   </div>
@@ -138,10 +135,10 @@ export default async function EventDetailPage({
             <div className="max-w-5xl mx-auto">
               {/* Event Description */}
               <section className="mb-24">
-                <div className="border-l-8 border-black pl-8 mb-12">
-                  <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter">
+                <div className="border-l-8 border-white pl-8 mb-12">
+                  <h2 className="text-3xl sm:text-4xl text-white font-black uppercase tracking-tighter">
                     Description de <br />
-                    <span className="text-black underline decoration-4 underline-offset-8 decoration-accent/30">
+                    <span className="text-white">
                       l&apos;événement
                     </span>
                   </h2>
