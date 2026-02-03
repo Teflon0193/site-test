@@ -30,30 +30,32 @@ export default function RegisterPage() {
         onError: (error) => {
           toast.error(error.error.message);
         },
-      }
+      },
     );
   };
 
   return (
     <AuthLayout title="Créer un compte">
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Créer un compte
+      <div className="space-y-10">
+        <div className="text-center lg:text-left space-y-4">
+          <h1 className="text-4xl font-black tracking-tighter text-black uppercase leading-none">
+            Nouveau <br />
+            <span className="text-black">Compte</span>
           </h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+            Rejoignez la communauté CCAPAC
+          </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-8">
           <GoogleAuthButton />
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-muted/50" />
+              <span className="w-full border-t-2 border-zinc-100" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                ou s&apos;inscrire avec
-              </span>
+            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.3em]">
+              <span className="bg-white px-6 text-zinc-300">OU</span>
             </div>
           </div>
 
@@ -78,10 +80,7 @@ export default function RegisterPage() {
             Conditions d&apos;utilisation
           </Link>{" "}
           et notre{" "}
-          <Link
-            href="#"
-            className="underline hover:text-foreground"
-          >
+          <Link href="#" className="underline hover:text-foreground">
             Politique de confidentialité
           </Link>
           .

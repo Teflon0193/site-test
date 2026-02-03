@@ -1,49 +1,55 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Mail, ArrowLeft } from "lucide-react";
+"use client";
+
+import { AuthLayout } from "@/app/components/auth/AuthLayout";
 import Link from "next/link";
 
 export default function VerifyEmailPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-none shadow-xl py-4">
-        <CardHeader className="text-center space-y-4 pb-4">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <Mail className="w-8 h-8 text-primary" />
-          </div>
-          <CardTitle className="text-2xl font-bold">
-            Vérifiez votre adresse email
-          </CardTitle>
-        </CardHeader>
+    <AuthLayout title="Vérification">
+      <div className="space-y-10">
+        <div className="text-center lg:text-left space-y-4">
+          <h1 className="text-4xl font-black tracking-tighter text-black uppercase leading-none">
+            Vérifiez <br />
+            <span className="text-primary">Email</span>
+          </h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+            Activation de votre accès membre — CCAPAC
+          </p>
+        </div>
 
-        <CardContent className="space-y-6 text-center">
-          <div className="space-y-3">
-            <p className="text-muted-foreground">
-              Nous avons envoyé un email de vérification à votre adresse.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Veuillez cliquer sur le lien dans l&apos;email pour activer votre
-              compte et accéder à votre espace membre.
+        <div className="bg-zinc-50 border-l-4 border-black p-6 space-y-6 text-left animate-slide-up">
+          <div className="space-y-4 text-xs text-black font-bold uppercase tracking-wider leading-relaxed">
+            <p>Nous avons envoyé un message de confirmation à votre adresse.</p>
+            <p className="text-zinc-500">
+              Veuillez cliquer sur le lien d&apos;activation pour authentifier
+              votre compte et accéder à nos services.
             </p>
           </div>
 
-          <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-2">
-            <p className="font-medium">Vous n&apos;avez pas reçu l&apos;email ?</p>
-            <ul className="text-xs text-muted-foreground space-y-1 text-left">
-              <li>• Vérifiez votre dossier spam ou courrier indésirable</li>
-              <li>• Assurez-vous d&apos;avoir saisi la bonne adresse email</li>
-              <li>• Le lien de vérification est valable pendant 24 heures</li>
+          <div className="space-y-2 pt-6 border-t border-zinc-200">
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+              Problèmes fréquents :
+            </p>
+            <ul className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 space-y-2">
+              <li className="flex items-center gap-2 text-primary tracking-[0.2em]">
+                • VÉRIFIEZ VOS SPAMS
+              </li>
+              <li className="flex items-center gap-2">
+                • DURÉE DU LIEN : 24 HEURES
+              </li>
             </ul>
           </div>
+        </div>
 
+        <div className="pt-6">
           <Link
             href="/auth/login"
-            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            className="w-full inline-flex items-center justify-center h-14 bg-black text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-primary transition-all duration-300"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Retour à la connexion
+            RETOUR À LA CONNEXION
           </Link>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </AuthLayout>
   );
 }

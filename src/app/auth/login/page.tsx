@@ -27,38 +27,38 @@ export default function LoginPage() {
 
         onError: (ctx) => {
           if (ctx.error.status === 403) {
-          toast.error("Veillez à vérifier votre email pour accéder à votre espace.") 
-        }
+            toast.error(
+              "Veillez à vérifier votre email pour accéder à votre espace.",
+            );
+          }
           toast.error(ctx.error.message);
         },
-        
-      }
+      },
     );
   };
 
   return (
     <AuthLayout title="Connexion">
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Bon retour parmi nous
+      <div className="space-y-10">
+        <div className="text-center lg:text-left space-y-4">
+          <h1 className="text-4xl font-black tracking-tighter text-black uppercase leading-none">
+            Espace <br />
+            <span className="text-black">Membre</span>
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Entrez vos identifiants pour accéder à votre espace
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+            Authentification
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-8">
           <GoogleAuthButton />
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-muted/50" />
+              <span className="w-full border-t-2 border-zinc-100" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                ou continuer avec
-              </span>
+            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.3em]">
+              <span className="bg-white px-6 text-zinc-300">OU</span>
             </div>
           </div>
 
