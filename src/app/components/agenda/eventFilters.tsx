@@ -44,7 +44,7 @@ export default function EventFilters({
 
   return (
     <section className="py-12 bg-white border-b border-zinc-200">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
+      <div className="max-w-7xl mx-auto px-2">
         <div className="flex flex-col lg:flex-row gap-8 items-start justify-between">
           <div className="mb-8 lg:mb-0 max-w-sm">
             <h2 className="text-2xl font-black text-black uppercase tracking-tighter mb-4">
