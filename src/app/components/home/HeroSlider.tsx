@@ -122,7 +122,7 @@ export default function HeroSlider({ slides, isVisible }: HeroSliderProps) {
                   >
 
                     {/* Massive Headline */}
-                    <h1 className="text-5xl sm:text-7xl lg:text-[4rem] leading-[0.9] font-black tracking-tighter text-white mb-6 sm:mb-4 drop-shadow-2xl">
+                    <h1 className="text-4xl sm:text-5xl lg:text-[4rem] leading-[0.9] font-black tracking-tighter text-white mb-6 sm:mb-4 drop-shadow-2xl">
                       {slide.title}
                     </h1>
 
