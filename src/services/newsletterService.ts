@@ -20,7 +20,9 @@ export const transformStrapiNewsletter = (
     size: data.pdf.size,
     ext: data.pdf.ext,
   },
-  coverImage: data.coverImage?.formats?.medium?.url || data.coverImage?.url,
+  coverImage:
+    (data.coverImage?.formats?.medium as { url?: string } | undefined)?.url ||
+    data.coverImage?.url,
   pageCount: data.pageCount,
   isFeatured: data.isFeatured,
   datePublication: data.datePublication,

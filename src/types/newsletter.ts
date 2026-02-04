@@ -52,7 +52,10 @@ export interface StrapiNewsletter {
   coverImage?: {
     id: number;
     url: string;
-    formats?: Record<string, unknown>;
+    formats?: {
+      medium?: { url: string };
+      [key: string]: { url?: string } | undefined;
+    };
   } | null;
   pageCount?: number;
   isFeatured: boolean;

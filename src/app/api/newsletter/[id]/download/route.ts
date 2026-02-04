@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getUser();
 
@@ -16,7 +16,8 @@ export async function GET(
     );
   }
 
-  const newsletter = await getNewsletterById(parseInt(params.id));
+  const { id } = await params;
+  const newsletter = await getNewsletterById(parseInt(id));
 
   if (!newsletter) {
     return NextResponse.json(
