@@ -44,7 +44,5 @@ export async function GET(
     console.error("[Newsletter Download] Failed to log activity:", error);
   }
 
-  return NextResponse.redirect(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}${newsletter.pdf.url}`
-  );
+  return NextResponse.redirect(newsletter.pdf.url);
 }

@@ -29,7 +29,6 @@ export default function PDFPreview({
   const [loading, setLoading] = useState(true);
   const [pageWidth, setPageWidth] = useState(800);
 
-  // Responsive width: only in useEffect to avoid setState during render
   useEffect(() => {
     setPageWidth(getPageWidth());
     const handleResize = () => setPageWidth(getPageWidth());
@@ -88,7 +87,7 @@ export default function PDFPreview({
               <div className="h-1 w-24 bg-white mx-auto"></div>
 
               <div className="space-y-4">
-                <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none">
+                <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none">
                   Contenu <br />
                   <span className="text-white">Limité</span>
                 </h3>
