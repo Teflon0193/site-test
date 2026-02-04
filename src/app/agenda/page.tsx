@@ -55,7 +55,7 @@ export default function AgendaPage() {
             <span className="inline-block px-3 py-1 bg-primary text-white text-[10px] font-black uppercase tracking-[0.4em] mb-6">
               AGENDA & ÉVÉNEMENTS
             </span>
-            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-black uppercase leading-[0.8] mb-6 drop-shadow-sm">
+            <h1 className="text-3xl md:text-6xl font-black tracking-tighter text-black uppercase leading-[0.8] mb-6 drop-shadow-sm">
               AGENDA
             </h1>
             <div className="w-24 h-3 bg-primary"></div>

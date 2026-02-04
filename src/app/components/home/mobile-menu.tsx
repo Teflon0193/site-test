@@ -34,7 +34,7 @@ export default function MobileMenu({ isOpen, onClose, user }: MobileMenuProps) {
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-[450px] bg-zinc-950 text-white z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] border-l border-white/10 ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-[450px] bg-primary text-white z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] border-l border-white/10 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -71,7 +71,7 @@ export default function MobileMenu({ isOpen, onClose, user }: MobileMenuProps) {
                   {item.submenu ? (
                     <div>
                       <button
-                        className="w-full text-left uppercase font-black text-3xl sm:text-4xl text-white hover:text-accent transition-colors duration-300 flex items-center justify-between group"
+                        className="w-full text-left uppercase font-black text-xl sm:text-4xl text-white hover:text-accent transition-colors duration-300 flex items-center justify-between group"
                         onClick={() =>
                           setOpenDropdown(
                             openDropdown === item.title ? null : item.title,
@@ -113,7 +113,7 @@ export default function MobileMenu({ isOpen, onClose, user }: MobileMenuProps) {
                   ) : (
                     <Link
                       href={item.href || "#"}
-                      className="block font-black text-3xl sm:text-4xl uppercase text-white hover:text-accent transition-colors duration-300 hover:translate-x-2 transform"
+                      className="block font-black text-xl sm:text-4xl uppercase text-white hover:text-accent transition-colors duration-300 hover:translate-x-2 transform"
                       onClick={handleLinkClick}
                     >
                       {item.title}
@@ -127,7 +127,7 @@ export default function MobileMenu({ isOpen, onClose, user }: MobileMenuProps) {
             <div className="mt-12 space-y-4">
               <Link
                 href={user ? "/espace-membre" : "/auth/login"}
-                className="block w-full py-4 bg-accent text-black text-center font-bold tracking-[0.2em] uppercase hover:bg-white transition-colors"
+                className="block w-full py-2 bg-accent text-black text-center font-bold tracking-[0.2em] uppercase hover:bg-white transition-colors"
                 onClick={onClose}
               >
                 {user ? "Espace Membre" : "Se connecter"}
