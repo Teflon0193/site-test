@@ -38,7 +38,6 @@ export default async function AuthCallbackPage({
         } else {
           redirect("/espace-membre?registered=true");
         }
-        redirect("/espace-membre?registered=true");
       }
     } else {
       // En cas d'erreur, rediriger quand même vers l'événement avec un message d'erreur

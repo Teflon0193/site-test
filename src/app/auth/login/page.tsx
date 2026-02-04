@@ -15,23 +15,16 @@ import { useSearchParams } from "next/navigation";
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect");
+  const redirect = searchParams.get("redirectUrl");
   const handleLoginSubmit = async (values: LoginFormValues) => {
     await signIn.email(
       {
         email: values.email,
         password: values.password,
+        callbackURL: redirect ? redirect as string : "/espace-membre",
       },
       {
-        onSuccess: () => {
-          if (redirect) {
-            router.push(redirect as string);
-          } else {
-            router.push("/espace-membre");
-          }
-          router.push("/espace-membre/admin");
-        },
-
+        onSuccess: () => router.push(redirect ? redirect as string : "/espace-membre"),
         onError: (ctx) => {
           if (ctx.error.status === 403) {
             toast.error(
@@ -58,7 +51,7 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-8">
-          <GoogleAuthButton />
+          <GoogleAuthButton callbackURL={redirect ?? "/espace-membre"} />
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

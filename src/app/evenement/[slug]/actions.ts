@@ -23,7 +23,7 @@ export async function registerEventAction(
       return {
         success: false,
         error: "Vous devez être connecté pour vous inscrire",
-        redirectTo: `/auth/login?redirect=/evenement/${eventId}`,
+        redirectTo: `/auth/login?redirectUrl=/evenement/${eventId}`,
       };
     }
 
