@@ -25,6 +25,7 @@ enum ActivityType {
   EVENT_REGISTER
   EVENT_CANCEL
   ADMIN_ACTION
+  NEWSLETTER_DOWNLOAD
 }
 
 model User {

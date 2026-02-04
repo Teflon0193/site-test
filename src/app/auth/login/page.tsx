@@ -10,10 +10,12 @@ import LoginForm, {
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
 import { signIn } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
   const handleLoginSubmit = async (values: LoginFormValues) => {
     await signIn.email(
       {
@@ -22,6 +24,11 @@ export default function LoginPage() {
       },
       {
         onSuccess: () => {
+          if (redirect) {
+            router.push(redirect as string);
+          } else {
+            router.push("/espace-membre");
+          }
           router.push("/espace-membre/admin");
         },
 

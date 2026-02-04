@@ -29,7 +29,7 @@ export function NavigationItem({
       >
         <div className="flex items-center gap-1 cursor-pointer py-2">
           <span
-            className={`font-bold uppercase tracking-[0.2em] transition-all duration-300 text-xs md:text-sm whitespace-nowrap flex items-center py-2 relative group ${
+            className={`font-bold uppercase tracking-[0.2em] transition-all duration-300 text-xs md:text-xs whitespace-nowrap flex items-center py-2 relative group ${
               isActive || isDropdownOpen
                 ? "text-white"
                 : "text-white hover:text-white"
@@ -62,7 +62,7 @@ export function NavigationItem({
   return (
     <Link
       href={item.href}
-      className={`font-bold uppercase tracking-[0.2em] transition-all duration-300 text-xs md:text-sm py-2 block whitespace-nowrap relative group ${
+      className={`font-bold uppercase tracking-[0.2em] transition-all duration-300 text-xs md:text-xs py-2 block whitespace-nowrap relative group ${
         isActive ? "text-white" : "text-white hover:text-white"
       }`}
     >
