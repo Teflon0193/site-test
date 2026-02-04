@@ -41,7 +41,7 @@ export const categories = [
     title: "Cinéma & Audiovisuel",
     description:
       "Valorisation du cinéma et de la création audiovisuelle congolaise",
-    image: "/images/media/cinema.jpg",
+    image: "/images/media/cinematheque.png",
     color: "from-blue-600 to-cyan-600",
   },
   {
@@ -90,7 +90,7 @@ export const programmes: Programme[] = [
     objectif: "Préserver et valoriser l'histoire du cinéma congolais",
     publicVise: "Cinéphiles, chercheurs, étudiants en cinéma",
     impact: "Sauvegarde de films historiques et éducation cinématographique",
-    image: "/images/media/media11.jpg",
+    image: "/images/media/cinematheque.png",
     startDate: "2025-12-15",
     endDate: "2025-12-15",
     startTime: "14:00",

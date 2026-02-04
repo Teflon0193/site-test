@@ -15,9 +15,12 @@ export default function Programmes() {
       <div className="max-w-[1300px] mx-auto px-6 sm:px-10 lg:px-16 mb-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
-            <span className="text-xs font-black tracking-[0.4em] text-accent uppercase block">
-              Nos Activités
-            </span>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-12 h-[2px] bg-accent"></span>
+              <span className="text-accent uppercase tracking-[0.4em] text-xs font-bold">
+                Nos Activités
+              </span>
+            </div>
             <h2 className="text-3xl md:text-3xl lg:text-5xl font-black text-black tracking-tighter uppercase leading-none">
               Vivez la <br />
               <span className="text-black">Culture Africaine</span>
@@ -51,8 +54,9 @@ export default function Programmes() {
                   src={programme.image || "/placeholder.svg"}
                   alt={programme.title}
                   fill
+                  quality={100}
                   sizes="(max-width: 768px) 280px, (max-width: 1024px) 350px, 450px"
-                  className="object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 ease-out group-hover:scale-105 opacity-80 group-hover:opacity-100"
+                  className="object-cover transition-all duration-1000 ease-out group-hover:scale-105 opacity-80 group-hover:opacity-100"
                 />
 
                 {/* Gradient Overlay */}
@@ -61,16 +65,16 @@ export default function Programmes() {
                 {/* Content */}
                 <div className="absolute inset-0 p-6 sm:p-10 flex flex-col justify-end z-10">
                   <div className="space-y-4">
-                    <span className="inline-block px-3 py-1 bg-accent/20 backdrop-blur-md border border-accent/30 text-accent text-[10px] font-black uppercase tracking-widest">
+                    <span className="inline-block px-3 py-1 bg-primary/20 backdrop-blur-md border border-primary/30 text-primary text-[10px] font-black uppercase tracking-widest">
                       {programme.category}
                     </span>
 
-                    <h3 className="text-xl sm:text-2xl font-black text-white uppercase leading-none tracking-tighter group-hover:text-accent transition-colors duration-300">
+                    <h3 className="text-xl sm:text-2xl font-black text-white uppercase leading-none tracking-tighter group-hover:text-primary transition-colors duration-300">
                       {programme.title}
                     </h3>
 
                     <div className="flex items-center text-white/40 group-hover:text-white text-[10px] font-black uppercase tracking-[0.2em] pt-4 transition-colors duration-300">
-                      <div className="w-8 h-px bg-white/20 mr-4 group-hover:w-12 group-hover:bg-accent transition-all duration-500" />
+                      <div className="w-8 h-px bg-white/20 mr-4 group-hover:w-12 group-hover:bg-primary transition-all duration-500" />
                       Détails
                     </div>
                   </div>

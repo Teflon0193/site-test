@@ -6,44 +6,72 @@ import { FaArrowRight } from "react-icons/fa";
 
 export default function ProgrammesPage() {
   return (
-    <MainLayout>
+    <MainLayout transparentHeader={false}>
       {/* Hero Section */}
-      <section className="relative h-[65vh] min-h-[500px] flex items-center justify-center overflow-hidden bg-black pb-16">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/media/visit2.jpg"
-            alt="Programmes CCAPAC"
-            fill
-            className="object-cover opacity-60"
-            priority
-            sizes="100vw"
-          />
-          {/* Gradient for text readability, but sharper */}
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-50" />
+      <section className="relative h-[40vh] min-h-[350px] md:h-[50vh] overflow-hidden border-b-2 border-black bg-white group/hero">
+        {/* Slanted Image Suite Background */}
+        <div className="absolute inset-0 flex w-[120%] -ml-[10%] z-10">
+          <div
+            className="relative flex-1 h-full overflow-hidden border-r-2 border-black transition-all duration-700 hover:flex-[1.5]"
+            style={{ clipPath: "polygon(0 0, 100% 0, 85% 100%, 0% 100%)" }}
+          >
+            <Image
+              src="/images/media/visit2.jpg"
+              alt="CCAPAC Programme 1"
+              fill
+              className="object-cover grayscale group-hover/hero:grayscale-0 transition-all duration-1000 scale-110 group-hover/hero:scale-100"
+              priority
+            />
+            <div className="absolute inset-0 bg-black/40 group-hover/hero:bg-transparent transition-all duration-700" />
+          </div>
+          <div
+            className="relative flex-1 h-full overflow-hidden border-x-2 border-black -ml-[5%] transition-all duration-700 hover:flex-[1.5]"
+            style={{ clipPath: "polygon(15% 0, 100% 0, 85% 100%, 0% 100%)" }}
+          >
+            <Image
+              src="/images/events/event2.jpg"
+              alt="CCAPAC Programme 2"
+              fill
+              className="object-cover grayscale group-hover/hero:grayscale-0 transition-all duration-1000 delay-75 scale-110 group-hover/hero:scale-100"
+            />
+            <div className="absolute inset-0 bg-black/40 group-hover/hero:bg-transparent transition-all duration-700" />
+          </div>
+          <div
+            className="relative flex-1 h-full overflow-hidden border-l-2 border-black -ml-[5%] transition-all duration-700 hover:flex-[1.5]"
+            style={{ clipPath: "polygon(15% 0, 100% 0, 100% 100%, 0% 100%)" }}
+          >
+            <Image
+              src="/images/media/media3.jpg"
+              alt="CCAPAC Programme 3"
+              fill
+              className="object-cover grayscale group-hover/hero:grayscale-0 transition-all duration-1000 delay-150 scale-110 group-hover/hero:scale-100"
+            />
+            <div className="absolute inset-0 bg-black/40 group-hover/hero:bg-transparent transition-all duration-700" />
+          </div>
         </div>
 
-        <div className="relative z-10 text-center px-4 w-full max-w-5xl mx-auto pt-28">
-          <span className="inline-block mb-6 px-4 py-1.5 bg-white text-black text-xs font-black tracking-[0.2em] uppercase transform -skew-x-6 border border-white hover:bg-black hover:text-white transition-colors duration-300 backdrop-blur-sm">
-            Découverte & Formation
-          </span>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 text-white tracking-tighter uppercase leading-[0.8] drop-shadow-2xl">
-            Nos Programmes
-          </h1>
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="h-[2px] w-12 bg-accent"></div>
-            <div className="h-[2px] w-12 bg-accent"></div>
+        {/* Text Overlay & Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent lg:to-white/5 z-20" />
+
+        <div className="container mx-auto px-6 md:px-12 lg:px-24 h-full flex flex-col justify-end pb-12 md:pb-16 relative z-30 pointer-events-none">
+          <div className="max-w-3xl bg-white/40 backdrop-blur-sm lg:backdrop-blur-none lg:bg-transparent p-8 lg:p-0 border-2 lg:border-0 border-black animate-slide-up">
+            <span className="inline-block px-3 py-1 bg-primary text-white text-[10px] font-black uppercase tracking-[0.4em] mb-6">
+              DÉCOUVERTE & FORMATION
+            </span>
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-black uppercase leading-[0.8] mb-6 drop-shadow-sm">
+              NOS PROGRAMMES
+            </h1>
+            <div className="w-24 h-3 bg-primary"></div>
           </div>
-          <p className="text-xl sm:text-2xl text-zinc-200 font-medium max-w-3xl mx-auto leading-relaxed border-l-4 border-accent pl-6 text-left md:text-center md:border-l-0 md:pl-0">
-            Explorez notre offre culturelle et éducative, conçue pour inspirer
-            et former les talents de demain.
-          </p>
         </div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-28 right-12 w-32 h-32 border-t-2 border-r-2 border-black/10 z-20 hidden lg:block"></div>
+        <div className="absolute bottom-12 right-12 w-32 h-32 border-b-2 border-r-2 border-black/10 z-20 hidden lg:block"></div>
       </section>
 
-      <section className="py-20 px-4 sm:px-6 md:px-8">
-        <div className="max-w-[1300px] mx-auto">
+      <section className="py-20">
+        <div className="container mx-auto px-6 md:px-12 lg:px-24 max-w-7xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-t-2 border-l-2 border-black">
             {categories.map((category, index) => (
               <Link

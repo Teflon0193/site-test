@@ -35,8 +35,8 @@ export default function Calendar({ events }: CalendarProps) {
   const hasMoreEvents = visibleEvents < sortedEvents.length;
 
   return (
-    <section className="py-8 sm:py-10 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8 bg-white">
-      <div className="max-w-[1400px] mx-auto">
+    <section className="py-8 sm:py-10 md:py-12 lg:py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         {sortedEvents.length === 0 && (
           <div className="text-center py-12 sm:py-16 md:py-20">
             <div className="bg-zinc-50 border border-zinc-200 p-6 sm:p-8 md:p-12 lg:p-16 max-w-lg mx-auto shadow-none">

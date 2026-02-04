@@ -28,8 +28,14 @@ export default function PartnersSection() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 border-b border-black/10 pb-8">
           <div>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-12 h-[2px] bg-accent"></span>
+              <span className="text-accent uppercase tracking-[0.4em] text-xs font-bold">
+                Nos Partenaires
+              </span>
+            </div>
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4">
-              Nos Partenaires
+              Ils nous accompagnent
             </h2>
             <p className="text-xl font-serif italic text-black/60 max-w-xl">
               Ils soutiennent notre vision et contribuent au rayonnement de la

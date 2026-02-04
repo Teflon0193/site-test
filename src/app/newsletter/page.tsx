@@ -1,6 +1,7 @@
 import { getNewsletters } from "@/services/newsletterService";
 import { getUser } from "@/lib/auth-server";
 import NewsletterPageClient from "@/app/newsletter/NewsletterPageClient";
+import MainLayout from "../components/layouts/MainLayout";
 
 export const metadata = {
   title: "Newsletters CCAPAC - Les faits marquants mensuels",
@@ -16,9 +17,11 @@ export default async function NewsletterPage() {
 
 
   return (
+    <MainLayout transparentHeader={false}>
     <NewsletterPageClient
       newsletters={newsletters}
       isAuthenticated={!!user}
     />
+    </MainLayout>
   );
 }

@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import type { FilterState } from "../../../hooks/useEventFilters";
-import { filterOptions} from "../../../data/events";
+import { filterOptions } from "../../../data/events";
 import { FaXmark } from "react-icons/fa6";
 
 interface EventFiltersProps {
@@ -44,7 +44,7 @@ export default function EventFilters({
 
   return (
     <section className="py-12 bg-white border-b border-zinc-200">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         <div className="flex flex-col lg:flex-row gap-8 items-start justify-between">
           <div className="mb-8 lg:mb-0 max-w-sm">
             <h2 className="text-2xl font-black text-black uppercase tracking-tighter mb-4">
@@ -154,7 +154,6 @@ export default function EventFilters({
             </div>
 
             <div className="flex items-center gap-4">
-
               {/* Clear Button */}
               {hasActiveFilters && (
                 <Button

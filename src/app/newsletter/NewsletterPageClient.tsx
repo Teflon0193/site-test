@@ -59,7 +59,7 @@ export default function NewsletterPageClient({
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="relative h-[60vh] min-h-[500px] md:h-[70vh] overflow-hidden border-b-2 border-black bg-white group/hero">
+      <section className="relative h-[40vh] min-h-[350px] md:h-[50vh] overflow-hidden border-b-2 border-black bg-white group/hero">
         {/* Slanted Image Suite Background */}
         <div className="absolute inset-0 flex w-[120%] -ml-[10%] z-10">
           <div
@@ -104,25 +104,20 @@ export default function NewsletterPageClient({
         {/* Text Overlay & Gradient */}
         <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent lg:to-white/5 z-20" />
 
-        <div className="container mx-auto px-6 md:px-12 lg:px-24 h-full flex flex-col justify-center relative z-30 pointer-events-none">
+        <div className="container mx-auto px-6 md:px-12 lg:px-24 h-full flex flex-col justify-end pb-12 md:pb-16 relative z-30 pointer-events-none">
           <div className="max-w-3xl bg-white/40 backdrop-blur-sm lg:backdrop-blur-none lg:bg-transparent p-8 lg:p-0 border-2 lg:border-0 border-black animate-slide-up">
             <span className="inline-block px-3 py-1 bg-primary text-white text-[10px] font-black uppercase tracking-[0.4em] mb-6">
               PUBLICATIONS & MÉMOIRES
             </span>
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-black uppercase leading-[0.8] mb-6 drop-shadow-sm">
-              NEWS<br />
-              <span className="text-primary italic">LETTER</span>
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-black uppercase leading-[0.8] mb-6 drop-shadow-sm">
+              NEWSLETTER
             </h1>
-            <div className="w-24 h-3 bg-black"></div>
-            <p className="max-w-md text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-zinc-600 mt-8 leading-relaxed">
-              DÉCOUVREZ LES MOMENTS FORTS ET LES RÉCITS QUI FAÇONNENT NOTRE
-              PATRIMOINE CULTUREL CHAQUE MOIS.
-            </p>
+            <div className="w-24 h-3 bg-primary"></div>
           </div>
         </div>
 
         {/* Decorative elements */}
-        <div className="absolute top-12 right-12 w-32 h-32 border-t-2 border-r-2 border-black/10 z-20 hidden lg:block"></div>
+        <div className="absolute top-28 right-12 w-32 h-32 border-t-2 border-r-2 border-black/10 z-20 hidden lg:block"></div>
         <div className="absolute bottom-12 right-12 w-32 h-32 border-b-2 border-r-2 border-black/10 z-20 hidden lg:block"></div>
       </section>
 

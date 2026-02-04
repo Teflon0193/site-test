@@ -40,8 +40,8 @@ export default function QuickAgenda() {
           <div className="lg:col-span-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-4 mb-6">
-                <span className="w-12 h-[2px] bg-foreground"></span>
-                <span className="text-foreground uppercase tracking-widest text-sm font-bold">
+                <span className="w-12 h-[2px] bg-accent"></span>
+                <span className="text-accent uppercase tracking-[0.4em] text-xs font-bold">
                   Calendrier
                 </span>
               </div>

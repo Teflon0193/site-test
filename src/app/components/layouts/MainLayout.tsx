@@ -16,7 +16,7 @@ export default function MainLayout({
   transparentHeader = true,
 }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-white text-foreground">
+    <div>
       <Header transparentHeader={transparentHeader} />
       {children}
       <Footer />
