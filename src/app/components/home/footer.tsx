@@ -23,7 +23,7 @@ export default function Footer() {
             </h2>
             <p className="text-zinc-500 font-medium text-sm leading-relaxed max-w-xs">
               Centre Culturel et Artistique pour les Pays d&apos;Afrique
-              Centrale. Un hub d&apos;excellence pour la création contemporaine.
+              Centrale.
             </p>
           </div>
 
@@ -97,7 +97,7 @@ export default function Footer() {
                 Mentions légales
               </Link>
               <span>
-                PAR{" "}
+                Développé par{" "}
                 <a
                   href="https://gofreelancerdc.com"
                   target="_blank"
