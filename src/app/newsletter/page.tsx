@@ -17,7 +17,7 @@ export default async function NewsletterPage() {
 
 
   return (
-    <MainLayout transparentHeader={false}>
+    <MainLayout>
     <NewsletterPageClient
       newsletters={newsletters}
       isAuthenticated={!!user}

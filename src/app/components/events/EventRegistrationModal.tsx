@@ -48,6 +48,7 @@ export default function EventRegistrationModal({
           email: values.email,
           password: values.password,
           name: `${values.firstName} ${values.lastName}`,
+          phone: values.phone,
         },
         {
           onSuccess: async () => {
