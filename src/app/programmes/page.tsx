@@ -53,7 +53,7 @@ export default function ProgrammesPage() {
         {/* Text Overlay & Gradient */}
         <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent lg:to-white/5 z-20" />
 
-        <div className="container mx-auto px-6 md:px-12 lg:px-24 h-full flex flex-col justify-end pb-12 md:pb-16 relative z-30 pointer-events-none">
+        <div className="container mx-auto px-6 md:px-12 lg:px-24 h-full flex flex-col justify-end pb-6 md:pb-16 relative z-30 pointer-events-none">
           <div className="max-w-3xl bg-white/40 backdrop-blur-sm lg:backdrop-blur-none lg:bg-transparent p-8 lg:p-0 border-2 lg:border-0 border-black animate-slide-up">
             <span className="inline-block px-3 py-1 bg-primary text-white text-[10px] font-black uppercase tracking-[0.4em] mb-6">
               DÉCOUVERTE & FORMATION
@@ -116,15 +116,11 @@ export default function ProgrammesPage() {
       <section className="py-24 px-4 bg-primary text-white border-t border-white/10">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="relative inline-block">
-            <span className="text-6xl absolute -top-8 -left-8 text-accent opacity-50 font-serif">
-              &quot;
-            </span>
+
             <p className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-tight text-white">
               La culture est ce qui reste quand on a tout oublié.
             </p>
-            <span className="text-6xl absolute -bottom-12 -right-8 text-accent opacity-50 font-serif">
-              &quot;
-            </span>
+
           </div>
 
           <div className="w-24 h-2 bg-accent mx-auto"></div>
@@ -132,7 +128,7 @@ export default function ProgrammesPage() {
           <div className="pt-8">
             <Link
               href="/contact"
-              className="inline-block px-12 py-5 bg-white text-black text-sm font-black uppercase tracking-[0.2em] hover:bg-accent hover:text-white transition-all duration-300 transform hover:scale-105"
+              className="inline-block px-8 md:px-12 py-5 bg-white text-black text-sm font-black uppercase tracking-[0.2em] hover:bg-accent hover:text-white transition-all duration-300 transform hover:scale-105"
             >
               Rejoindre l&apos;aventure
             </Link>

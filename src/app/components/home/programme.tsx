@@ -25,11 +25,14 @@ export default function Programmes() {
               Vivez la <br />
               <span className="text-black">Culture Africaine</span>
             </h2>
+            <p className="text-lg text-black/60 font-light max-w-sm mb-2">
+            Découvrez nos programmes culturels qui célèbrent la richesse artistique du Congo à travers la musique, le théâtre, le cinéma et le patrimoine.  
+            </p>
           </div>
 
           <Link
             href="/programmes"
-            className="group inline-flex items-center justify-center px-8 py-4 bg-white text-black hover:bg-accent hover:text-white transition-all duration-500 font-bold uppercase tracking-widest text-xs"
+            className="group inline-flex items-center justify-center px-4 py-4 bg-white text-black hover:bg-accent hover:text-white transition-all duration-500 font-bold uppercase tracking-widest text-xs"
           >
             <span>Explorer tout le programme</span>
             <FaArrowRight className="ml-3 w-3 h-3 group-hover:translate-x-1 transition-transform" />
