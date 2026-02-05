@@ -30,7 +30,7 @@ export default function GrandTambourPresentation() {
             GRAND TAMBOUR
           </span>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 text-white tracking-tighter uppercase leading-[0.8] drop-shadow-2xl">
-            Centre Culturel et Artistique des Pays d&apos;Afrique Centrale
+            Centre Culturel et Artistique pour les Pays d&apos;Afrique Centrale
           </h1>
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="h-[2px] w-12 bg-accent"></div>
