@@ -78,7 +78,7 @@ export default function Programmes() {
 
                     <div className="flex items-center text-white/40 group-hover:text-white text-[10px] font-black uppercase tracking-[0.2em] pt-4 transition-colors duration-300">
                       <div className="w-8 h-px bg-white/20 mr-4 group-hover:w-12 group-hover:bg-primary transition-all duration-500" />
-                      Détails
+                      Découvrir
                     </div>
                   </div>
                 </div>
