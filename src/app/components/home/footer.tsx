@@ -33,6 +33,7 @@ export default function Footer() {
               Navigation
             </h4>
             <nav className="grid grid-cols-1 gap-y-4">
+            <nav className="grid grid-cols-1 gap-y-4">
               {navigation.map((link) => (
                 <Link
                   key={link.label}
@@ -42,6 +43,7 @@ export default function Footer() {
                   {link.label}
                 </Link>
               ))}
+            </nav>
             </nav>
           </div>
 
