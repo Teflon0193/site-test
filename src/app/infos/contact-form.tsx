@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/app/components/ui/button";
 import { FaPaperPlane } from "react-icons/fa";
 import { Loader2 } from "lucide-react";
 import {
@@ -80,25 +81,25 @@ export default function ContactForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              <FormItem>
+                <FormLabel className="text-xs sm:text-sm font-semibold">
                   Prénom
                 </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder=""
-                    className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-xs font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors"
+                    placeholder="Votre prénom"
+                    className="bg-background text-sm sm:text-base h-10 sm:h-11"
                     {...field}
                     disabled={isLoading}
                   />
                 </FormControl>
-                <FormMessage className="text-[10px] uppercase font-bold text-red-500" />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
@@ -106,43 +107,43 @@ export default function ContactForm() {
             control={form.control}
             name="lastName"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              <FormItem>
+                <FormLabel className="text-xs sm:text-sm font-semibold">
                   Nom
                 </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder=""
-                    className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-xs font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors"
+                    placeholder="Votre nom"
+                    className="bg-background text-sm sm:text-base h-10 sm:h-11"
                     {...field}
                     disabled={isLoading}
                   />
                 </FormControl>
-                <FormMessage className="text-[10px] uppercase font-bold text-red-500" />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              <FormItem>
+                <FormLabel className="text-xs sm:text-sm font-semibold">
                   Email
                 </FormLabel>
                 <FormControl>
                   <Input
                     type="email"
-                    placeholder=""
-                    className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-xs font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors"
+                    placeholder="votre@email.com"
+                    className="bg-background text-sm sm:text-base h-10 sm:h-11"
                     {...field}
                     disabled={isLoading}
                   />
                 </FormControl>
-                <FormMessage className="text-[10px] uppercase font-bold text-red-500" />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
@@ -151,20 +152,20 @@ export default function ContactForm() {
             control={form.control}
             name="phone"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              <FormItem>
+                <FormLabel className="text-xs sm:text-sm font-semibold">
                   Téléphone
                 </FormLabel>
                 <FormControl>
                   <Input
                     type="tel"
-                    placeholder=""
-                    className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-xs font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors"
+                    placeholder="Votre numéro"
+                    className="bg-background text-sm sm:text-base h-10 sm:h-11"
                     {...field}
                     disabled={isLoading}
                   />
                 </FormControl>
-                <FormMessage className="text-[10px] uppercase font-bold text-red-500" />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
@@ -174,8 +175,8 @@ export default function ContactForm() {
           control={form.control}
           name="subject"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            <FormItem>
+              <FormLabel className="text-xs sm:text-sm font-semibold">
                 Sujet
               </FormLabel>
               <Select
@@ -184,50 +185,38 @@ export default function ContactForm() {
                 disabled={isLoading}
               >
                 <FormControl>
-                  <SelectTrigger className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-xs font-bold uppercase tracking-wider focus:ring-0 focus:border-black transition-colors">
-                    <SelectValue placeholder="SÉLECTIONNEZ UN SUJET" />
+                  <SelectTrigger className="bg-background text-sm sm:text-base h-10 sm:h-11">
+                    <SelectValue placeholder="Sélectionnez le sujet de votre message" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="rounded-none border-2 border-black">
+                <SelectContent>
                   <SelectItem
                     value="information-generale"
-                    className="text-[10px] font-black uppercase"
+                    className="text-xs sm:text-sm"
                   >
                     Information générale
                   </SelectItem>
                   <SelectItem
                     value="location-espaces"
-                    className="text-[10px] font-black uppercase"
+                    className="text-xs sm:text-sm"
                   >
-                    Location d&apos;espaces
+                    Location d&apos;`espaces
                   </SelectItem>
-                  <SelectItem
-                    value="programmation"
-                    className="text-[10px] font-black uppercase"
-                  >
+                  <SelectItem value="programmation" className="text-xs sm:text-sm">
                     Programmation
                   </SelectItem>
-                  <SelectItem
-                    value="partenariat"
-                    className="text-[10px] font-black uppercase"
-                  >
+                  <SelectItem value="partenariat" className="text-xs sm:text-sm">
                     Partenariat
                   </SelectItem>
-                  <SelectItem
-                    value="presse"
-                    className="text-[10px] font-black uppercase"
-                  >
+                  <SelectItem value="presse" className="text-xs sm:text-sm">
                     Presse & Médias
                   </SelectItem>
-                  <SelectItem
-                    value="autre"
-                    className="text-[10px] font-black uppercase"
-                  >
+                  <SelectItem value="autre" className="text-xs sm:text-sm">
                     Autre
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage className="text-[10px] uppercase font-bold text-red-500" />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -236,41 +225,41 @@ export default function ContactForm() {
           control={form.control}
           name="message"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            <FormItem>
+              <FormLabel className="text-xs sm:text-sm font-semibold">
                 Message
               </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="VOTRE MESSAGE ICI..."
-                  rows={6}
-                  className="bg-white border-zinc-200 border-2 rounded-none p-4 text-xs font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors resize-none"
+                  placeholder="Comment pouvons-nous vous aider ?"
+                  rows={5}
+                  className="resize-none bg-background text-sm sm:text-base"
                   {...field}
                   disabled={isLoading}
                 />
               </FormControl>
-              <FormMessage className="text-[10px] uppercase font-bold text-red-500" />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
 
-        <button
+        <Button
           type="submit"
-          className="w-full bg-black text-white h-14 font-black uppercase tracking-[0.2em] text-xs hover:bg-accent hover:text-white transition-all duration-300 flex items-center justify-center gap-3 disabled:bg-zinc-800"
+          className="w-full text-xs sm:text-sm md:text-base h-10 sm:h-11 md:h-12"
           disabled={isLoading}
         >
           {isLoading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>ENVOI EN COURS...</span>
+              <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 animate-spin" />
+              <span>Envoi en cours...</span>
             </>
           ) : (
             <>
-              <span>DÉMARRER LA DISCUSSION</span>
-              <FaPaperPlane className="h-3 w-3" />
+              <span>Démarrer la discussion</span>
+              <FaPaperPlane className="ml-1.5 sm:ml-2 h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </>
           )}
-        </button>
+        </Button>
       </form>
     </Form>
   );

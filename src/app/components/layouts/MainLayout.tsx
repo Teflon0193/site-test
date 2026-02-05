@@ -4,20 +4,16 @@ import Footer from "../home/footer";
 
 interface MainLayoutProps {
   children: React.ReactNode;
-  transparentHeader?: boolean;
 }
 
 /**
  * Layout wrapper Server Component qui combine Header et Footer
  * Utilisé par toutes les pages publiques qui ont besoin de ces deux composants
  */
-export default function MainLayout({
-  children,
-  transparentHeader = true,
-}: MainLayoutProps) {
+export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div>
-      <Header transparentHeader={transparentHeader} />
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
       {children}
       <Footer />
     </div>

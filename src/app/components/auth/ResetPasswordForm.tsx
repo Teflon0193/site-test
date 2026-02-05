@@ -5,9 +5,10 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 const schema = z
@@ -52,23 +53,19 @@ export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
   return (
     <form
       onSubmit={handleSubmit(onSubmit ?? defaultSubmit)}
-      className="space-y-6"
+      className="space-y-5"
       noValidate
     >
       <div className="space-y-2">
-        <Label
-          htmlFor="newPassword"
-          className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500"
-        >
-          NOUVEAU MOT DE PASSE
-        </Label>
+        <Label htmlFor="newPassword">Nouveau mot de passe</Label>
         <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="newPassword"
             type={showPassword ? "text" : "password"}
-            placeholder=""
+            placeholder="••••••••"
             autoComplete="new-password"
-            className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-sm font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors pr-12"
+            className="h-11 pl-10 pr-10"
             aria-invalid={!!errors.newPassword}
             aria-describedby={
               errors.newPassword ? "newPassword-error" : undefined
@@ -78,7 +75,7 @@ export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             tabIndex={-1}
           >
             {showPassword ? (
@@ -91,7 +88,7 @@ export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
         {errors.newPassword && (
           <p
             id="newPassword-error"
-            className="text-[10px] uppercase font-bold text-red-500 mt-1"
+            className="text-sm text-destructive font-medium"
           >
             {errors.newPassword.message}
           </p>
@@ -99,19 +96,15 @@ export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label
-          htmlFor="confirmPassword"
-          className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500"
-        >
-          CONFIRMER LE MOT DE PASSE
-        </Label>
+        <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
         <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="confirmPassword"
             type={showConfirmPassword ? "text" : "password"}
-            placeholder=""
+            placeholder="••••••••"
             autoComplete="new-password"
-            className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-sm font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors pr-12"
+            className="h-11 pl-10 pr-10"
             aria-invalid={!!errors.confirmPassword}
             aria-describedby={
               errors.confirmPassword ? "confirmPassword-error" : undefined
@@ -121,7 +114,7 @@ export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             tabIndex={-1}
           >
             {showConfirmPassword ? (
@@ -134,27 +127,27 @@ export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
         {errors.confirmPassword && (
           <p
             id="confirmPassword-error"
-            className="text-[10px] uppercase font-bold text-red-500 mt-1"
+            className="text-sm text-destructive font-medium"
           >
             {errors.confirmPassword.message}
           </p>
         )}
       </div>
 
-      <button
+      <Button
         type="submit"
-        className="w-full bg-black text-white h-14 font-black uppercase tracking-[0.2em] text-xs hover:bg-primary transition-all duration-300 flex items-center justify-center gap-3 disabled:bg-zinc-800"
+        className="w-full h-11 cursor-pointer text-base font-semibold shadow-md active:scale-[0.98] transition-all"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>RÉINITIALISATION...</span>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Réinitialisation...
           </>
         ) : (
-          "RÉINITIALISER LE MOT DE PASSE"
+          "Réinitialiser le mot de passe"
         )}
-      </button>
+      </Button>
     </form>
   );
 }

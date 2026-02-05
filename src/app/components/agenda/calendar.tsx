@@ -24,7 +24,7 @@ export default function Calendar({ events }: CalendarProps) {
 
   // Trie les événements du plus récent au plus ancien
   const sortedEvents = [...events].sort(
-    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
+    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
   );
 
   const loadMoreEvents = () => {
@@ -35,16 +35,16 @@ export default function Calendar({ events }: CalendarProps) {
   const hasMoreEvents = visibleEvents < sortedEvents.length;
 
   return (
-    <section className="py-8 sm:py-10 md:py-12 lg:py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-2">
+    <section className="py-8 sm:py-10 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-muted/5 to-background">
+      <div className="max-w-7xl mx-auto">
         {sortedEvents.length === 0 && (
           <div className="text-center py-12 sm:py-16 md:py-20">
-            <div className="bg-zinc-50 border border-zinc-200 p-6 sm:p-8 md:p-12 lg:p-16 max-w-lg mx-auto shadow-none">
-              <FaMagnifyingGlass className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-zinc-300 mx-auto mb-4 sm:mb-5 md:mb-6" />
-              <h3 className="text-lg sm:text-xl md:text-2xl font-black uppercase text-black mb-2 sm:mb-3 md:mb-4 tracking-tight">
+            <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12 lg:p-16 max-w-lg mx-auto border border-muted/20 shadow-lg">
+              <FaMagnifyingGlass className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-muted-foreground mx-auto mb-4 sm:mb-5 md:mb-6" />
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2 sm:mb-3 md:mb-4">
                 Aucun événement trouvé
               </h3>
-              <p className="text-zinc-500 text-xs sm:text-sm md:text-base leading-relaxed px-2 font-medium">
+              <p className="text-muted-foreground text-xs sm:text-sm md:text-base leading-relaxed px-2">
                 Essayez de modifier vos critères de recherche pour découvrir nos
                 événements
               </p>
@@ -53,77 +53,74 @@ export default function Calendar({ events }: CalendarProps) {
         )}
 
         {sortedEvents.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-8 xl:gap-10">
             {displayedEvents.map((event) => (
               <Card
                 key={event.id}
-                className="group cursor-pointer border-zinc-200 rounded-none overflow-hidden bg-white hover:border-black transition-all duration-300 shadow-none hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+                className="group cursor-pointer transition-all duration-300 hover:shadow-xl border-muted/20 rounded-xl sm:rounded-2xl hover:border-primary/50 overflow-hidden bg-gradient-to-br from-white to-muted/10"
                 onClick={() => router.push(`/evenement/${event.slug}`)}
               >
-                <div className="relative h-64 sm:h-72 overflow-hidden border-b border-zinc-100">
+                <div className="relative h-48 sm:h-52 md:h-56 lg:h-60 overflow-hidden">
                   <Image
                     src={event.image}
                     alt={event.title}
                     fill
-                    className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
                     priority={false}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
 
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                  <div className="absolute top-0 left-0 p-4 w-full flex justify-between items-start pointer-events-none">
-                    <div className="flex flex-col gap-2 items-start">
-                      <Badge className="bg-black text-white hover:bg-black border-none rounded-none text-[10px] sm:text-xs px-3 py-1 uppercase font-bold tracking-wider shadow-none">
+                  <div className="absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 flex flex-col gap-1.5 sm:gap-2">
+                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+                      <span className="truncate max-w-[80px] sm:max-w-none">
                         {event.discipline}
-                      </Badge>
-                    </div>
+                      </span>
+                    </Badge>
+                    <Badge className="bg-gradient-to-r from-muted/80 to-muted/60 text-foreground shadow-lg text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+                      <span className="truncate max-w-[80px] sm:max-w-none">
+                        {event.public}
+                      </span>
+                    </Badge>
                   </div>
                 </div>
 
-                <div className="p-6 sm:p-8">
-                  <div className="mb-4 flex flex-wrap gap-2">
-                    <Badge
-                      variant="outline"
-                      className="border-zinc-300 text-zinc-500 rounded-none text-[10px] font-bold uppercase tracking-widest px-2 py-0.5"
-                    >
-                      {event.public}
-                    </Badge>
-                  </div>
-
-                  <CardHeader className="p-0 mb-6">
-                    <CardTitle className="text-xl sm:text-2xl md:text-2xl font-black uppercase text-black group-hover:text-black transition-colors leading-[0.9] tracking-tight line-clamp-2">
+                <div className="p-4 sm:p-5 md:p-6 lg:p-7">
+                  <CardHeader className="p-0 mb-3 sm:mb-4 md:mb-5">
+                    <CardTitle className="text-base sm:text-lg md:text-xl font-bold uppercase text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                       {event.title}
                     </CardTitle>
                   </CardHeader>
 
                   <CardContent className="p-0">
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3 text-sm text-zinc-600">
-                        <FaCalendar className="h-4 w-4 mt-0.5 text-black" />
-                        <span className="font-bold uppercase tracking-wide">
+                    <div className="space-y-2.5 sm:space-y-3 md:space-y-4">
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                          <FaCalendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
+                        </div>
+                        <span className="line-clamp-1 font-medium truncate">
                           {formatEventDateTime(event.startDate, event.endDate)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm text-zinc-600">
-                        <FaClock className="h-4 w-4 text-black" />
-                        <span className="font-medium">
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                          <FaClock className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
+                        </div>
+                        <span className="font-medium truncate">
                           {formatTimePeriod(event.startTime, event.endTime)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm text-zinc-600">
-                        <FaMapPin className="h-4 w-4 text-black" />
-                        <span className="font-medium line-clamp-1">
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                          <FaMapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
+                        </div>
+                        <span className="line-clamp-1 font-medium truncate">
                           {event.location}
                         </span>
                       </div>
-                    </div>
-
-                    <div className="mt-6 pt-6 border-t border-zinc-100 flex items-center justify-between text-black font-bold text-xs uppercase tracking-widest group-hover:underline decoration-2 underline-offset-4">
-                      <span>Voir les détails</span>
-                      <div className="h-px w-8 bg-black group-hover:w-12 transition-all duration-300" />
                     </div>
                   </CardContent>
                 </div>
@@ -133,12 +130,12 @@ export default function Calendar({ events }: CalendarProps) {
         )}
 
         {sortedEvents.length > 0 && hasMoreEvents && (
-          <div className="text-center mt-16 sm:mt-20">
+          <div className="text-center mt-12 sm:mt-14 md:mt-16 lg:mt-20">
             <button
               onClick={loadMoreEvents}
-              className="justify-center cursor-pointer bg-black text-white px-8 sm:px-10 py-4 font-black text-sm uppercase tracking-[0.2em] hover:bg-accent hover:text-black transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 active:translate-y-0 active:shadow-none border-2 border-transparent hover:border-black"
+              className="justify-center cursor-pointer space-x-2 bg-gradient-to-r from-accent to-accent/90 text-black px-4 sm:px-5 md:px-6 lg:px-8 py-2.5 sm:py-3 md:py-4 font-bold text-xs sm:text-sm md:text-base hover:from-accent/90 hover:to-accent transition-all duration-300 shadow-lg hover:shadow-xl rounded-lg sm:rounded-xl hover:scale-105"
             >
-              Plus d&apos;événements
+              Charger plus d&apos;événements
             </button>
           </div>
         )}

@@ -15,26 +15,26 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="mt-12 sm:mt-16 flex justify-center items-center gap-2">
+    <div className="mt-8 sm:mt-12 md:mt-16 flex justify-center items-center gap-1.5 sm:gap-2">
       <button
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="p-3 text-zinc-400 hover:text-black hover:bg-zinc-100 disabled:opacity-30 disabled:hover:text-zinc-400 disabled:hover:bg-transparent transition-colors rounded-none"
+        className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors"
         aria-label="Previous Page"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
       </button>
 
-      <div className="flex items-center gap-2 overflow-x-auto max-w-full">
+      <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto max-w-full">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
           <button
             key={page}
             onClick={() => onPageChange(page)}
             className={cn(
-              "w-10 h-10 flex items-center justify-center rounded-none text-sm font-bold transition-all flex-shrink-0 border",
+              "w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md text-xs sm:text-sm font-medium transition-colors flex-shrink-0",
               currentPage === page
-                ? "bg-black text-white border-black"
-                : "text-zinc-500 border-transparent hover:border-zinc-300 hover:bg-zinc-50",
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted"
             )}
           >
             {page}
@@ -45,10 +45,10 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage === totalPages}
-        className="p-3 text-zinc-400 hover:text-black hover:bg-zinc-100 disabled:opacity-30 disabled:hover:text-zinc-400 disabled:hover:bg-transparent transition-colors rounded-none"
+        className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors"
         aria-label="Next Page"
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={18} className="sm:w-5 sm:h-5" />
       </button>
     </div>
   );

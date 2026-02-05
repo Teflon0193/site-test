@@ -8,7 +8,7 @@ export default function AgendaContainer() {
   const event = useEventFilters();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
       <EventFilters
         filters={event.filters}
         onFilterChange={event.updateFilter}

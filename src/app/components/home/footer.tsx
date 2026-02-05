@@ -1,4 +1,6 @@
+import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock } from "react-icons/fa";
 import { SOCIAL_LINKS } from "@/lib/header/constants";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Footer() {
@@ -9,105 +11,154 @@ export default function Footer() {
     { label: "Infos pratiques", href: "/infos" },
   ];
 
+  const programmes = [
+    {
+      label: "Musique & Arts vivants",
+      href: "/programmes/musique-arts-vivants",
+    },
+    {
+      label: "Théâtre & Arts de la scène",
+      href: "/programmes/theatre-arts-scene",
+    },
+    { label: "Cinéma & Audiovisuel", href: "/programmes/cinema-audiovisuel" },
+    { label: "Littérature & Pensée", href: "/programmes/litterature-pensee" },
+  ];
+
   return (
-    <footer className="bg-primary text-white py-16 sm:py-24 border-t border-white/5">
-      <div className="max-w-[1300px] mx-auto px-6 sm:px-10 lg:px-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-24 mb-16">
-          
-          <div className="space-y-6">
-            <h2 className="text-3xl font-black uppercase tracking-tighter leading-none">
-              CCAPAC
-              <span className="block text-xs tracking-[0.3em] mt-2 text-foreground">
-                GRAND TAMBOUR
-              </span>
-            </h2>
-            <p className="text-white font-medium text-sm leading-relaxed max-w-xs">
-              Centre Culturel et Artistique pour les Pays d&apos;Afrique
+    <footer className="bg-primary border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-8">
+          {/* Brand Column */}
+          <div className="space-y-4 sm:space-y-6">
+            <Link href="/" className="inline-block">
+              <div className="relative h-10 sm:h-12 w-auto items-center flex">
+                <Image
+                  src="/logo-grand-tambour.png"
+                  alt="CCAPAC Logo"
+                  width={180}
+                  height={60}
+                  className="h-24 sm:h-24 md:h-24 lg:h-24 xl:h-24 w-auto object-contain brightness-0 invert opacity-90"
+                />
+              </div>
+            </Link>
+            <p className="text-xs sm:text-sm leading-relaxed text-white">
+              Le Centre Culturel et Artistique pour les pays d&apos;Afrique
               Centrale.
             </p>
-          </div>
-
-          {/* LIENS */}
-          <div className="space-y-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">
-              Navigation
-            </h4>
-            <nav className="grid grid-cols-1 gap-y-4">
-            <nav className="grid grid-cols-1 gap-y-4">
-              {navigation.map((link) => (
+            <div className="flex gap-3 sm:gap-4">
+              {SOCIAL_LINKS.map((social) => (
                 <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm font-black uppercase tracking-widest hover:text-secondary transition-all duration-300 w-fit"
+                  key={social.label}
+                  href={social.href}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white hover:text-white transition-all duration-300"
+                  aria-label={social.label}
                 >
-                  {link.label}
+                  <social.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Link>
               ))}
-            </nav>
-            </nav>
+            </div>
           </div>
 
-          {/* CONTACT */}
-          <div className="space-y-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">
+          {/* Navigation Column */}
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider mb-4 sm:mb-6">
+              Navigation
+            </h4>
+            <ul className="space-y-2.5 sm:space-y-3">
+              {navigation.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-xs sm:text-sm hover:text-white cursor-pointer text-white/80 transition-colors duration-200"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Programmes Column */}
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider mb-4 sm:mb-6">
+              Programmes
+            </h4>
+            <ul className="space-y-2.5 sm:space-y-3">
+              {programmes.map((program) => (
+                <li key={program.label}>
+                  <Link
+                    href={program.href}
+                    className="text-xs sm:text-sm hover:text-white cursor-pointer text-white/80 transition-colors duration-200"
+                  >
+                    {program.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Column */}
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider mb-4 sm:mb-6">
               Contact
             </h4>
-            <div className="space-y-4 text-sm font-bold uppercase tracking-widest text-white">
-              <p className="hover:text-white transition-colors">
-                Boulevard Triomphal, Kinshasa
-              </p>
-              <p className="hover:text-white transition-colors">
-                +243 995 505 050
-              </p>
-              <p className="hover:text-white transition-colors">
-                info@centreculturel.cd
-              </p>
+            <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
+              <div className="flex gap-2.5 sm:gap-3">
+                <FaMapMarkerAlt className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0 mt-0.5" />
+                <span className="leading-relaxed text-white/90">
+                  Boulevard Triomphal
+                  <br />
+                  Kinshasa, RDC
+                </span>
+              </div>
+              <div className="flex gap-2.5 sm:gap-3 items-center">
+                <FaPhone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />
+                <span className="text-white/90">+243 995 505 050</span>
+              </div>
+              <div className="flex gap-2.5 sm:gap-3 items-center">
+                <FaEnvelope className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />
+                <span className="break-all text-white/90">
+                  info@centreculturel.cd
+                </span>
+              </div>
+              <div className="flex gap-2.5 sm:gap-3 items-start">
+                <FaClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0 mt-0.5" />
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-white/90">Lun-Ven: 8h-16h</p>
+                  <p className="text-white/90">Sam: 9h-16h</p>
+                  <p className="text-white/90">Dim: 14h-18h</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* BAS DE PAGE */}
-        <div className="pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          <div className="flex gap-6">
-            {SOCIAL_LINKS.map((social) => (
+      {/* Bottom Bar */}
+      <div className="border-t border-white/5 bg-black/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white">
+            <p>© {new Date().getFullYear()} CCAPAC. Tous droits réservés.</p>
+
+            <div className="flex items-center gap-6">
+              <Link href="#" className="hover:text-white transition-colors">
+                Politique de confidentialité
+              </Link>
+              <Link href="#" className="hover:text-white transition-colors">
+                Mentions légales
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-white">Développé par</span>
               <a
-                key={social.label}
-                href={social.href}
+                href="https://gofreelancerdc.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-secondary transition-all duration-300 transform hover:scale-110"
-                aria-label={social.label}
+                className="font-bold text-white hover:text-white transition-colors"
               >
-                <social.icon className="w-5 h-5" />
+                GoFreelance
               </a>
-            ))}
-          </div>
-
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-wite">
-            <p>© {new Date().getFullYear()} CCAPAC — TOUS DROITS RÉSERVÉS</p>
-            <div className="flex gap-6">
-              {/* <Link
-                href="/confidentialite"
-                className="hover:text-white transition-colors"
-              >
-                Confidentialité
-              </Link>
-              <Link
-                href="/mentions-legales"
-                className="hover:text-white transition-colors"
-              >
-                Mentions légales
-              </Link> */}
-              <span>
-                Développé par{" "}
-                <a
-                  href="https://gofreelancerdc.com"
-                  target="_blank"
-                  className="hover:text-white transition-colors underline decoration-white underline-offset-4"
-                >
-                  GOFREELANCE
-                </a>
-              </span>
             </div>
           </div>
         </div>

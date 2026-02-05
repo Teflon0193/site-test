@@ -11,7 +11,7 @@ export function MobileMenuToggle({ onToggle }: MobileMenuToggleProps) {
       onClick={onToggle}
       aria-label="Toggle mobile menu"
     >
-      <BiMenu className="w-8 h-8 sm:w-8 sm:h-8" />
+      <BiMenu className="w-5 h-5 sm:w-6 sm:h-6" />
     </button>
   );
 }

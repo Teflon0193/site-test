@@ -48,51 +48,43 @@ export default function MediaPopup({
   const currentItem = mediaItems[currentIndex];
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-black animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[60] flex flex-col bg-black/95 animate-in fade-in duration-200">
       {/* Search/Controls Header */}
-      <div className="absolute top-0 left-0 right-0 p-6 z-50 flex justify-between items-start pointer-events-none">
-        <div className="pointer-events-auto bg-black/50 backdrop-blur-md px-4 py-2 text-white text-xs font-bold uppercase tracking-widest border border-white/10">
+      <div className="absolute top-0 left-0 right-0 p-3 sm:p-4 z-50 flex justify-between items-start">
+        <div className="text-white/70 text-xs sm:text-sm font-medium">
           {currentIndex + 1} / {mediaItems.length}
         </div>
         <button
           onClick={onClose}
-          className="pointer-events-auto p-3 text-white hover:text-accent transition-colors bg-black/50 backdrop-blur-md border border-white/10 hover:border-accent"
+          className="p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
           aria-label="Fermer"
         >
-          <X size={24} />
+          <X size={20} className="sm:w-6 sm:h-6" />
         </button>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center relative w-full h-full overflow-hidden">
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons (Hidden on mobile interactions sometimes, but kept for clarity) */}
         <button
           onClick={onPrev}
-          className="absolute left-0 h-full px-4 sm:px-8 z-40 text-white/30 hover:text-white hover:bg-black/20 transition-all hidden sm:flex items-center justify-center group"
+          className="absolute left-2 sm:left-4 z-40 p-2 sm:p-3 text-white/50 hover:text-white transition-colors hidden sm:block"
           aria-label="Précédent"
         >
-          <ChevronLeft
-            size={48}
-            strokeWidth={1}
-            className="group-hover:scale-110 transition-transform duration-300"
-          />
+          <ChevronLeft size={32} className="sm:w-10 sm:h-10" strokeWidth={1} />
         </button>
 
         <button
           onClick={onNext}
-          className="absolute right-0 h-full px-4 sm:px-8 z-40 text-white/30 hover:text-white hover:bg-black/20 transition-all hidden sm:flex items-center justify-center group"
+          className="absolute right-2 sm:right-4 z-40 p-2 sm:p-3 text-white/50 hover:text-white transition-colors hidden sm:block"
           aria-label="Suivant"
         >
-          <ChevronRight
-            size={48}
-            strokeWidth={1}
-            className="group-hover:scale-110 transition-transform duration-300"
-          />
+          <ChevronRight size={32} className="sm:w-10 sm:h-10" strokeWidth={1} />
         </button>
 
         {/* Image */}
-        <div className="relative w-full h-full p-4 sm:p-12 md:p-20 flex items-center justify-center">
-          <div className="relative w-full h-full max-w-7xl">
+        <div className="relative w-full h-full p-3 sm:p-4 md:p-8 lg:p-12 xl:p-20 flex items-center justify-center">
+          <div className="relative w-full h-full max-w-7xl max-h-[75vh] sm:max-h-[80vh] md:max-h-[85vh]">
             <Image
               src={currentItem.image || "/placeholder.svg"}
               alt={currentItem.title}
@@ -106,27 +98,25 @@ export default function MediaPopup({
       </div>
 
       {/* Footer / Caption Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-black/90 pt-8 pb-8 border-t border-white/10">
-        <div className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="text-xl sm:text-2xl font-black text-white mb-3 uppercase tracking-tight">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-8 sm:pt-10 md:pt-12 pb-4 sm:pb-6 md:pb-8 px-3 sm:px-4 md:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-1.5 sm:mb-2 line-clamp-2">
             {currentItem.title}
           </h2>
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-bold uppercase tracking-widest text-zinc-400">
-            <div className="flex items-center gap-2">
-              <Calendar size={14} className="text-accent" />
-              <span className="truncate">
-                {formatDate(currentItem.eventDate)}
-              </span>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-white/70">
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <Calendar size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+              <span className="truncate">{formatDate(currentItem.eventDate)}</span>
             </div>
             {currentItem.location && (
-              <div className="flex items-center gap-2">
-                <MapPin size={14} className="text-accent" />
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <MapPin size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
                 <span className="truncate">{currentItem.location}</span>
               </div>
             )}
             {currentItem.photographer && (
-              <div className="flex items-center gap-2">
-                <Camera size={14} className="text-accent" />
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <Camera size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
                 <span className="truncate">{currentItem.photographer}</span>
               </div>
             )}

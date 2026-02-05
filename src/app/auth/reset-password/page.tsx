@@ -20,46 +20,38 @@ function ResetPasswordContent() {
 
   if (error === "INVALID_TOKEN" || !token) {
     return (
-      <main>
-      <div className="space-y-8">
-        <div className="text-center lg:text-left space-y-4">
-          <h1 className="text-4xl font-black tracking-tighter text-black uppercase leading-none">
-            Lien <br />
-            <span className="text-red-600">Invalide</span>
+      <div className="space-y-6">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Lien invalide ou expiré
           </h1>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
-            Erreur de sécurité ou expiration
-          </p>
-        </div>
           <p className="text-sm text-muted-foreground">
             Ce lien de réinitialisation n&apos;est plus valide. Il a peut-être
             expiré ou a déjà été utilisé.
           </p>
         </div>
 
-        <div className="bg-zinc-50 border-l-4 border-black p-6">
-          <p className="text-xs text-black font-bold uppercase tracking-wider leading-relaxed">
-            📧 Vous pouvez demander un nouveau lien de réinitialisation. Les jetons de sécurité expirent après 1 heure.
+        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+          <p className="text-sm text-orange-800 dark:text-orange-200">
+            📧 Vous pouvez demander un nouveau lien de réinitialisation.
           </p>
         </div>
 
         <div className="flex flex-col gap-3">
           <Link
             href="/auth/forgot-password"
-            className="w-full inline-flex items-center justify-center h-14 bg-black text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-primary transition-all duration-300"
+            className="w-full inline-flex items-center justify-center gap-2 h-11 bg-primary text-primary-foreground rounded-md font-semibold hover:bg-primary/90 transition-colors"
           >
-            NOUVELLE DEMANDE
+            Demander un nouveau lien
           </Link>
           <Link
             href="/auth/login"
-            className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 hover:text-black transition-colors"
+            className="text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            RETOUR À LA CONNEXION
+            Retour à la connexion
           </Link>
-        
+        </div>
       </div>
-      </main>
-      
     );
   }
 
@@ -79,14 +71,13 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="space-y-10">
-      <div className="text-center lg:text-left space-y-4">
-        <h1 className="text-4xl font-black tracking-tighter text-black uppercase leading-none">
-          Réinitialiser <br />
-          <span className="text-black">Mot de Passe</span>
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Créer un nouveau mot de passe
         </h1>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
-          Sécurisation de votre accès membre
+        <p className="text-sm text-muted-foreground">
+          Choisissez un mot de passe sécurisé pour votre compte.
         </p>
       </div>
 
@@ -94,24 +85,24 @@ function ResetPasswordContent() {
         <ResetPasswordForm onSubmit={handleSubmit} />
       </div>
 
-      <div className="bg-zinc-50 border-2 border-zinc-100 p-6">
-        <p className="text-[10px] font-black uppercase tracking-widest text-black mb-4">
-          Conseils de sécurité :
+      <div className="bg-muted/50 border border-muted rounded-lg p-4">
+        <p className="text-xs text-muted-foreground">
+          <strong>Conseils pour un mot de passe sécurisé :</strong>
         </p>
-        <ul className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 space-y-2">
-          <li className="flex items-center gap-2"><div className="w-1 h-1 bg-primary"></div> AU MOINS 8 CARACTÈRES</li>
-          <li className="flex items-center gap-2"><div className="w-1 h-1 bg-primary"></div> LETTRES, CHIFFRES & SYMBOLES</li>
-          <li className="flex items-center gap-2"><div className="w-1 h-1 bg-primary"></div> ÉVITEZ LES INFOS PERSONNELLES</li>
+        <ul className="text-xs text-muted-foreground/80 space-y-1 mt-2 ml-4 list-disc">
+          <li>Au moins 8 caractères</li>
+          <li>Mélangez lettres, chiffres et symboles</li>
+          <li>Évitez les informations personnelles</li>
         </ul>
       </div>
 
       <div className="text-center">
         <Link
           href="/auth/login"
-          className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 hover:text-black transition-colors group"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
         >
-          <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
-          RETOUR À LA CONNEXION
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          Retour à la connexion
         </Link>
       </div>
     </div>

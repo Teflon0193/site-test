@@ -1,181 +1,170 @@
 import MainLayout from "../components/layouts/MainLayout";
 import ContactForm from "./contact-form";
 import { GoogleMapsButton } from "./GoogleMapsButton";
-import Image from "next/image";
+import {
+  FaClock,
+  FaMapMarkerAlt,
+  FaPhoneAlt,
+  FaEnvelope,
+} from "react-icons/fa";
 
 export default function InfosPratiquesPage() {
   return (
     <MainLayout>
-      {/* Hero Section */}
-      <section className="relative h-[65vh] min-h-[500px] flex items-center justify-center overflow-hidden bg-black pb-16">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/media/visite.jpg"
-            alt="Infos Pratiques CCAPAC"
-            fill
-            className="object-cover opacity-60"
-            priority
-            sizes="100vw"
-          />
-          {/* Gradient for text readability, but sharper */}
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-50" />
-        </div>
-
-        <div className="relative z-10 text-center px-4 w-full max-w-5xl mx-auto pt-28">
-          <span className="inline-block mb-6 px-4 py-1.5 bg-white text-black text-xs font-black tracking-[0.2em] uppercase transform -skew-x-6 border border-white hover:bg-black hover:text-white transition-colors duration-300 backdrop-blur-sm">
-            Contact & Accès
-          </span>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 text-white tracking-tighter uppercase leading-[0.8] drop-shadow-2xl">
-            Infos Pratiques
+      {/* Hero Section - Reduced Height */}
+      <section className="relative h-[25vh] min-h-[200px] sm:h-[30vh] sm:min-h-[250px] md:h-[35vh] md:min-h-[300px] mt-16 sm:mt-20 md:mt-24 flex items-center justify-center bg-muted/5 border-b border-border/40">
+        <div className="text-center px-4 sm:px-6 max-w-4xl mx-auto">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-3 md:mb-4 tracking-tight text-foreground uppercase">
+            Informations Pratiques
           </h1>
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="h-[2px] w-12 bg-accent"></div>
-            <div className="h-[2px] w-12 bg-accent"></div>
-          </div>
-          <p className="text-xl sm:text-2xl text-zinc-200 font-medium max-w-3xl mx-auto leading-relaxed border-l-4 border-accent pl-6 text-left md:text-center md:border-l-0 md:pl-0">
-            Tout ce qu&apos;il faut savoir pour nous rendre visite, nous
-            contacter ou participer à nos activités.
+          <p className="text-muted-foreground text-xs sm:text-sm md:text-base lg:text-lg max-w-2xl mx-auto leading-relaxed">
+            Tout ce que vous devez savoir pour votre visite au CCAPAC.
           </p>
         </div>
       </section>
 
-      <div className="bg-white px-4 sm:px-10 lg:px-16 py-16 lg:py-32">
-        <div className="max-w-[1300px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 lg:py-20">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 sm:gap-10 md:gap-12 lg:gap-16">
           {/* Left Column: Info Cards */}
-          <div className="space-y-24">
+          <div className="space-y-6 sm:space-y-8 md:space-y-10">
             {/* Horaires */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-6 border-b-2 border-black pb-6">
-                <span className="text-accent font-black text-lg">01</span>
-                <h2 className="text-3xl font-black uppercase tracking-tighter">
-                  Horaires
+            <div className="space-y-4 sm:space-y-5 md:space-y-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                  <FaClock className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5" />
+                </div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
+                  Horaires d&apos;ouverture
                 </h2>
               </div>
 
-              <div className="bg-zinc-50 border-2 border-black p-6 sm:p-10 space-y-8">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-zinc-200 pb-6">
-                  <span className="font-black uppercase tracking-widest text-[10px] text-zinc-400">
-                    Lundi - Vendredi
-                  </span>
-                  <span className="font-black text-2xl tracking-tighter">
-                    08:00 — 16:00
-                  </span>
+              <div className="bg-card border border-border/50 rounded-lg sm:rounded-xl overflow-hidden shadow-sm">
+                <div className="p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 border-b border-border/40 pb-2.5 sm:pb-3 last:border-0 last:pb-0">
+                    <span className="font-medium text-sm sm:text-base">
+                      Lundi - Vendredi
+                    </span>
+                    <span className="font-bold text-primary text-sm sm:text-base">
+                      8h00 - 16h00
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 border-b border-border/40 pb-2.5 sm:pb-3 last:border-0 last:pb-0">
+                    <span className="font-medium text-sm sm:text-base">
+                      Samedi
+                    </span>
+                    <span className="font-bold text-primary text-sm sm:text-base">
+                      09h00 - 16h00
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 border-b border-border/40 pb-2.5 sm:pb-3 last:border-0 last:pb-0">
+                    <span className="font-medium text-sm sm:text-base">
+                      Dimanche
+                    </span>
+                    <span className="font-bold text-primary text-sm sm:text-base">
+                      14h00 - 18h00
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-zinc-200 pb-6">
-                  <span className="font-black uppercase tracking-widest text-[10px] text-zinc-400">
-                    Samedi
-                  </span>
-                  <span className="font-black text-2xl tracking-tighter">
-                    09:00 — 16:00
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-zinc-200 pb-6">
-                  <span className="font-black uppercase tracking-widest text-[10px] text-zinc-400">
-                    Dimanche
-                  </span>
-                  <span className="font-black text-2xl tracking-tighter">
-                    14:00 — 18:00
-                  </span>
-                </div>
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-accent pt-2">
-                  * Fermé les jours fériés
+                <div className="bg-muted/20 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 text-[10px] sm:text-xs md:text-sm text-muted-foreground border-t border-border/40">
+                  Fermé les jours fériés. Horaires spéciaux vac. scolaires.
                 </div>
               </div>
             </div>
 
             {/* Accès */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-6 border-b-2 border-black pb-6">
-                <span className="text-accent font-black text-lg">02</span>
-                <h2 className="text-3xl font-black uppercase tracking-tighter">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                  <FaMapMarkerAlt className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5" />
+                </div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                   Accès
                 </h2>
               </div>
 
-              <div className="bg-black text-white p-6 sm:p-10 space-y-10 border-2 border-black">
-                <div className="grid sm:grid-cols-2 gap-10">
-                  <div>
-                    <h3 className="font-black uppercase tracking-widest text-[10px] text-zinc-500 mb-4">
-                      Adresse
-                    </h3>
-                    <p className="text-xl leading-tight font-black uppercase tracking-tighter">
-                      Boulevard Triomphal
-                      <br />
-                      Kinshasa, RDC
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-black uppercase tracking-widest text-[10px] text-zinc-500 mb-4">
-                      Parking
-                    </h3>
-                    <p className="text-xl leading-tight font-black uppercase tracking-tighter">
-                      Gratuit et <br /> surveillé sur place.
-                    </p>
-                  </div>
+              <div className="bg-card border border-border/50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 shadow-sm space-y-4 sm:space-y-5 md:space-y-6">
+                <div>
+                  <h3 className="font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
+                    Adresse
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm md:text-base">
+                    Boulevard Triomphal
+                    <br />
+                    Kinshasa, République Démocratique du Congo
+                  </p>
                 </div>
-                <div className="pt-6 border-t border-white/10">
-                  <GoogleMapsButton />
+
+                <div>
+                  <h3 className="font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
+                    Parking
+                  </h3>
+                  <p className="text-muted-foreground text-xs sm:text-sm md:text-base">
+                    Gratuit et surveillé
+                  </p>
                 </div>
+
+                <GoogleMapsButton />
               </div>
             </div>
 
             {/* Direct Contacts */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-6 border-b-2 border-black pb-6">
-                <span className="text-accent font-black text-lg">03</span>
-                <h2 className="text-3xl font-black uppercase tracking-tighter">
-                  Contacts
+            <div className="space-y-4 sm:space-y-5 md:space-y-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                  <FaPhoneAlt className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
+                  Contacts Directs
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-2 border-black bg-white">
-                <div className="p-8 border-b md:border-b-0 md:border-r-2 border-black hover:bg-zinc-50 transition-colors">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">
-                    Accueil
+              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-muted/20 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-border/30 hover:border-primary/30 transition-colors">
+                  <p className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider mb-1.5 sm:mb-2">
+                    Accueil Général
                   </p>
-                  <p className="font-black text-2xl tracking-tighter mb-4">
+                  <p className="font-medium text-sm sm:text-base md:text-lg mb-1 break-all">
                     +243 995 505 050
                   </p>
-                  <a
-                    href="mailto:info@centreculturel.cd"
-                    className="text-xs font-black uppercase tracking-widest border-b-2 border-accent hover:text-accent transition-colors pb-1"
-                  >
-                    Envoyer un mail
-                  </a>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Du Lundi au Samedi
+                  </p>
                 </div>
-                <div className="p-8 hover:bg-zinc-50 transition-colors">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">
-                    Programmation
+                <div className="bg-muted/20 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-border/30 hover:border-primary/30 transition-colors">
+                  <p className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider mb-1.5 sm:mb-2">
+                    Infos & Programmation
                   </p>
-                  <p className="font-black text-2xl tracking-tighter mb-4">
-                    +243 81 000 0000
+                  <p className="font-medium text-sm sm:text-base md:text-lg mb-1 break-all">
+                    info@centreculturel.cd
                   </p>
-                  <a
-                    href="mailto:prog@centreculturel.cd"
-                    className="text-xs font-black uppercase tracking-widest border-b-2 border-accent hover:text-accent transition-colors pb-1"
-                  >
-                    Envoyer un mail
-                  </a>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Réponse sous 24h
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Column: Contact Form */}
-          <div className="lg:sticky lg:top-32 h-fit">
-            <div className="bg-white border-2 border-black p-6 sm:p-10 lg:p-16 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] max-w-full">
-              <div className="mb-12">
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-accent mb-4 block">
-                  Écrivez-nous
-                </span>
-                <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter leading-none mb-6">
-                  Une <br /> Question ?
+          <div className="lg:sticky lg:top-24 xl:top-32 h-fit">
+            <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm border border-border/50 overflow-hidden">
+              <div className="bg-muted/20 border-b border-border/40 p-4 sm:p-5 md:p-6 lg:p-8">
+                <div className="flex items-center gap-2 sm:gap-3 text-primary mb-1.5 sm:mb-2">
+                  <FaEnvelope className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <h3 className="font-bold uppercase tracking-wider text-xs sm:text-sm">
+                    Nous écrire
+                  </h3>
+                </div>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
+                  Envoyer un message
                 </h2>
-                <div className="w-16 h-2 bg-black" />
+                <p className="text-muted-foreground mt-1.5 sm:mt-2 text-xs sm:text-sm md:text-base">
+                  Une question spécifique ? Remplissez ce formulaire.
+                </p>
               </div>
-              <ContactForm />
+              <div className="p-4 sm:p-5 md:p-6 lg:p-8">
+                <ContactForm />
+              </div>
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import MediaPageClient from "./MediaPageClient";
 
 export default function MediaPage() {
   return (
-    <MainLayout transparentHeader={false}>
+    <MainLayout>
       <MediaPageClient />
     </MainLayout>
   );

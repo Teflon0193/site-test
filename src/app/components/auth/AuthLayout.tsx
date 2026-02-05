@@ -3,6 +3,7 @@
 import type React from "react";
 import Image from "next/image";
 import Link from "next/link";
+// import { ArrowLeft } from "lucide-react";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -11,76 +12,62 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white">
-      {/* Left Column: Form */}
-      <div className="relative flex flex-col justify-center px-6 sm:px-12 lg:px-20 xl:px-32 py-16 bg-white overflow-y-auto">
+    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-background">
+      <div className="relative flex flex-col justify-center px-6 sm:px-12 lg:px-20 xl:px-32 py-12 bg-white dark:bg-zinc-950">
+        {/* <div className="absolute top-6 left-6 sm:top-12 sm:left-12">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            Retour à l&apos;accueil
+          </Link>
+        </div> */}
+
         <div className="w-full max-w-[400px] mx-auto lg:max-w-[440px]">
-          <div className="mb-16 text-center lg:text-left">
-            <Link href="/" className="inline-block group">
+          <div className="mb-12 text-center">
+            <Link href="/">
               <Image
                 src="/images/logo-primary.png"
                 alt="Logo CCAPAC"
-                width={120}
-                height={80}
-                className="h-10 w-auto object-contain grayscale group-hover:grayscale-0 transition-all duration-500"
+                width={140}
+                height={100}
+                className="mx-auto h-12 w-auto object-contain"
                 priority
               />
             </Link>
           </div>
 
-          <div className="animate-slide-up">{children}</div>
-
-          <div className="mt-16 pt-8 border-t border-zinc-100 lg:hidden text-center">
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
-              © {new Date().getFullYear()} CCAPAC — KINSHASA, RDC
-            </p>
-          </div>
+          {children}
         </div>
       </div>
 
-      {/* Right Column: Visual Component */}
-      <div className="hidden lg:flex flex-col relative bg-black text-white overflow-hidden border-l-2 border-black">
-        <div className="absolute inset-0 z-10 opacity-40 bg-black" />
+      <div className="hidden lg:flex flex-col relative bg-muted text-white">
+        <div className="absolute inset-0 bg-zinc-900/40 z-10" />
         <Image
           src="/images/grand-tambour-fond.jpg"
           alt="Grand Tambour CCAPAC"
           fill
-          className="object-cover grayscale"
+          className="object-cover"
           priority
-          quality={100}
+          quality={90}
         />
 
-        <div className="relative z-20 flex flex-col items-start justify-center h-full px-20">
-          <div className="space-y-8 max-w-xl">
-            <span className="inline-block px-4 py-1 bg-primary text-white text-[10px] font-black uppercase tracking-[0.4em]">
-              PATRIMOINE CULTUREL
-            </span>
-            <h2 className="text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-none">
-              VIVEZ LA <br />
-              <span className="text-white tracking-[-0.05em]">
-                CULTURE AFRICAINE
-              </span>
+        <div className="relative z-20 flex flex-col items-center justify-center h-full px-12 text-center">
+          <div className="space-y-6 max-w-xl backdrop-blur-sm bg-black/10 p-8 rounded-2xl border border-white/10">
+            <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-white drop-shadow-md">
+              Centre Culturel et Artistique pour les Pays d&apos;Afrique Centrale
             </h2>
-            <div className="w-20 h-2 bg-white"></div>
-            <p className="text-xl text-zinc-300 leading-tight font-black uppercase tracking-tight max-w-md">
-              Promouvoir, valoriser et transmettre le patrimoine culturel au
-              cœur de l&apos;Afrique Centrale.
+            <div className="w-24 h-1 bg-primary mx-auto rounded-full"></div>
+            <p className="text-lg text-white/90 leading-relaxed font-light">
+              &quot;Promouvoir, valoriser et transmettre le patrimoine culturel
+              africain.&quot;
             </p>
           </div>
         </div>
 
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 p-12 z-20">
-          <div className="w-12 h-12 border-t-4 border-r-4 border-white/20"></div>
-        </div>
-        <div className="absolute bottom-0 left-0 p-12 z-20">
-          <div className="w-12 h-12 border-b-4 border-l-4 border-white/20"></div>
-        </div>
-
-        <div className="absolute bottom-12 w-full px-20 z-20 text-left">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white">
-            © {new Date().getFullYear()} CCAPAC — TOUS DROITS RÉSERVÉS
-          </p>
+        <div className="absolute bottom-8 w-full text-center z-20 text-xs text-white/50">
+          © {new Date().getFullYear()} CCAPAC - Tous droits réservés
         </div>
       </div>
     </div>

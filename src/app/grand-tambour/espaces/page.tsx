@@ -3,7 +3,7 @@ import EspacesPageClient from "./EspacesPageClient";
 
 export default function EspacesGrandTambour() {
   return (
-    <MainLayout transparentHeader={false}>
+    <MainLayout>
       <EspacesPageClient />
     </MainLayout>
   );

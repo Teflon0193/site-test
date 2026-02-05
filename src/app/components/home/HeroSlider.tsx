@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroSlide } from "@/types/hero-slide";
@@ -68,7 +68,7 @@ export default function HeroSlider({ slides, isVisible }: HeroSliderProps) {
 
   return (
     <section
-      className={`relative w-full h-[85vh] sm:h-[90vh] lg:h-screen min-h-[600px] overflow-hidden bg-background transition-opacity duration-500 ${
+      className={`relative w-full h-[70vh] min-h-[500px] sm:h-[80vh] sm:min-h-[600px] lg:h-screen lg:min-h-[700px] overflow-hidden bg-gradient-to-br from-muted/20 via-muted/10 to-muted/5 transition-all duration-500 ${
         isVisible ? "opacity-100" : "opacity-0"
       }`}
       onMouseEnter={() => setIsAutoPlaying(false)}
@@ -85,67 +85,46 @@ export default function HeroSlider({ slides, isVisible }: HeroSliderProps) {
           return (
             <div
               key={slide.id}
-              className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                isActive ? "opacity-100 z-10" : "opacity-0 z-0"
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                isActive ? "opacity-100" : "opacity-0"
               }`}
             >
-              {/* Background Image with Zoom Effect */}
-              <div className="absolute inset-0 z-0">
-                <div
-                  className={`relative w-full h-full transform transition-transform duration-[10s] ease-out ${
-                    isActive ? "scale-110" : "scale-100"
-                  }`}
-                >
+              {/* Background Image */}
+              <div className="absolute inset-0">
+                <div className="relative w-full h-full">
                   <Image
                     src={slide.image}
                     alt={slide.title}
-                    className="object-cover object-center sm:object-[center_20%]"
+                    className="object-cover object-center sm:object-[60%_center]"
                     fill
                     priority={index === 0}
-                    sizes="100vw"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
                     quality={90}
                   />
-                  {/* Enhanced Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10 sm:bg-gradient-to-r sm:from-black/80 sm:via-black/50 sm:to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
                 </div>
               </div>
 
-              {/* Content Container */}
-              <div className="relative h-full z-10 flex items-center">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 w-full mt-20 sm:mt-20">
-                  <div
-                    className={`max-w-4xl transition-all duration-1000 delay-300 ${
-                      isActive
-                        ? "opacity-100 translate-y-0"
-                        : "opacity-0 translate-y-20"
-                    }`}
-                  >
-
-                    {/* Massive Headline */}
-                    <h1 className="text-4xl sm:text-5xl lg:text-[4rem] leading-[0.9] font-black tracking-tighter text-white mb-6 sm:mb-4 drop-shadow-2xl">
+              {/* Content */}
+              <div className="relative h-full flex items-center justify-start z-30 pt-20 sm:pt-24 lg:pt-24 mt-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                  <div className="max-w-3xl">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-white drop-shadow-lg">
                       {slide.title}
                     </h1>
 
-                    {/* Styled Subtitle */}
                     {slide.subtitle && (
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-12">
-                        <div className="w-12 sm:w-20 h-1 bg-accent rounded-full" />
-                        <p className="text-xl sm:text-2xl lg:text-3xl font-light italic text-white/90 max-w-xl leading-relaxed">
-                          {slide.subtitle}
-                        </p>
-                      </div>
+                      <p className="text-base sm:text-xl md:text-xl mb-4 sm:mb-6 leading-relaxed italic text-yellow-400 drop-shadow-md">
+                        {slide.subtitle}
+                      </p>
                     )}
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <Link
                         href={slide.buttonLink}
-                        className="group relative px-8 py-4 bg-accent text-black font-bold text-sm sm:text-base tracking-widest uppercase overflow-hidden transition-all hover:bg-white"
+                        className="px-6 py-3 sm:px-8 sm:py-3 font-bold hover:opacity-90 transition-all duration-300 text-sm sm:text-base text-center bg-gradient-to-r from-accent to-accent/90 text-black rounded-xl shadow-lg hover:shadow-xl hover:scale-105"
                       >
-                        <span className="relative z-10">
-                          {slide.buttonText}
-                        </span>
-                        <div className="absolute inset-0 bg-white transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out" />
+                        {slide.buttonText}
                       </Link>
                     </div>
                   </div>
@@ -159,18 +138,32 @@ export default function HeroSlider({ slides, isVisible }: HeroSliderProps) {
       {/* Navigation Arrows */}
       {slides.length > 1 && (
         <>
-          {/* Navigation Arrows Removed */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white p-2 sm:p-3 rounded-full transition-all duration-300 backdrop-blur-sm z-40 touch-manipulation hover:scale-110 shadow-lg"
+            aria-label="Slide précédent"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
 
-          {/* Indicators (Bars) */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 px-4 z-40">
+          <button
+            onClick={nextSlide}
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white p-2 sm:p-3 rounded-full transition-all duration-300 backdrop-blur-sm z-40 touch-manipulation hover:scale-110 shadow-lg"
+            aria-label="Slide suivant"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Dots Indicator */}
+          <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3 px-4">
             {slides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`h-1 transition-all duration-300 ${
+                className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 touch-manipulation shadow-lg ${
                   index === currentSlide
-                    ? "w-12 bg-accent"
-                    : "w-6 bg-white/50 hover:bg-white/80"
+                    ? "bg-gradient-to-r from-accent to-accent/90 scale-125 shadow-xl"
+                    : "bg-white/50 hover:bg-white/70 active:bg-white/80 hover:scale-110"
                 }`}
                 aria-label={`Aller au slide ${index + 1}`}
               />

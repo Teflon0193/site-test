@@ -14,24 +14,24 @@ export default function MissionCard({
   imageAlt,
 }: MissionCardProps) {
   return (
-    <div className="text-center group p-6 border border-transparent hover:border-zinc-200 transition-colors duration-300">
-      <div className="relative mb-6 inline-block">
-        <div className="w-20 h-20 mx-auto relative flex items-center justify-center">
-          {/* Square accent behind logo */}
-          <div className="absolute inset-0 bg-black/5 scale-0 group-hover:scale-100 transition-transform duration-300 ease-out origin-center" />
+    <div className="text-center group">
+      <div className="relative mb-4 sm:mb-5 md:mb-6 inline-block">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 mx-auto relative flex items-center justify-center">
+          {/* Simple accent circle behind logo if transparent, or just the logo */}
+          <div className="absolute inset-0 bg-primary/5 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500 ease-out" />
           <Image
             src={imageSrc}
             alt={imageAlt}
             width={80}
             height={80}
-            className="relative z-10 w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
+            className="relative z-10 w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-500"
           />
         </div>
       </div>
-      <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight mb-3 text-black group-hover:underline decoration-4 underline-offset-4 decoration-accent transition-all px-2">
+      <h3 className="text-sm sm:text-base md:text-lg font-bold uppercase tracking-wide mb-2 sm:mb-2.5 md:mb-3 text-foreground group-hover:text-primary transition-colors px-2">
         {title}
       </h3>
-      <p className="text-sm text-zinc-600 leading-relaxed px-2 font-medium">
+      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed px-2">
         {description}
       </p>
     </div>

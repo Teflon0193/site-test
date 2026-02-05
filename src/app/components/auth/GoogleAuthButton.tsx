@@ -1,10 +1,10 @@
 "use client";
 
+import type React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { signIn } from "@/lib/auth-client";
 import { toast } from "sonner";
-
 
 interface GoogleAuthButtonProps {
   callbackURL?: string;
@@ -37,7 +37,7 @@ export function GoogleAuthButton({
     <Button
       type="button"
       variant="outline"
-      className="w-full cursor-pointer rounded-none h-11 sm:h-12 border border-input bg-white hover:bg-white/50 text-black font-medium transition-all shadow-sm hover:shadow-md"
+      className="w-full cursor-pointer h-11 sm:h-12 border border-input bg-background hover:bg-muted/50 text-foreground font-medium transition-all shadow-sm hover:shadow-md"
       onClick={handleGoogleSignIn}
     >
       <Image

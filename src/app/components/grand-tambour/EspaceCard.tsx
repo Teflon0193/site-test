@@ -18,7 +18,7 @@ export default function EspaceCard({
 
   return (
     <div
-      className="group bg-white p-6 sm:p-8 border border-zinc-200 cursor-pointer hover:border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300"
+      className="group bg-gradient-to-br from-white to-muted/10 p-6 sm:p-8 rounded-2xl shadow-xl border border-muted/20 cursor-pointer hover:shadow-2xl transition-all duration-300"
       onClick={() => onSelect(index)}
       role="button"
       tabIndex={0}
@@ -32,14 +32,14 @@ export default function EspaceCard({
     >
       <div className="text-center">
         <div className="relative mb-6">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black text-white flex items-center justify-center mx-auto group-hover:bg-accent group-hover:text-black transition-colors duration-300">
-            <IconComponent className="w-8 h-8 sm:w-10 sm:h-10" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
+            <IconComponent className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
           </div>
         </div>
-        <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black mb-3 group-hover:underline decoration-4 underline-offset-4 decoration-accent transition-all">
+        <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
           {espace.nom}
         </h3>
-        <p className="text-sm sm:text-base text-zinc-600 mb-0 font-medium">
+        <p className="text-sm sm:text-base text-muted-foreground mb-4">
           {espace.caracteristiques.map((carac, idx) => (
             <span key={idx}>
               {carac}
