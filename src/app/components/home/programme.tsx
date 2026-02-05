@@ -11,8 +11,8 @@ export default function Programmes() {
   const loopedProgrammes = [...featuredProgrammes, ...featuredProgrammes];
 
   return (
-    <section className="py-24 bg-white text-black relative overflow-hidden border-y border-white/10">
-      <div className="max-w-[1300px] mx-auto px-6 sm:px-10 lg:px-16 mb-16">
+    <section className="py-10 lg:py-24 bg-white text-black relative overflow-hidden border-y border-white/10">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-8 mb-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-4 mb-6">

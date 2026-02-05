@@ -23,7 +23,7 @@ export default function PartnersSection() {
   ];
 
   return (
-    <section className="py-24 bg-white text-black relative z-20">
+    <section className="py-10 lg:py-24 bg-white text-black relative z-20">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 border-b border-black/10 pb-8">

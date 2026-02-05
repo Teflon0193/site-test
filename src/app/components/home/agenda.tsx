@@ -33,7 +33,7 @@ export default function QuickAgenda() {
   if (loading) return null; // Ou squelette si nécessaire, mais minimaliste pour l'instant
 
   return (
-    <section className="py-24 lg:py-32 bg-white text-black relative border-t border-white/10">
+    <section className="py-10 lg:py-24 bg-white text-black relative border-t border-white/10">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* Header Column */}

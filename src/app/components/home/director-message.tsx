@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function DirectorMessage() {
   return (
-    <section className="py-24 lg:py-32 bg-primary text-black relative overflow-hidden border-y border-white/10">
+    <section className="py-10 lg:py-32 bg-primary text-black relative overflow-hidden border-y border-white/10">
       {/* Deep Background Image */}
       <div className="absolute top-0 right-0 w-1/2 h-full opacity-40 pointer-events-none hidden lg:block">
         <div className="relative w-full h-full">
@@ -16,7 +16,7 @@ export default function DirectorMessage() {
         </div>
       </div>
 
-      <div className="max-w-[1300px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* Content Side */}
           <div className="lg:col-span-8">
