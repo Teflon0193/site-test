@@ -6,6 +6,7 @@ interface CallbackPageProps {
   searchParams: Promise<{
     eventId?: string;
     eventSlug?: string;
+    redirectUrl?: string;
   }>;
 }
 
@@ -13,7 +14,7 @@ export default async function AuthCallbackPage({
   searchParams,
 }: CallbackPageProps) {
   const params = await searchParams;
-  const { eventId, eventSlug } = params;
+  const { eventId, eventSlug, redirectUrl } = params;
 
   // Vérifier que l'utilisateur est authentifié
   const user = await getUser();
@@ -32,8 +33,11 @@ export default async function AuthCallbackPage({
       if (eventSlug) {
         redirect(`/evenement/${eventSlug}?registered=true`);
       } else {
-        // Si pas de slug, rediriger vers l'espace membre
-        redirect("/espace-membre?registered=true");
+        if (redirectUrl) {
+          redirect(redirectUrl);
+        } else {
+          redirect("/espace-membre?registered=true");
+        }
       }
     } else {
       // En cas d'erreur, rediriger quand même vers l'événement avec un message d'erreur

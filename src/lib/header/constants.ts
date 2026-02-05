@@ -30,6 +30,10 @@ export const menuItems: MenuItem[] = [
     href: "/agenda",
   },
   {
+    title: "Newsletter",
+    href: "/newsletter",
+  },
+  {
     title: "Médias",
     href: "/media",
   },

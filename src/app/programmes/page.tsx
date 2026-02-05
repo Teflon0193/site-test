@@ -6,64 +6,104 @@ import { FaArrowRight } from "react-icons/fa";
 
 export default function ProgrammesPage() {
   return (
-    <MainLayout>
+    <MainLayout transparentHeader={false}>
       {/* Hero Section */}
-      <section className="relative h-[35vh] min-h-[280px] sm:h-[40vh] sm:min-h-[350px] lg:h-[45vh] lg:min-h-[400px] mt-16 sm:mt-20 lg:mt-24 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-black/60 z-10" />
-        <Image
-          src="/motif-luba.png"
-          alt="Programmes culturels CCAPAC"
-          fill
-          className="object-cover"
-          priority
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-        />
-        <div className="relative z-20 text-center px-4 sm:px-6 w-full">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 md:mb-6 text-white tracking-tight uppercase drop-shadow-2xl">
-            Nos Programmes
-          </h1>
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 font-light leading-relaxed max-w-2xl mx-auto drop-shadow-md px-2">
-            Une fenêtre ouverte sur la richesse du patrimoine africain.
-            Découvrez, apprenez et vivez la culture.
-          </p>
+      <section className="relative h-[40vh] min-h-[350px] md:h-[50vh] overflow-hidden border-b-2 border-black bg-white group/hero">
+        {/* Slanted Image Suite Background */}
+        <div className="absolute inset-0 flex w-[120%] -ml-[10%] z-10">
+          <div
+            className="relative flex-1 h-full overflow-hidden border-r-2 border-black transition-all duration-700 hover:flex-[1.5]"
+            style={{ clipPath: "polygon(0 0, 100% 0, 85% 100%, 0% 100%)" }}
+          >
+            <Image
+              src="/images/media/visit2.jpg"
+              alt="CCAPAC Programme 1"
+              fill
+              className="object-cover grayscale group-hover/hero:grayscale-0 transition-all duration-1000 scale-110 group-hover/hero:scale-100"
+              priority
+            />
+            <div className="absolute inset-0 bg-black/40 group-hover/hero:bg-transparent transition-all duration-700" />
+          </div>
+          <div
+            className="relative flex-1 h-full overflow-hidden border-x-2 border-black -ml-[5%] transition-all duration-700 hover:flex-[1.5]"
+            style={{ clipPath: "polygon(15% 0, 100% 0, 85% 100%, 0% 100%)" }}
+          >
+            <Image
+              src="/images/events/event2.jpg"
+              alt="CCAPAC Programme 2"
+              fill
+              className="object-cover grayscale group-hover/hero:grayscale-0 transition-all duration-1000 delay-75 scale-110 group-hover/hero:scale-100"
+            />
+            <div className="absolute inset-0 bg-black/40 group-hover/hero:bg-transparent transition-all duration-700" />
+          </div>
+          <div
+            className="relative flex-1 h-full overflow-hidden border-l-2 border-black -ml-[5%] transition-all duration-700 hover:flex-[1.5]"
+            style={{ clipPath: "polygon(15% 0, 100% 0, 100% 100%, 0% 100%)" }}
+          >
+            <Image
+              src="/images/media/media3.jpg"
+              alt="CCAPAC Programme 3"
+              fill
+              className="object-cover grayscale group-hover/hero:grayscale-0 transition-all duration-1000 delay-150 scale-110 group-hover/hero:scale-100"
+            />
+            <div className="absolute inset-0 bg-black/40 group-hover/hero:bg-transparent transition-all duration-700" />
+          </div>
         </div>
+
+        {/* Text Overlay & Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent lg:to-white/5 z-20" />
+
+        <div className="container mx-auto px-6 md:px-12 lg:px-24 h-full flex flex-col justify-end pb-6 md:pb-16 relative z-30 pointer-events-none">
+          <div className="max-w-3xl bg-white/40 backdrop-blur-sm lg:backdrop-blur-none lg:bg-transparent p-8 lg:p-0 border-2 lg:border-0 border-black animate-slide-up">
+            <span className="inline-block px-3 py-1 bg-primary text-white text-[10px] font-black uppercase tracking-[0.4em] mb-6">
+              DÉCOUVERTE & FORMATION
+            </span>
+            <h1 className="text-3xl md:text-6xl font-black tracking-tighter text-black uppercase leading-[0.8] mb-6 drop-shadow-sm">
+              NOS PROGRAMMES
+            </h1>
+            <div className="w-24 h-3 bg-primary"></div>
+          </div>
+        </div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-28 right-12 w-32 h-32 border-t-2 border-r-2 border-black/10 z-20 hidden lg:block"></div>
+        <div className="absolute bottom-12 right-12 w-32 h-32 border-b-2 border-r-2 border-black/10 z-20 hidden lg:block"></div>
       </section>
 
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+      <section className="py-20">
+        <div className="container mx-auto px-6 md:px-12 lg:px-24 max-w-7xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-t-2 border-l-2 border-black">
             {categories.map((category, index) => (
               <Link
                 key={category.id}
                 href={`/programmes/${category.id}`}
-                className="group relative h-[300px] sm:h-[350px] md:h-[400px] lg:h-[500px] rounded-xl sm:rounded-2xl overflow-hidden block shadow-lg sm:shadow-xl transition-all duration-500 hover:shadow-2xl"
+                className="group relative h-[400px] sm:h-[500px] overflow-hidden block bg-zinc-900 border-r-2 border-b-2 border-black"
               >
                 <Image
                   src={category.image || "/placeholder.svg"}
                   alt={category.title}
                   fill
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105 opacity-60 group-hover:opacity-40"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 50vw"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
-
-                <div className="absolute inset-0 p-4 sm:p-6 md:p-8 flex flex-col justify-end">
-                  <div className="transform transition-transform duration-500 translate-y-2 sm:translate-y-4 group-hover:translate-y-0">
-                    <span className="text-white/60 text-xs sm:text-sm font-mono mb-1 sm:mb-2 block uppercase tracking-widest">
-                      0{index + 1}
+                <div className="absolute inset-0 p-8 flex flex-col justify-between z-10">
+                  <div className="flex justify-between items-start">
+                    <span className="text-white text-4xl font-black opacity-20 group-hover:opacity-100 transition-opacity duration-500">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-3 uppercase tracking-tight leading-tight">
+                    <div className="w-10 h-10 bg-white text-black flex items-center justify-center transform -translate-y-4 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                      <FaArrowRight className="-rotate-45 group-hover:rotate-0 transition-transform duration-500" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4 leading-[0.9] uppercase tracking-tighter">
                       {category.title}
                     </h2>
-                    <p className="text-white/80 text-sm sm:text-base md:text-lg line-clamp-2 sm:line-clamp-3 font-light leading-relaxed mb-3 sm:mb-4 md:mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                    <p className="text-white/80 text-lg font-light leading-relaxed max-w-md opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
                       {category.description}
                     </p>
-
-                    <div className="inline-flex items-center text-white font-semibold text-xs sm:text-sm uppercase tracking-wider group-hover:text-accent transition-colors">
-                      <span className="mr-2">Explorer</span>
-                      <FaArrowRight className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:translate-x-2" />
-                    </div>
                   </div>
                 </div>
               </Link>
@@ -73,18 +113,26 @@ export default function ProgrammesPage() {
       </section>
 
       {/* Quote Section */}
-      <section className="py-12 sm:py-14 md:py-16 px-4 sm:px-6 bg-muted/5 border-t border-muted/10">
-        <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-light text-muted-foreground italic px-2">
-            &quot;La culture est ce qui reste quand on a tout oublié.&quot;
-          </p>
-          <div className="w-12 sm:w-16 h-0.5 bg-primary/40 mx-auto"></div>
-          <Link
-            href="/contact"
-            className="inline-block pt-2 sm:pt-4 text-xs sm:text-sm font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
-          >
-            Rejoindre l&apos;aventure
-          </Link>
+      <section className="py-24 px-4 bg-primary text-white border-t border-white/10">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="relative inline-block">
+
+            <p className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-tight text-white">
+              La culture est ce qui reste quand on a tout oublié.
+            </p>
+
+          </div>
+
+          <div className="w-24 h-2 bg-accent mx-auto"></div>
+
+          <div className="pt-8">
+            <Link
+              href="/contact"
+              className="inline-block px-8 md:px-12 py-5 bg-white text-black text-sm font-black uppercase tracking-[0.2em] hover:bg-accent hover:text-white transition-all duration-300 transform hover:scale-105"
+            >
+              Rejoindre l&apos;aventure
+            </Link>
+          </div>
         </div>
       </section>
     </MainLayout>

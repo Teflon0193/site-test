@@ -5,10 +5,9 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const schema = z.object({
   email: z.string().min(1, "L'email est requis").email("Email invalide"),
@@ -38,45 +37,52 @@ export function ForgotPasswordForm({ onSubmit }: ForgotPasswordFormProps) {
   return (
     <form
       onSubmit={handleSubmit(onSubmit ?? defaultSubmit)}
-      className="space-y-5"
+      className="space-y-6"
       noValidate
     >
       <div className="space-y-2">
-        <Label htmlFor="email">Adresse email</Label>
+        <Label
+          htmlFor="email"
+          className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500"
+        >
+          ADRESSE EMAIL
+        </Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="email"
             type="email"
-            placeholder="nom@exemple.com"
+            placeholder=""
             autoComplete="email"
-            className="h-11 pl-10"
+            className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-sm font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors"
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "email-error" : undefined}
             {...register("email")}
           />
         </div>
         {errors.email && (
-          <p id="email-error" className="text-sm text-destructive font-medium">
+          <p
+            id="email-error"
+            className="text-[10px] uppercase font-bold text-red-500 mt-1"
+          >
             {errors.email.message}
           </p>
         )}
       </div>
 
-      <Button
+      <button
         type="submit"
-        className="w-full h-11 cursor-pointer text-base font-semibold shadow-md active:scale-[0.98] transition-all"
+        className="w-full bg-black text-white h-14 font-black uppercase tracking-[0.2em] text-xs hover:bg-primary transition-all duration-300 flex items-center justify-center gap-3 disabled:bg-zinc-800"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Envoi en cours...
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>ENVOI EN COURS...</span>
           </>
         ) : (
-          "Envoyer le lien de réinitialisation"
+          "RÉINITIALISER MON ACCÈS"
         )}
-      </Button>
+      </button>
     </form>
   );
 }

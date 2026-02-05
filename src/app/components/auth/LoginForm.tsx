@@ -5,7 +5,6 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
@@ -40,23 +39,31 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
   return (
     <form
       onSubmit={handleSubmit(onSubmit ?? defaultSubmit)}
-      className="space-y-5"
+      className="space-y-6"
       noValidate
     >
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label
+          htmlFor="email"
+          className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500"
+        >
+          EMAIL
+        </Label>
         <Input
           id="email"
           type="email"
-          placeholder="nom@exemple.com"
+          placeholder=""
           autoComplete="email"
-          className="h-11"
+          className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-sm font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors"
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
           {...register("email")}
         />
         {errors.email && (
-          <p id="email-error" className="text-sm text-destructive font-medium">
+          <p
+            id="email-error"
+            className="text-[10px] uppercase font-bold text-red-500"
+          >
             {errors.email.message}
           </p>
         )}
@@ -64,12 +71,17 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Mot de passe</Label>
+          <Label
+            htmlFor="password"
+            className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500"
+          >
+            MOT DE PASSE
+          </Label>
           <Link
             href="/auth/forgot-password"
-            className="text-xs text-primary hover:underline font-medium tab-index-[-1]"
+            className="text-[10px] text-zinc-400 hover:text-black font-black uppercase tracking-widest transition-colors"
           >
-            Mot de passe oublié ?
+            OUBLIÉ ?
           </Link>
         </div>
         <Input
@@ -77,7 +89,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
           type="password"
           placeholder=""
           autoComplete="current-password"
-          className="h-11"
+          className="bg-white border-zinc-200 border-2 rounded-none h-12 px-4 text-sm font-bold uppercase tracking-wider focus-visible:ring-0 focus-visible:border-black transition-colors"
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? "password-error" : undefined}
           {...register("password")}
@@ -85,27 +97,27 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         {errors.password && (
           <p
             id="password-error"
-            className="text-sm text-destructive font-medium"
+            className="text-[10px] uppercase font-bold text-red-500"
           >
             {errors.password.message}
           </p>
         )}
       </div>
 
-      <Button
+      <button
         type="submit"
-        className="w-full h-11 cursor-pointer text-base font-semibold shadow-md active:scale-[0.98] transition-all"
+        className="w-full bg-black text-white h-14 font-black uppercase tracking-[0.2em] text-xs hover:bg-primary transition-all duration-300 flex items-center justify-center gap-3 disabled:bg-zinc-800"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Connexion...
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>ACCÈS EN COURS...</span>
           </>
         ) : (
-          "Se connecter"
+          "SE CONNECTER"
         )}
-      </Button>
+      </button>
     </form>
   );
 }

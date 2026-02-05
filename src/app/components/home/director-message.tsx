@@ -2,54 +2,78 @@ import Image from "next/image";
 
 export default function DirectorMessage() {
   return (
-    <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-primary via-primary/95 to-primary/90">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
-          <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 mb-20">
-            <div className="space-y-3 sm:space-y-4">
-              <h2 className="text-2xl uppercase sm:text-2xl md:text-4xl lg:text-4xl xl:text-4xl font-bold text-white leading-tight mb-10 drop-shadow-lg">
-                Une vision partagée de notre héritage culturel
+    <section className="py-10 lg:py-32 bg-primary text-black relative overflow-hidden border-y border-white/10">
+      {/* Deep Background Image */}
+      <div className="absolute top-0 right-0 w-1/2 h-full opacity-40 pointer-events-none hidden lg:block">
+        <div className="relative w-full h-full">
+          <Image
+            src="/images/mukishi.png"
+            alt="Masque traditionnel"
+            fill
+            className="object-contain object-right-bottom grayscale"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/40 to-transparent" />
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+          {/* Content Side */}
+          <div className="lg:col-span-8">
+            <div className="mb-12 border-l-8 border-foreground pl-8">
+
+              <h2 className="text-2xl md:text-4xl text-white lg:text-5xl font-black uppercase tracking-tighter leading-none mb-8">
+                Une vision partagée de notre  <br />
+                <span className="text-white">héritage culturel</span>
               </h2>
             </div>
 
-            <blockquote className="text-base sm:text-lg md:text-xl leading-relaxed text-white italic border-l-4 border-secondary pl-4 sm:pl-6 my-6 sm:my-8 bg-white/10 backdrop-blur-sm rounded-r-xl p-4 sm:p-6 shadow-lg">
-              &quot;Le CCAPAC incarne notre vision commune de célébrer et
-              préserver l&apos;extraordinaire diversité culturelle de
-              l&apos;Afrique Centrale. Ensemble, nous bâtissons un pont entre
-              nos traditions ancestrales et les expressions artistiques
-              contemporaines.&quot;
-            </blockquote>
-
-            <div className="flex items-center space-x-3 sm:space-x-4 pt-2">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-white/20 to-white/10 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg border border-white/20">
-                <Image
-                  src="/images/members/balufu.jpg"
-                  alt="Balufu Bakupa-Kanyinda, Directeur Général"
-                  width={64}
-                  height={64}
-                  className="rounded-full w-10 h-10 sm:w-14 sm:h-14 object-cover"
-                />
+            <div className="space-y-12">
+              <div className="relative">
+                <p className="text-xl md:text-2xl lg:text-xl font-medium leading-tight tracking-tight text-white/90">
+                  Le CCAPAC incarne notre vision commune de célébrer et
+                  préserver l&apos;extraordinaire diversité culturelle de
+                  l&apos;Afrique Centrale. Ensemble, nous bâtissons un pont
+                  entre nos traditions ancestrales et les expressions
+                  artistiques contemporaines.
+                </p>
               </div>
-              <div>
-                <p className="font-semibold text-white text-base sm:text-lg drop-shadow-md">
-                  Balufu Bakupa-Kanyinda
-                </p>
-                <p className="text-xs sm:text-sm text-white uppercase tracking-wide drop-shadow-sm">
-                  Directeur Général
-                </p>
+
+              {/* Signature Block - Sharp & Minimalist */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 pt-8 border-t border-white/10">
+                <div className="relative group">
+                  <div className="w-24 h-24 border border-white/20 p-2 grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-105">
+                    <Image
+                      src="/images/members/balufu.jpg"
+                      alt="Balufu Bakupa-Kanyinda"
+                      width={100}
+                      height={100}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xl text-white font-black uppercase tracking-tighter">
+                    Balufu Bakupa-Kanyinda
+                  </p>
+                  <p className="text-zinc-500 font-black tracking-[0.2em] text-[10px] uppercase">
+                    Directeur Général
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-center lg:justify-end order-1 lg:order-2 lg:mb-0">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl blur-xl"></div>
+          {/* Mobile Visualization Overlay or Spacer */}
+          <div className="lg:col-span-4 flex items-end justify-center lg:justify-end">
+            {/* Small decorative element for mobile/smaller screens to hint at the deep background image */}
+            <div className="lg:hidden relative w-full aspect-square opacity-20 max-w-xs">
               <Image
                 src="/images/mukishi.png"
-                alt="Masque traditionnel africain Mukishi"
-                width={400}
-                height={500}
-                className="relative w-48 h-60 sm:w-64 sm:h-80 md:w-80 md:h-96 lg:w-96 lg:h-auto max-w-full object-contain drop-shadow-2xl"
+                alt="Masque traditionnel"
+                fill
+                className="object-contain grayscale"
               />
             </div>
           </div>

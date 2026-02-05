@@ -9,7 +9,7 @@ import ForgotPasswordForm, {
 } from "@/app/components/auth/ForgotPasswordForm";
 import { requestPasswordReset } from "@/lib/auth-client";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [emailSent, setEmailSent] = useState(false);
@@ -35,75 +35,82 @@ export default function ForgotPasswordPage() {
     <AuthLayout title="Mot de passe oublié">
       <div className="space-y-6">
         {!emailSent ? (
-          <>
-            <div className="text-center space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Mot de passe oublié ?
+          <div className="space-y-10">
+            <div className="text-center lg:text-left space-y-4">
+              <h1 className="text-4xl font-black tracking-tighter text-black uppercase leading-none">
+                Accès <br />
+                <span className="text-primary">Oublié</span>
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Entrez votre adresse email et nous vous enverrons un lien pour
-                réinitialiser votre mot de passe.
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+                Récupération de vos identifiants member
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-8">
               <ForgotPasswordForm onSubmit={handleSubmit} />
-            </div>
 
-            <div className="text-center">
-              <Link
-                href="/auth/login"
-                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                Retour à la connexion
-              </Link>
+              <div className="text-center pt-6">
+                <Link
+                  href="/auth/login"
+                  className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 hover:text-black transition-colors group"
+                >
+                  <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
+                  RETOUR À LA CONNEXION
+                </Link>
+              </div>
             </div>
-          </>
+          </div>
         ) : (
           <>
-            <div className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div className="space-y-10">
+              <div className="text-center lg:text-left space-y-4">
+                <h1 className="text-4xl font-black tracking-tighter text-black uppercase leading-none">
+                  Email <br />
+                  <span className="text-green-600">Envoyé</span>
+                </h1>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+                  Vérifiez votre boîte de réception
+                </p>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Email envoyé !
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Nous avons envoyé un lien de réinitialisation à{" "}
-                <strong className="text-foreground">{sentEmail}</strong>
-              </p>
-            </div>
 
-            <div className="bg-muted/50 border border-muted rounded-lg p-4 space-y-2">
-              <p className="text-sm text-muted-foreground">
-                <strong>Prochaines étapes :</strong>
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Vérifiez votre boîte de réception</li>
-                <li>Cliquez sur le lien dans l&apos;email</li>
-                <li>Créez un nouveau mot de passe</li>
-              </ul>
-              <p className="text-xs text-muted-foreground/70 pt-2">
-                Si vous ne recevez pas l&apos;email, vérifiez vos spams ou{" "}
+              <div className="bg-zinc-50 border-l-4 border-black p-6 space-y-4 text-left">
+                <p className="text-xs text-black font-bold uppercase tracking-wider">
+                  Un lien de réinitialisation a été transmis à : <br />
+                  <span className="text-primary">{sentEmail}</span>
+                </p>
+
+                <div className="space-y-2 pt-2 border-t border-zinc-200">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                    Prochaines étapes :
+                  </p>
+                  <ul className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-primary"></div> CLIQUEZ SUR LE
+                      LIEN REÇU
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-primary"></div> CRÉEZ VOTRE
+                      NOUVEAU PASSE
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
                 <button
                   onClick={() => setEmailSent(false)}
-                  className="text-primary hover:underline font-medium"
+                  className="w-full text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 hover:text-black transition-colors"
                 >
-                  essayez avec une autre adresse
+                  RENVOYER OU CHANGER D&apos;EMAIL
                 </button>
-                .
-              </p>
-            </div>
 
-            <div className="text-center">
-              <Link
-                href="/auth/login"
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Retour à la connexion
-              </Link>
+                <Link
+                  href="/auth/login"
+                  className="w-full inline-flex items-center justify-center h-14 bg-black text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-primary transition-all duration-300"
+                >
+                  RETOUR À LA CONNEXION
+                </Link>
+              </div>
             </div>
           </>
         )}

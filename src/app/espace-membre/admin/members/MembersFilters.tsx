@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { startTransition, useState} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Search} from "lucide-react";
 
 interface MembersFiltersProps {
   currentSearch: string;
@@ -14,11 +13,10 @@ interface MembersFiltersProps {
 
 export function MembersFilters({
   currentSearch,
-  currentStatus,
 }: MembersFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // const [isPending, startTransition] = useTransition();
   const [searchTerm, setSearchTerm] = useState(currentSearch);
 
   const updateFilters = (key: string, value: string) => {
