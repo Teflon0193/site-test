@@ -79,7 +79,7 @@ export default function Footer() {
               />
             </div>
             <p className="text-sm sm:text-base opacity-90 leading-relaxed mb-4 sm:mb-6 text-white">
-              Centre Culturel et Artistique pour les pays d&apos;Afrique
+              Centre Culturel et Artistique pour les Pays d&apos;Afrique
               Centrale.
             </p>
             <div className="flex space-x-3 sm:space-x-4">
