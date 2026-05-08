@@ -134,7 +134,7 @@ export default function EspaceMembres() {
                         href="tel:+243995505050"
                         className="font-medium text-foreground hover:text-primary transition-colors"
                       >
-                        +243 995 505 050
+                        +243 890 809 746
                       </a>
                     </div>
                   </div>

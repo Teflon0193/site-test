@@ -157,7 +157,7 @@ export default function Footer() {
                   <FaPhone size={16} className="text-white" />
                 </div>
                 <p className="text-sm sm:text-base opacity-90 font-medium">
-                  +243 995 505 050
+                  +243 890 809 746
                 </p>
               </div>
               <div className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-xl hover:bg-white/5 transition-all duration-300">
@@ -188,7 +188,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 sm:space-y-4 md:space-y-0">
             <p className="text-xs sm:text-sm opacity-80 text-center md:text-left">
               © {new Date().getFullYear()} Centre Culturel et Artistique pour
-              les pays d&apos;Afrique Centrale. Tous droits réservés.
+              les Pays d&apos;Afrique Centrale. Tous droits réservés.
             </p>
             <div className="flex space-x-4 sm:space-x-6">
               {legalLinks.map((legal) => (

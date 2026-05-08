@@ -355,7 +355,7 @@ export default function InfosPratiquesPage() {
                         Accueil général
                       </p>
                       <p className="text-muted-foreground text-xs sm:text-sm lg:text-base break-all">
-                        +243 995 505 050
+                      +243 890 809 746
                       </p>
                     </div>
                   </div>
