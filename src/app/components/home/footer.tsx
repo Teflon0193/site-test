@@ -42,7 +42,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-xs sm:text-sm leading-relaxed text-white">
-              Le Centre Culturel et Artistique pour les pays d&apos;Afrique
+              Le Centre Culturel et Artistique pour les Pays d&apos;Afrique
               Centrale.
             </p>
             <div className="flex gap-3 sm:gap-4">
@@ -113,7 +113,7 @@ export default function Footer() {
               </div>
               <div className="flex gap-2.5 sm:gap-3 items-center">
                 <FaPhone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />
-                <span className="text-white/90">+243 995 505 050</span>
+                <span className="text-white/90">+243 890 809 746</span>
               </div>
               <div className="flex gap-2.5 sm:gap-3 items-center">
                 <FaEnvelope className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />

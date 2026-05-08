@@ -124,7 +124,7 @@ export default function InfosPratiquesPage() {
                     Accueil Général
                   </p>
                   <p className="font-medium text-sm sm:text-base md:text-lg mb-1 break-all">
-                    +243 995 505 050
+                    +243 890 809 746
                   </p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground">
                     Du Lundi au Samedi
