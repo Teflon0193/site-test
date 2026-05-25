@@ -1,6 +1,6 @@
 import type React from "react";
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
@@ -9,10 +9,16 @@ import { QueryProvider } from "./query-provider";
 
 const GTM_ID = "GTM-TM76Z944";
 
-const poppins = Poppins({
+const poppins = localFont({
   variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  src: [
+    { path: "./fonts/poppins-300.ttf", weight: "300", style: "normal" },
+    { path: "./fonts/poppins-400.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/poppins-500.ttf", weight: "500", style: "normal" },
+    { path: "./fonts/poppins-600.ttf", weight: "600", style: "normal" },
+    { path: "./fonts/poppins-700.ttf", weight: "700", style: "normal" },
+  ],
 });
 
 export const metadata: Metadata = {

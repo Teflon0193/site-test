@@ -5,6 +5,23 @@ import { Event, StrapiEvent, EventFilters } from "@/types/events";
 import { HeroSlide, StrapiHeroSlide } from "@/types/hero-slide";
 import { Media, StrapiMedia } from "@/types/media";
 
+type StrapiImage = {
+  url?: string;
+  formats?: Record<string, unknown>;
+} | null;
+
+const getOptimizedImageUrl = (image: StrapiImage): string => {
+  const formats = image?.formats;
+
+  return (
+    (formats?.large as { url?: string } | undefined)?.url ||
+    (formats?.medium as { url?: string } | undefined)?.url ||
+    (formats?.small as { url?: string } | undefined)?.url ||
+    image?.url ||
+    ""
+  );
+};
+
 export const buildStrapiQuery = (filters: EventFilters): URLSearchParams => {
   const queryParams = new URLSearchParams();
 
@@ -104,7 +121,7 @@ export const transformStrapiEvent = (strapiEvent: StrapiEvent): Event => {
     discipline: strapiEvent.discipline,
     public: strapiEvent.public,
     description: strapiEvent.description,
-    image: (strapiEvent.image?.formats?.large as { url: string })?.url || "",
+    image: getOptimizedImageUrl(strapiEvent.image),
     capacity: strapiEvent.capacity,
     featured: strapiEvent.featured || false,
     category: strapiEvent.category,
@@ -134,7 +151,7 @@ export const transformStrapiHeroSlide = (
     description: strapiSlide.description,
     buttonText: strapiSlide.buttonText || "En savoir plus",
     buttonLink: strapiSlide.buttonLink || "/",
-    image: strapiSlide.image?.url || "",
+    image: getOptimizedImageUrl(strapiSlide.image),
     order: strapiSlide.order || 0,
     isActive: strapiSlide.isActive !== false,
     createdAt: strapiSlide.createdAt,
@@ -148,7 +165,7 @@ export const transformStrapiMedia = (strapiMedia: StrapiMedia): Media => {
     id: strapiMedia.id,
     title: strapiMedia.title,
     description: strapiMedia.description,
-    image: strapiMedia.image?.url || "",
+    image: getOptimizedImageUrl(strapiMedia.image),
     eventDate: strapiMedia.eventDate,
     category: strapiMedia.category,
     eventType: strapiMedia.eventType,

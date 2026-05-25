@@ -14,7 +14,7 @@ export default function VideoFocus() {
     youtubeId: "6snOnJ-AlwY", // Exemple - remplacez par votre vraie vidéo
 
     // Option 2: Vidéo locale
-    localVideo: "/videos/grand-tambour-presentation.mp4",
+    localVideo: null as string | null,
 
     // Image de fallback
     posterImage: "/images/grand-tambour.jpg",
@@ -40,7 +40,7 @@ export default function VideoFocus() {
     <section className="relative h-[60vh] min-h-[500px] lg:h-[80vh] w-full overflow-hidden bg-black">
       {/* Background avec image ou vidéo locale */}
       <div className="absolute inset-0">
-        {!hasVideoError ? (
+        {videoConfig.localVideo && !hasVideoError ? (
           // Essayer d'abord la vidéo locale
           <video
             className="w-full h-full object-cover opacity-80"
