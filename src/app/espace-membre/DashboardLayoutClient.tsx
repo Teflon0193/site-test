@@ -10,6 +10,7 @@ import {
   Users,
   Calendar,
   User,
+  MessageSquare,
   LogOut,
   Menu,
   X,
@@ -56,6 +57,11 @@ export default function DashboardLayoutClient({
             label: "Événements",
             icon: Calendar,
           },
+          {
+            href: "/espace-membre/admin/suggestions",
+            label: "Suggestions",
+            icon: MessageSquare,
+          },
         ]
       : [
           { href: "/espace-membre", label: "Accueil", icon: Home },
@@ -63,6 +69,11 @@ export default function DashboardLayoutClient({
             href: "/espace-membre/events",
             label: "Événements",
             icon: Calendar,
+          },
+          {
+            href: "/espace-membre/suggestions",
+            label: "Suggestions",
+            icon: MessageSquare,
           },
           {
             href: "/espace-membre/profile",
