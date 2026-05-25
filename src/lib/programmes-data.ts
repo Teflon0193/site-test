@@ -57,27 +57,27 @@ export const categories = [
 export const programmes: Programme[] = [
   // Cinéma & Audiovisuel
 
-  {
-    id: "13",
-    slug: "kelasi-film-festival",
-    title: "Kelasi Film Festival",
-    category: "Cinéma & Audiovisuel",
-    categorySlug: "cinema-audiovisuel",
-    slogan: "Cinéma jeune pour la jeunesse",
-    description:
-      "Festival international du film éducatif et citoyen, au service de la jeunesse et de l’apprentissage.",
-    objectif: "Encourager l'émergence de nouveaux talents cinématographiques",
-    publicVise: "Jeunes réalisateurs, étudiants, public jeune",
-    impact: "Formation et accompagnement de la nouvelle génération",
-    image: "/images/media/media10.jpg",
-    startDate: "2025-12-15",
-    endDate: "2025-12-15",
-    startTime: "14:00",
-    endTime: "16:00",
-    location: "Salle de Danse Principale",
-    discipline: "Atelier",
-    featured: true,
-  },
+  // {
+  //   id: "13",
+  //   slug: "kelasi-film-festival",
+  //   title: "Kelasi Film Festival",
+  //   category: "Cinéma & Audiovisuel",
+  //   categorySlug: "cinema-audiovisuel",
+  //   slogan: "Cinéma jeune pour la jeunesse",
+  //   description:
+  //     "Festival international du film éducatif et citoyen, au service de la jeunesse et de l’apprentissage.",
+  //   objectif: "Encourager l'émergence de nouveaux talents cinématographiques",
+  //   publicVise: "Jeunes réalisateurs, étudiants, public jeune",
+  //   impact: "Formation et accompagnement de la nouvelle génération",
+  //   image: "/images/media/media10.jpg",
+  //   startDate: "2025-12-15",
+  //   endDate: "2025-12-15",
+  //   startTime: "14:00",
+  //   endTime: "16:00",
+  //   location: "Salle de Danse Principale",
+  //   discipline: "Atelier",
+  //   featured: true,
+  // },
   {
     id: "11",
     slug: "cinematheque-congolaise",
@@ -456,6 +456,7 @@ export const programmes: Programme[] = [
     endTime: "16:00",
     location: "Salle de Danse Principale",
     discipline: "Atelier",
+    featured: true,
   },
   {
     id: "20",
