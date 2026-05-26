@@ -53,32 +53,33 @@ export default function Calendar({ events }: CalendarProps) {
         )}
 
         {sortedEvents.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-8 xl:gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
             {displayedEvents.map((event) => (
               <Card
                 key={event.id}
-                className="group cursor-pointer transition-all duration-300 hover:shadow-xl border-muted/20 rounded-xl sm:rounded-2xl hover:border-primary/50 overflow-hidden bg-gradient-to-br from-white to-muted/10"
+                className="group cursor-pointer transition-all duration-300 hover:shadow-lg border-muted/30 rounded-xl hover:border-primary/40 overflow-hidden bg-white"
                 onClick={() => router.push(`/evenement/${event.slug}`)}
               >
-                <div className="relative h-48 sm:h-52 md:h-56 lg:h-60 overflow-hidden">
-                  <Image
-                    src={event.image}
-                    alt={event.title}
-                    fill
-                    className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
-                    priority={false}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative aspect-[16/9] overflow-hidden bg-muted/20">
+                  <div className="absolute inset-0 bg-[url('/motif-lub.png')] bg-center bg-cover opacity-[0.04]" />
+                  <div className="absolute inset-3 sm:inset-4">
+                    <Image
+                      src={event.image || "/placeholder.svg"}
+                      alt={event.title}
+                      fill
+                      className="object-contain object-center"
+                      priority={false}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  </div>
 
                   <div className="absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 flex flex-col gap-1.5 sm:gap-2">
-                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+                    <Badge className="bg-primary text-primary-foreground shadow-sm text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
                       <span className="truncate max-w-[80px] sm:max-w-none">
                         {event.discipline}
                       </span>
                     </Badge>
-                    <Badge className="bg-gradient-to-r from-muted/80 to-muted/60 text-foreground shadow-lg text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+                    <Badge className="bg-white/90 text-foreground shadow-sm text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
                       <span className="truncate max-w-[80px] sm:max-w-none">
                         {event.public}
                       </span>
@@ -86,7 +87,7 @@ export default function Calendar({ events }: CalendarProps) {
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-5 md:p-6 lg:p-7">
+                <div className="p-4 sm:p-5 md:p-6">
                   <CardHeader className="p-0 mb-3 sm:mb-4 md:mb-5">
                     <CardTitle className="text-base sm:text-lg md:text-xl font-bold uppercase text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                       {event.title}
@@ -94,9 +95,9 @@ export default function Calendar({ events }: CalendarProps) {
                   </CardHeader>
 
                   <CardContent className="p-0">
-                    <div className="space-y-2.5 sm:space-y-3 md:space-y-4">
+                    <div className="space-y-2.5 sm:space-y-3">
                       <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
-                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
                           <FaCalendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
                         <span className="line-clamp-1 font-medium truncate">
@@ -105,7 +106,7 @@ export default function Calendar({ events }: CalendarProps) {
                       </div>
 
                       <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
-                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
                           <FaClock className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
                         <span className="font-medium truncate">
@@ -114,7 +115,7 @@ export default function Calendar({ events }: CalendarProps) {
                       </div>
 
                       <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
-                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
                           <FaMapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
                         <span className="line-clamp-1 font-medium truncate">
