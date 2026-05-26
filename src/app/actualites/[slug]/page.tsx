@@ -1,10 +1,9 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Calendar, FileText, Quote } from "lucide-react";
+import { Calendar, FileText } from "lucide-react";
 import MainLayout from "@/app/components/layouts/MainLayout";
 import { getActualiteBySlug } from "@/services/actualiteService";
-import { ActualiteBlock } from "@/types/actualite";
+import ActualiteBlockRenderer from "./components/ActualiteBlockRenderer";
 
 const typeLabels = {
   NEWSLETTER: "Newsletter",
@@ -82,7 +81,10 @@ export default async function ActualiteDetailPage({
           <div className="space-y-10">
             {actualite.blocks?.length ? (
               actualite.blocks.map((block) => (
-                <ActualiteBlockRenderer key={`${block.__component}-${block.id}`} block={block} />
+                <ActualiteBlockRenderer
+                  key={`${block.__component}-${block.id}`}
+                  block={block}
+                />
               ))
             ) : (
               <div className="border-2 border-dashed border-zinc-200 p-10 text-center">
@@ -97,207 +99,4 @@ export default async function ActualiteDetailPage({
       </article>
     </MainLayout>
   );
-}
-
-function ActualiteBlockRenderer({ block }: { block: ActualiteBlock }) {
-  if (block.__component === "shared.quote") {
-    return (
-      <blockquote className="border-2 border-black p-8">
-        <Quote className="mb-5 h-8 w-8 text-primary" />
-        {block.title && (
-          <h2 className="mb-4 text-2xl font-black uppercase tracking-tighter">
-            {block.title}
-          </h2>
-        )}
-        {block.body && (
-          <p className="text-lg font-semibold leading-relaxed text-zinc-700">
-            {block.body}
-          </p>
-        )}
-      </blockquote>
-    );
-  }
-
-  if (block.__component === "shared.rich-text" && block.body) {
-    return <RichTextContent body={block.body} />;
-  }
-
-  return null;
-}
-
-function RichTextContent({ body }: { body: string }) {
-  const lines = body.split(/\r?\n/);
-  const elements: React.ReactNode[] = [];
-  let listItems: string[] = [];
-  let listType: "ul" | "ol" | null = null;
-  let paragraph: string[] = [];
-
-  const flushParagraph = () => {
-    if (paragraph.length === 0) return;
-
-    const text = paragraph.join(" ");
-    elements.push(
-      <p key={`p-${elements.length}`} className="text-base font-medium leading-8 text-zinc-700">
-        {renderInlineMarkdown(text)}
-      </p>
-    );
-    paragraph = [];
-  };
-
-  const flushList = () => {
-    if (!listType || listItems.length === 0) return;
-
-    const ListTag = listType;
-    elements.push(
-      <ListTag
-        key={`list-${elements.length}`}
-        className={`space-y-3 pl-6 text-base font-medium leading-8 text-zinc-700 ${
-          listType === "ol" ? "list-decimal" : "list-disc"
-        }`}
-      >
-        {listItems.map((item, index) => (
-          <li key={`${item}-${index}`}>{renderInlineMarkdown(item)}</li>
-        ))}
-      </ListTag>
-    );
-    listItems = [];
-    listType = null;
-  };
-
-  lines.forEach((line) => {
-    const trimmed = line.trim();
-
-    if (!trimmed) {
-      flushParagraph();
-      flushList();
-      return;
-    }
-
-    const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
-    if (heading) {
-      flushParagraph();
-      flushList();
-
-      const level = heading[1].length;
-      const className =
-        level === 1
-          ? "text-3xl md:text-4xl"
-          : level === 2
-            ? "text-2xl md:text-3xl"
-            : "text-xl md:text-2xl";
-      const HeadingTag = `h${level + 1}` as "h2" | "h3" | "h4";
-
-      elements.push(
-        <HeadingTag
-          key={`h-${elements.length}`}
-          className={`${className} pt-4 font-black uppercase leading-tight tracking-tighter text-black`}
-        >
-          {renderInlineMarkdown(heading[2])}
-        </HeadingTag>
-      );
-      return;
-    }
-
-    const unorderedItem = trimmed.match(/^[-*]\s+(.+)$/);
-    const orderedItem = trimmed.match(/^\d+\.\s+(.+)$/);
-    if (unorderedItem || orderedItem) {
-      flushParagraph();
-      const nextType = orderedItem ? "ol" : "ul";
-
-      if (listType && listType !== nextType) {
-        flushList();
-      }
-
-      listType = nextType;
-      listItems.push((orderedItem || unorderedItem)?.[1] || "");
-      return;
-    }
-
-    if (trimmed.startsWith(">")) {
-      flushParagraph();
-      flushList();
-      elements.push(
-        <blockquote
-          key={`quote-${elements.length}`}
-          className="border-l-4 border-primary pl-6 text-lg font-black uppercase tracking-tight text-zinc-700"
-        >
-          {renderInlineMarkdown(trimmed.replace(/^>\s?/, ""))}
-        </blockquote>
-      );
-      return;
-    }
-
-    flushList();
-    paragraph.push(trimmed);
-  });
-
-  flushParagraph();
-  flushList();
-
-  return <div className="space-y-6">{elements}</div>;
-}
-
-function renderInlineMarkdown(text: string): React.ReactNode[] {
-  const nodes: React.ReactNode[] = [];
-  const pattern = /(\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*)/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = pattern.exec(text))) {
-    if (match.index > lastIndex) {
-      nodes.push(text.slice(lastIndex, match.index));
-    }
-
-    if (match[2] && match[3]) {
-      const href = getSafeHref(match[3]);
-      nodes.push(
-        href ? (
-          <Link
-            key={`link-${match.index}`}
-            href={href}
-            className="font-black text-primary underline underline-offset-4"
-          >
-            {match[2]}
-          </Link>
-        ) : (
-          match[2]
-        )
-      );
-    } else if (match[4]) {
-      nodes.push(
-        <strong key={`strong-${match.index}`} className="font-black text-black">
-          {match[4]}
-        </strong>
-      );
-    } else if (match[5]) {
-      nodes.push(
-        <em key={`em-${match.index}`} className="italic text-zinc-900">
-          {match[5]}
-        </em>
-      );
-    }
-
-    lastIndex = pattern.lastIndex;
-  }
-
-  if (lastIndex < text.length) {
-    nodes.push(text.slice(lastIndex));
-  }
-
-  return nodes;
-}
-
-function getSafeHref(href: string) {
-  const trimmed = href.trim();
-
-  if (
-    trimmed.startsWith("/") ||
-    trimmed.startsWith("https://") ||
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("mailto:")
-  ) {
-    return trimmed;
-  }
-
-  return "";
 }
