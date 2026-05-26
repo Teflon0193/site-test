@@ -15,7 +15,10 @@ const getPdfUrl = (url: string) => {
     const pdfUrl = new URL(url, STRAPI_BASE_URL);
     const strapiUrl = new URL(STRAPI_BASE_URL);
 
-    if (pdfUrl.origin !== strapiUrl.origin) {
+    const isStrapiMedia = pdfUrl.origin === strapiUrl.origin;
+    const isExternalHttpsMedia = pdfUrl.protocol === "https:";
+
+    if (!isStrapiMedia && !isExternalHttpsMedia) {
       return null;
     }
 
@@ -52,6 +55,7 @@ export async function GET(
   if (!pdfUrl) {
     return jsonError("PDF indisponible pour cette newsletter", 404);
   }
+  
 
   let pdfResponse: Response;
 

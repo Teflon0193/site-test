@@ -32,7 +32,10 @@ const getPdfUrl = (url: string) => {
     const pdfUrl = new URL(url, STRAPI_BASE_URL);
     const strapiUrl = new URL(STRAPI_BASE_URL);
 
-    if (pdfUrl.origin !== strapiUrl.origin) {
+    const isStrapiMedia = pdfUrl.origin === strapiUrl.origin;
+    const isExternalHttpsMedia = pdfUrl.protocol === "https:";
+
+    if (!isStrapiMedia && !isExternalHttpsMedia) {
       return null;
     }
 
@@ -43,10 +46,17 @@ const getPdfUrl = (url: string) => {
 };
 
 const getActualite = async (id: string): Promise<StrapiActualite | null> => {
-  const params = new URLSearchParams({ populate: "pdf" });
-  const url = `${STRAPI_BASE_URL}/api/actualites/${encodeURIComponent(
-    id
-  )}?${params.toString()}`;
+  const params = new URLSearchParams();
+  params.append("populate", "pdf");
+  params.append("pagination[limit]", "1");
+
+  if (/^\d+$/.test(id)) {
+    params.append("filters[id][$eq]", id);
+  } else {
+    params.append("filters[documentId][$eq]", id);
+  }
+
+  const url = `${STRAPI_BASE_URL}/api/actualites?${params.toString()}`;
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -69,7 +79,14 @@ const getActualite = async (id: string): Promise<StrapiActualite | null> => {
     throw new Error(`Strapi actualite lookup failed: ${response.status}`);
   }
 
-  const payload = (await response.json()) as { data?: StrapiActualite | null };
+  const payload = (await response.json()) as {
+    data?: StrapiActualite[] | StrapiActualite | null;
+  };
+
+  if (Array.isArray(payload.data)) {
+    return payload.data[0] ?? null;
+  }
+
   return payload.data ?? null;
 };
 
@@ -85,7 +102,7 @@ export async function GET(
 
   const { id } = await params;
 
-  if (!/^\d+$/.test(id)) {
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
     return jsonError("Identifiant invalide", 400);
   }
 

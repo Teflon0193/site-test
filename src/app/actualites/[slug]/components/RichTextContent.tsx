@@ -17,7 +17,7 @@ export default function RichTextContent({ body }: { body: string }) {
     elements.push(
       <p
         key={`p-${elements.length}`}
-        className="text-base font-medium leading-8 text-zinc-700"
+        className="text-base font-medium leading-8 text-muted-foreground"
       >
         {renderInlineMarkdown(text)}
       </p>
@@ -32,7 +32,7 @@ export default function RichTextContent({ body }: { body: string }) {
     elements.push(
       <ListTag
         key={`list-${elements.length}`}
-        className={`space-y-3 pl-6 text-base font-medium leading-8 text-zinc-700 ${
+        className={`space-y-3 pl-6 text-base font-medium leading-8 text-muted-foreground ${
           listType === "ol" ? "list-decimal" : "list-disc"
         }`}
       >
@@ -83,7 +83,7 @@ export default function RichTextContent({ body }: { body: string }) {
       elements.push(
         <blockquote
           key={`quote-${elements.length}`}
-          className="border-l-4 border-primary pl-6 text-lg font-black uppercase tracking-tight text-zinc-700"
+          className="rounded-r-2xl border-l-4 border-primary bg-white px-6 py-5 text-lg font-semibold leading-relaxed text-foreground shadow-sm"
         >
           {renderInlineMarkdown(trimmed.replace(/^>\s?/, ""))}
         </blockquote>
@@ -113,7 +113,7 @@ function renderHeading(level: number, text: string, index: number) {
   return (
     <HeadingTag
       key={`h-${index}`}
-      className={`${className} pt-4 font-black uppercase leading-tight tracking-tighter text-black`}
+      className={`${className} pt-4 font-bold uppercase leading-tight tracking-tight text-foreground`}
     >
       {renderInlineMarkdown(text)}
     </HeadingTag>

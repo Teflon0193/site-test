@@ -1,6 +1,7 @@
 import { STRAPI_BASE_URL, STRAPI_TOKEN } from "@/lib/constant";
 import {
   Actualite,
+  ActualiteBlock,
   ActualiteForDownload,
   ActualiteMois,
   ActualiteType,
@@ -28,6 +29,23 @@ const getCoverImageUrl = (image: StrapiActualite["coverImage"]) =>
       image?.url
   );
 
+const transformActualiteBlocks = (
+  blocks?: ActualiteBlock[]
+): ActualiteBlock[] | undefined =>
+  blocks?.map((block) => ({
+    ...block,
+    file: block.file
+      ? {
+          ...block.file,
+          url: getMediaUrl(block.file.url),
+        }
+      : undefined,
+    files: block.files?.map((file) => ({
+      ...file,
+      url: getMediaUrl(file.url),
+    })),
+  }));
+
 const transformStrapiActualite = (data: StrapiActualite): Actualite => ({
   id: data.id,
   documentId: data.documentId,
@@ -35,7 +53,7 @@ const transformStrapiActualite = (data: StrapiActualite): Actualite => ({
   slug: data.slug,
   type: data.type,
   summary: data.summary,
-  blocks: data.blocks,
+  blocks: transformActualiteBlocks(data.blocks),
   pdf: data.pdf
     ? {
         name: data.pdf.name,
@@ -55,7 +73,9 @@ const transformStrapiActualite = (data: StrapiActualite): Actualite => ({
 
 const buildActualiteQuery = (filters: ActualiteFilters = {}) => {
   const params = new URLSearchParams();
-  params.append("populate", "pdf,coverImage,blocks");
+  params.append("populate[0]", "pdf");
+  params.append("populate[1]", "coverImage");
+  params.append("populate[blocks][populate]", "*");
   params.append("sort[0]", "annee:desc");
   params.append("sort[1]", "datePublication:desc");
   params.append("sort[2]", "createdAt:desc");
