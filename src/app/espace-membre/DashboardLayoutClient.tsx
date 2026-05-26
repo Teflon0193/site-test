@@ -208,7 +208,7 @@ export default function DashboardLayoutClient({
         <div className="p-4 border-t bg-muted/10">
           <div className="flex items-center gap-3 mb-4 px-2">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user.image || ""} alt={user.name} />
+              {user.image && <AvatarImage src={user.image} alt={user.name} />}
               <AvatarFallback className="bg-primary/10 text-primary font-bold">
                 {user.name.charAt(0).toUpperCase()}
               </AvatarFallback>

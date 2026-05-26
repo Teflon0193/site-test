@@ -36,7 +36,7 @@ export function ProfilePhotoUploader({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const displayImageUrl = previewUrl || imageUrl || "";
+  const displayImageUrl = previewUrl || imageUrl;
   const initial = userName.charAt(0).toUpperCase();
 
   const handleChooseFile = () => {
@@ -119,7 +119,9 @@ export function ProfilePhotoUploader({
             isPending && "opacity-70"
           )}
         >
-          <AvatarImage src={displayImageUrl} alt={userName} />
+          {displayImageUrl && (
+            <AvatarImage src={displayImageUrl} alt={userName} />
+          )}
           <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
             {initial}
           </AvatarFallback>
