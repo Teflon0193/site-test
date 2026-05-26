@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Mail,
   Calendar,
@@ -13,6 +12,7 @@ import {
 import { getUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ProfilePhotoUploader } from "./ProfilePhotoUploader";
 
 export default async function ProfilePage() {
   const user = await getUser();
@@ -36,12 +36,10 @@ export default async function ProfilePage() {
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 pb-6 border-b">
-        <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
-          <AvatarImage src={user.image || ""} />
-          <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
-            {user.name.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <ProfilePhotoUploader
+          initialImageUrl={user.image}
+          userName={user.name}
+        />
 
         <div className="flex-1 space-y-2">
           <div className="flex flex-col md:flex-row md:items-center gap-3">

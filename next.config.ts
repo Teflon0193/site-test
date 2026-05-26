@@ -13,6 +13,11 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "6mb",
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: "http", hostname: "localhost" },
