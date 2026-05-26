@@ -111,17 +111,15 @@ export default async function EventDetailPage({
                 <div className="rounded-xl border border-muted/30 bg-muted/20 p-3 sm:p-4 shadow-sm">
                   <div className="relative aspect-[16/9] max-h-[70vh] overflow-hidden rounded-lg bg-white">
                     <div className="absolute inset-0 bg-[url('/motif-lub.png')] bg-center bg-cover opacity-[0.04]" />
-                    <div className="absolute inset-2 sm:inset-3 md:inset-4">
-                      <Image
-                        src={event.image || "/placeholder.svg"}
-                        alt={event.title}
-                        fill
-                        className="object-contain object-center"
-                        priority
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 65vw, 760px"
-                        quality={90}
-                      />
-                    </div>
+                    <Image
+                      src={event.image || "/placeholder.svg"}
+                      alt={event.title}
+                      fill
+                      className="object-cover object-center"
+                      priority
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 65vw, 760px"
+                      quality={90}
+                    />
                   </div>
                 </div>
 
