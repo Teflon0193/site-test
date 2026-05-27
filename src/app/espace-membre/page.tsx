@@ -12,6 +12,7 @@ import {
   XCircle,
   Settings,
   Mail,
+  MessageSquare,
 } from "lucide-react";
 import { getUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
@@ -166,6 +167,8 @@ export default async function DashboardPage() {
                           return XCircle;
                         case "ADMIN_ACTION":
                           return Settings;
+                        case "SUGGESTION_SUBMIT":
+                          return MessageSquare;
                         default:
                           return Activity;
                       }
@@ -185,6 +188,8 @@ export default async function DashboardPage() {
                           return "Annulation d'un événement";
                         case "ADMIN_ACTION":
                           return "Action administrative";
+                        case "SUGGESTION_SUBMIT":
+                          return "Suggestion envoyée";
                         default:
                           return "Activité";
                       }

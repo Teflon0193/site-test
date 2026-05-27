@@ -2,9 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getAdminStats,
   getMembers,
+  getSuggestions,
   type AdminStatsResponse,
   type MembersQueryParams,
   type MembersResponse,
+  type SuggestionsQueryParams,
+  type SuggestionsResponse,
 } from "@/services/adminService";
 
 export const useAdminStatsQuery = () =>
@@ -21,5 +24,13 @@ export const useMembersQuery = (params: MembersQueryParams) =>
     queryKey: ["admin", "members", params],
     queryFn: () => getMembers(params),
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+export const useSuggestionsQuery = (params: SuggestionsQueryParams) =>
+  useQuery<SuggestionsResponse, Error>({
+    queryKey: ["admin", "suggestions", params],
+    queryFn: () => getSuggestions(params),
+    staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
   });

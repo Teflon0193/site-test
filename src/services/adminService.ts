@@ -37,6 +37,41 @@ export interface MembersResponse {
   totalMembers: number;
 }
 
+export type SuggestionCategory =
+  | "PROGRAMMATION"
+  | "ACCUEIL"
+  | "ESPACES"
+  | "COMMUNICATION"
+  | "AUTRE";
+
+export type SuggestionStatus = "NEW" | "READ" | "RESOLVED";
+
+export interface AdminSuggestion {
+  id: string;
+  category: SuggestionCategory;
+  message: string;
+  status: SuggestionStatus;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt: string | null;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+  };
+}
+
+export interface SuggestionsQueryParams {
+  status?: SuggestionStatus | "all";
+  category?: SuggestionCategory | "all";
+}
+
+export interface SuggestionsResponse {
+  suggestions: AdminSuggestion[];
+  totalSuggestions: number;
+}
+
 async function handleJsonResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -79,4 +114,45 @@ export async function getMembers(
   });
 
   return handleJsonResponse<MembersResponse>(res);
+}
+
+export async function getSuggestions(
+  params: SuggestionsQueryParams
+): Promise<SuggestionsResponse> {
+  const searchParams = new URLSearchParams();
+
+  if (params.status && params.status !== "all") {
+    searchParams.set("status", params.status);
+  }
+
+  if (params.category && params.category !== "all") {
+    searchParams.set("category", params.category);
+  }
+
+  const queryString = searchParams.toString();
+  const url = queryString
+    ? `/api/admin/suggestions?${queryString}`
+    : "/api/admin/suggestions";
+
+  const res = await fetch(url, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  return handleJsonResponse<SuggestionsResponse>(res);
+}
+
+export async function updateSuggestionStatus(
+  suggestionId: string,
+  status: SuggestionStatus
+): Promise<AdminSuggestion> {
+  const res = await fetch("/api/admin/suggestions", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ suggestionId, status }),
+  });
+
+  return handleJsonResponse<AdminSuggestion>(res);
 }

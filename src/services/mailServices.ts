@@ -194,6 +194,44 @@ export const emailTemplates = {
     `;
     return baseEmailLayout(content);
   },
+
+  /**
+   * Email de notification pour une suggestion membre
+   */
+  memberSuggestion: (data: {
+    memberName: string;
+    memberEmail: string;
+    category: string;
+    message: string;
+    submittedAt: Date;
+  }): string => {
+    const submittedAt = data.submittedAt.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const content = `
+      <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Nouvelle suggestion membre</h2>
+
+      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 4px; border: 1px solid #eee;">
+        <p style="margin: 0 0 10px 0;"><strong>Membre :</strong> ${data.memberName}</p>
+        <p style="margin: 0 0 10px 0;"><strong>Email :</strong> <a href="mailto:${data.memberEmail}" style="color: #804423; text-decoration: none;">${data.memberEmail}</a></p>
+        <p style="margin: 0 0 10px 0;"><strong>Catégorie :</strong> ${data.category}</p>
+        <p style="margin: 0;"><strong>Date :</strong> ${submittedAt}</p>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <p style="font-weight: 600; margin-bottom: 12px;">Message :</p>
+        <p style="white-space: pre-wrap; background-color: #fff; padding: 15px; border-left: 3px solid #804423;">${data.message}</p>
+      </div>
+
+      ${ctaButton(`${BASE_URL}/espace-membre/admin/suggestions`, "Ouvrir les suggestions")}
+    `;
+    return baseEmailLayout(content);
+  },
 };
 
 // =============================================================================
@@ -276,5 +314,19 @@ export async function sendContactFormEmail(
     to: adminEmail,
     subject: `Nouveau message de contact - ${contactData.subject}`,
     html: emailTemplates.contactForm(contactData),
+  });
+}
+
+/**
+ * Envoie un email pour une nouvelle suggestion membre
+ */
+export async function sendMemberSuggestionEmail(
+  adminEmail: string,
+  suggestionData: Parameters<typeof emailTemplates.memberSuggestion>[0]
+): Promise<boolean> {
+  return sendEmail({
+    to: adminEmail,
+    subject: `Nouvelle suggestion membre - ${suggestionData.category}`,
+    html: emailTemplates.memberSuggestion(suggestionData),
   });
 }

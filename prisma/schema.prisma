@@ -26,6 +26,21 @@ enum ActivityType {
   EVENT_CANCEL
   ADMIN_ACTION
   NEWSLETTER_DOWNLOAD
+  SUGGESTION_SUBMIT
+}
+
+enum SuggestionCategory {
+  PROGRAMMATION
+  ACCUEIL
+  ESPACES
+  COMMUNICATION
+  AUTRE
+}
+
+enum SuggestionStatus {
+  NEW
+  READ
+  RESOLVED
 }
 
 model User {
@@ -47,6 +62,7 @@ model User {
   accounts        Account[]
   registrations   EventRegistration[]
   activities      MemberActivity[]
+  suggestions     MemberSuggestion[]
   approvalToken   ApprovalToken?
 
   @@unique([email])
@@ -134,4 +150,21 @@ model MemberActivity {
 
   @@index([userId, type])
   @@map("member_activity")
+}
+
+model MemberSuggestion {
+  id         String             @id @default(cuid()) @map("_id")
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   SuggestionCategory
+  message    String
+  status     SuggestionStatus   @default(NEW)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  resolvedAt DateTime?
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([category, createdAt])
+  @@map("member_suggestion")
 }

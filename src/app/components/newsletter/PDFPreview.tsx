@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Download } from "lucide-react";
 
@@ -14,9 +14,14 @@ interface PDFPreviewProps {
   isAuthenticated: boolean;
 }
 
-function getPageWidth() {
-  if (typeof window === "undefined") return 800;
-  return Math.min(800, window.innerWidth - 40);
+const MAX_PAGE_WIDTH = 560;
+const MIN_PAGE_WIDTH = 260;
+
+function getPageWidth(containerWidth: number) {
+  return Math.max(
+    MIN_PAGE_WIDTH,
+    Math.min(MAX_PAGE_WIDTH, Math.floor(containerWidth - 24))
+  );
 }
 
 export default function PDFPreview({
@@ -25,19 +30,35 @@ export default function PDFPreview({
   onDownloadClick,
   isAuthenticated,
 }: PDFPreviewProps) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [numPages, setNumPages] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [pageWidth, setPageWidth] = useState(800);
+  const [pageWidth, setPageWidth] = useState(MAX_PAGE_WIDTH);
 
   useEffect(() => {
-    setPageWidth(getPageWidth());
-    const handleResize = () => setPageWidth(getPageWidth());
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const wrapper = wrapperRef.current;
+
+    if (!wrapper) {
+      return;
+    }
+
+    const updatePageWidth = () => {
+      setPageWidth(getPageWidth(wrapper.clientWidth));
+    };
+
+    updatePageWidth();
+
+    const resizeObserver = new ResizeObserver(updatePageWidth);
+    resizeObserver.observe(wrapper);
+
+    return () => resizeObserver.disconnect();
   }, []);
 
   return (
-    <div className="pdf-preview-wrapper w-full">
+    <div
+      ref={wrapperRef}
+      className="pdf-preview-wrapper mx-auto w-full max-w-[620px]"
+    >
       <Document
         file={pdfUrl}
         onLoadSuccess={({ numPages }) => {
@@ -49,7 +70,7 @@ export default function PDFPreview({
           setLoading(false);
         }}
         loading={
-          <div className="w-full h-96 bg-zinc-50 animate-pulse border-2 border-zinc-100 flex items-center justify-center">
+          <div className="flex h-[420px] w-full animate-pulse items-center justify-center rounded-xl border border-muted/20 bg-white">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
               Chargement de la liseuse...
             </p>
@@ -57,7 +78,7 @@ export default function PDFPreview({
         }
         className="pdf-document"
       >
-        <div className="space-y-12">
+        <div className="space-y-6">
           {!loading &&
             Array.from(new Array(Math.min(maxPages, numPages)), (_, i) => (
               <div
@@ -69,59 +90,41 @@ export default function PDFPreview({
                   width={pageWidth}
                   renderTextLayer={false}
                   renderAnnotationLayer={false}
-                  className="pdf-page shadow-none border-4 border-black bg-white"
+                  className="pdf-page overflow-hidden rounded-lg border border-muted/20 bg-white shadow-sm"
                 />
               </div>
             ))}
         </div>
       </Document>
 
-      {numPages > maxPages && (
-        <div className="relative mt-20">
-          {/* Sharp overlay */}
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] h-64 -mt-64 border-t-2 border-dashed border-zinc-300 pointer-events-none" />
+      {(!isAuthenticated || numPages > maxPages) && (
+        <div className="relative mt-6">
+          {numPages > maxPages && (
+            <div className="absolute inset-x-4 -top-20 h-20 border-t border-dashed border-muted/30 bg-white/70 backdrop-blur-sm" />
+          )}
 
-          {/* CTA Banner */}
-          <div className="relative z-10 bg-primary text-white p-12 md:p-16 flex flex-col items-center justify-center text-center">
-            <div className="max-w-xl space-y-8">
-              <div className="h-1 w-24 bg-white mx-auto"></div>
-
-              <div className="space-y-4">
-                <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none">
-                  Contenu <br />
-                  <span className="text-white">Limité</span>
-                </h3>
-
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
-                  <span className="text-white">
-                    +{numPages - maxPages} PAGES
-                  </span>{" "}
-                  SUPPLÉMENTAIRES DANS L&apos;ÉDITION COMPLÈTE
+          <div className="relative z-10 rounded-xl bg-primary px-5 py-6 text-center text-white shadow-sm sm:px-6">
+            {isAuthenticated ? (
+              <p className="text-xs font-bold uppercase tracking-widest text-white/75">
+                +{numPages - maxPages} pages dans l’édition complète
+              </p>
+            ) : (
+              <div className="space-y-2">
+                <p className="mx-auto max-w-sm text-sm font-semibold leading-relaxed text-white">
+                  Connectez-vous pour lire la newsletter
+                  complète.
                 </p>
               </div>
-
-              <div className="pt-4 flex flex-col items-center gap-6">
-                <button
-                  onClick={onDownloadClick}
-                  className="group relative inline-flex items-center gap-4 bg-white text-black px-10 py-5 font-black uppercase tracking-[0.2em] text-xs hover:bg-accent hover:text-white transition-all duration-300"
-                >
-                  <Download className="h-4 w-4" />
-                  {isAuthenticated
-                    ? "TÉLÉCHARGER LE PDF COMPLET"
-                    : "SE CONNECTER POUR TÉLÉCHARGER"}
-                </button>
-
-                {!isAuthenticated && (
-                  <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-zinc-500">
-                    CRÉEZ UN COMPTE POUR ACCÉDER À TOUTES NOS PUBLICATIONS
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Decorative corner */}
-            <div className="absolute top-6 right-6 w-8 h-8 border-t-2 border-r-2 border-white/20"></div>
-            <div className="absolute bottom-6 left-6 w-8 h-8 border-b-2 border-l-2 border-white/20"></div>
+            )}
+            <button
+              onClick={onDownloadClick}
+              className="mt-4 inline-flex items-center justify-center gap-3 rounded-full bg-white px-5 py-3 text-xs font-bold uppercase tracking-wide text-foreground transition hover:bg-accent hover:text-black"
+            >
+              <Download className="h-4 w-4" />
+              {isAuthenticated
+                ? "Télécharger le PDF complet"
+                : "Se connecter pour lire la newsletter"}
+            </button>
           </div>
         </div>
       )}
