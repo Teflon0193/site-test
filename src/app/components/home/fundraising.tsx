@@ -1,127 +1,239 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
   Banknote,
   BookOpen,
-  Check,
   CheckCircle2,
-  Copy,
   CreditCard,
   HandCoins,
-  Landmark,
   Mail,
   Phone,
   ShieldCheck,
+  WalletCards,
 } from "lucide-react";
 
-type Step = "amount" | "identity" | "payment" | "confirmed";
-type PaymentMethod = "mobile_money" | "card" | "transfer";
+type Step = "amount" | "identity" | "payment";
+type PaymentMethod = "card" | "paypal" | "mobile_money";
 
-const campaignGoal = 517251;
+type DonationStatus =
+  | "pending"
+  | "succeeded"
+  | "failed"
+  | "cancelled"
+  | "refunded";
+
+type CreatedDonation = {
+  donation_id: string;
+  status: DonationStatus;
+  provider_instructions: string | null;
+  pawapay: {
+    country?: string;
+    provider?: string;
+    provider_amount?: number;
+    provider_currency?: string;
+    last_provider_status?: string;
+  } | null;
+};
+
+type CampaignResponse = {
+  campaign: {
+    id: string;
+    title: string;
+    description: string | null;
+    goal_amount: number;
+    currency: string;
+    status: "draft" | "active" | "paused" | "completed" | "archived";
+    cover_image_url: string | null;
+  };
+  tiers: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    min_amount: number;
+    max_amount: number | null;
+    display_order: number;
+  }>;
+  stats: {
+    raised_amount: number;
+    progress_percent: number;
+    succeeded_donations_count: number;
+    unique_donors_count: number;
+    pending_donations_count: number;
+  };
+};
 
 const impactItems = [
-  "561 m2 entierement amenages pour la lecture et la mediation.",
-  "5 000 ouvrages initiaux, dont 3 000 pour la Bibliotheque.",
-  "Outils numeriques de recherche et de formation.",
-  "Ateliers, clubs de lecture et rencontres litteraires.",
-];
-
-const levels = [
-  {
-    name: "Partenaire Fondateur",
-    range: "100 000 USD +",
-    amount: 100000,
-    note: "Engagement institutionnel majeur",
-  },
-  {
-    name: "Grand Mecene",
-    range: "50 000 - 99.99 USD",
-    amount: 50000,
-    note: "Soutien structurant de campagne",
-  },
-  {
-    name: "Mecene Biblio Librairie",
-    range: "25 000 - 49.99 USD",
-    amount: 25000,
-    note: "Collections, equipements et usages",
-  },
-  {
-    name: "Parrain de Rayon",
-    range: "5 000 - 24.99 USD",
-    amount: 5000,
-    note: "Rayon, collection ou espace dedie",
-  },
-  {
-    name: "Ami & Citoyen",
-    range: "100 - 4.99 USD",
-    amount: 100,
-    note: "Contribution ouverte a tous",
-  },
+  "561 m2 entièrement aménagés pour la lecture et la médiation.",
+  "5 000 ouvrages initiaux, dont 3 000 pour la Bibliothèque.",
+  "Outils numériques de recherche et de formation.",
+  "Ateliers, clubs de lecture et rencontres littéraires.",
 ];
 
 const paymentMethods = [
   {
     id: "mobile_money" as const,
     title: "Mobile Money",
-    detail: "M-Pesa, Orange Money, Airtel Money",
+    detail: "Validation sur votre téléphone",
     icon: Phone,
   },
   {
     id: "card" as const,
     title: "Carte bancaire",
-    detail: "Visa ou Mastercard",
+    detail: "Paiement sécurisé par carte",
     icon: CreditCard,
   },
   {
-    id: "transfer" as const,
-    title: "Virement bancaire",
-    detail: "Rawbank, Equity BCDC, Ecobank",
-    icon: Landmark,
+    id: "paypal" as const,
+    title: "PayPal",
+    detail: "Paiement avec votre compte",
+    icon: WalletCards,
   },
 ];
 
-const bankAccounts = [
-  { bank: "Rawbank", number: "CD48 05100051010120306000152" },
-  { bank: "Equity BCDC", number: "00011150511200194697606 USD" },
-  { bank: "Ecobank", number: "0026000013508010061362 USD" },
-];
-
-const formatUsd = (value: number) =>
-  new Intl.NumberFormat("fr-FR", {
+const formatMoney = (value: number, currency = "USD") =>
+  `${new Intl.NumberFormat("fr-FR", {
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(value)} ${currency}`;
+
+const formatTierRange = (
+  minAmount: number,
+  maxAmount: number | null,
+  currency: string
+) => {
+  if (maxAmount === null) {
+    return `${formatMoney(minAmount, currency)} +`;
+  }
+
+  return `${formatMoney(minAmount, currency)} - ${formatMoney(
+    maxAmount,
+    currency
+  )}`;
+};
+
+const formatDonationStatus = (status: DonationStatus) => {
+  const labels: Record<DonationStatus, string> = {
+    pending: "en attente",
+    succeeded: "confirme",
+    failed: "non abouti",
+    cancelled: "annule",
+    refunded: "rembourse",
+  };
+
+  return labels[status];
+};
+
+const formatProviderStatus = (status: string) =>
+  status
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace("submitted", "envoye")
+    .replace("accepted", "accepte")
+    .replace("completed", "confirme")
+    .replace("failed", "non abouti")
+    .replace("rejected", "refuse");
 
 export default function FundraisingSection() {
+  const [campaignData, setCampaignData] = useState<CampaignResponse | null>(
+    null
+  );
+  const [isLoadingCampaign, setIsLoadingCampaign] = useState(true);
+  const [campaignError, setCampaignError] = useState("");
   const [step, setStep] = useState<Step>("amount");
-  const [selectedLevel, setSelectedLevel] = useState(4);
+  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [useCustomAmount, setUseCustomAmount] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("mobile_money");
-  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
+  const [isVerifyingDonation, setIsVerifyingDonation] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [mobileDonation, setMobileDonation] = useState<CreatedDonation | null>(
+    null
+  );
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCampaign() {
+      try {
+        const response = await fetch("/api/fundraising/campaign", {
+          cache: "no-store",
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data?.error?.message ||
+              "La collecte ne peut pas être affichée pour le moment."
+          );
+        }
+
+        if (ignore) return;
+
+        setCampaignData(data);
+        setSelectedTierId(data.tiers.at(-1)?.id || null);
+      } catch (error) {
+        if (!ignore) {
+          setCampaignError(
+            error instanceof Error
+              ? error.message
+              : "La collecte ne peut pas être affichée pour le moment."
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoadingCampaign(false);
+        }
+      }
+    }
+
+    loadCampaign();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mobileDonation || mobileDonation.status !== "pending") return;
+
+    const interval = window.setInterval(() => {
+      verifyMobileDonation(mobileDonation.donation_id);
+    }, 5000);
+
+    return () => window.clearInterval(interval);
+  }, [mobileDonation]);
+
+  const tiers = campaignData?.tiers || [];
+  const currency = campaignData?.campaign.currency || "USD";
+  const selectedTier = tiers.find((tier) => tier.id === selectedTierId);
+  const minimumAmount = Math.max(
+    tiers.length ? Math.min(...tiers.map((tier) => tier.min_amount)) : 100,
+    100
+  );
+  const campaignIsActive = campaignData?.campaign.status === "active";
 
   const selectedAmount = useMemo(() => {
     if (useCustomAmount) {
       return Number(customAmount) || 0;
     }
 
-    return levels[selectedLevel].amount;
-  }, [customAmount, selectedLevel, useCustomAmount]);
+    return selectedTier?.min_amount || minimumAmount;
+  }, [customAmount, minimumAmount, selectedTier?.min_amount, useCustomAmount]);
 
   const selectedLabel = useCustomAmount
     ? "Montant libre"
-    : levels[selectedLevel].name;
+    : selectedTier?.name || "Contribution";
 
   const progressPercent = Math.min(
-    Math.round((selectedAmount / campaignGoal) * 100),
+    Math.max(campaignData?.stats.progress_percent || 0, 0),
     100
   );
 
@@ -134,8 +246,20 @@ export default function FundraisingSection() {
   };
 
   const goToIdentity = () => {
-    if (selectedAmount < 100) {
-      setErrors({ amount: "Le montant minimum est de 100 USD." });
+    if (!campaignIsActive) {
+      setErrors({
+        amount: "Les contributions en ligne ne sont pas ouvertes pour le moment.",
+      });
+      return;
+    }
+
+    if (selectedAmount < minimumAmount) {
+      setErrors({
+        amount: `Le montant minimum est de ${formatMoney(
+          minimumAmount,
+          currency
+        )}.`,
+      });
       return;
     }
 
@@ -163,14 +287,135 @@ export default function FundraisingSection() {
     setStep("payment");
   };
 
-  const copyAccount = async (number: string) => {
-    await navigator.clipboard.writeText(number);
-    setCopiedAccount(number);
-    window.setTimeout(() => setCopiedAccount(null), 1800);
+  const createCheckout = async () => {
+    setCheckoutError("");
+
+    if (paymentMethod === "mobile_money" && !phone.trim()) {
+      setCheckoutError(
+        "Indiquez votre numéro de téléphone pour recevoir la demande de paiement."
+      );
+      return;
+    }
+
+    setIsCreatingCheckout(true);
+
+    try {
+      const response = await fetch("/api/fundraising/donations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: selectedAmount,
+          payment_method: paymentMethod,
+          client_request_id: crypto.randomUUID(),
+          donor: {
+            name: fullName,
+            email,
+            phone: phone || undefined,
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error?.message ||
+            "Le paiement ne peut pas être démarré pour le moment."
+        );
+      }
+
+      if (paymentMethod === "mobile_money") {
+        setMobileDonation({
+          donation_id: data.donation_id,
+          status: data.status,
+          provider_instructions: data.provider_instructions,
+          pawapay: data.pawapay,
+        });
+        setIsCreatingCheckout(false);
+        return;
+      }
+
+      sessionStorage.setItem("ccapac.last_donation_id", data.donation_id);
+      window.location.href = data.checkout_url;
+    } catch (error) {
+      setCheckoutError(
+        error instanceof Error
+          ? error.message
+          : "Le paiement ne peut pas être démarré pour le moment."
+      );
+      setIsCreatingCheckout(false);
+    }
   };
 
+  const verifyMobileDonation = async (donationId: string) => {
+    setIsVerifyingDonation(true);
+
+    try {
+      const response = await fetch(
+        `/api/fundraising/donations/${donationId}/verify`,
+        { method: "POST" }
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error?.message ||
+            "Nous ne pouvons pas confirmer le paiement pour le moment."
+        );
+      }
+
+      setMobileDonation((current) =>
+        current
+          ? {
+              ...current,
+              status: data.status,
+              provider_instructions:
+                data.provider_instructions || current.provider_instructions,
+              pawapay: data.pawapay || current.pawapay,
+            }
+          : current
+      );
+    } catch (error) {
+      setCheckoutError(
+        error instanceof Error
+          ? error.message
+          : "Nous ne pouvons pas confirmer le paiement pour le moment."
+      );
+    } finally {
+      setIsVerifyingDonation(false);
+    }
+  };
+
+  if (isLoadingCampaign) {
+    return <FundraisingShell>Chargement de la campagne...</FundraisingShell>;
+  }
+
+  if (campaignError || !campaignData) {
+    return (
+      <FundraisingShell>
+        <div className="max-w-2xl">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-secondary">
+            Campagne indisponible
+          </p>
+          <h2 className="mt-3 text-2xl font-bold uppercase text-primary sm:text-3xl">
+            La collecte n&apos;est pas disponible
+          </h2>
+          <p className="mt-3 text-sm font-medium leading-relaxed text-primary/75">
+            {campaignError ||
+              "Merci de réessayer plus tard ou de contacter l'équipe CCAPAC."}
+          </p>
+        </div>
+      </FundraisingShell>
+    );
+  }
+
   return (
-    <section className="relative overflow-hidden bg-[#f4efe4] py-16 text-primary sm:py-20 lg:py-24">
+    <section
+      id="fundraising"
+      className="relative overflow-hidden bg-[#f4efe4] py-16 text-primary sm:py-20 lg:py-24"
+    >
       <div className="absolute inset-x-0 top-0 h-36 bg-primary" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-primary/10" />
 
@@ -190,54 +435,48 @@ export default function FundraisingSection() {
               <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
                 <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/12 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] backdrop-blur-md">
                   <HandCoins className="h-4 w-4 text-[#ffcc02]" />
-                  Soutien Biblio-Librairie
+                  Collecte en cours
                 </div>
 
                 <h2 className="max-w-xl text-3xl font-bold uppercase leading-[1.05] tracking-tight sm:text-4xl lg:text-4xl">
-                  Investir dans la lecture, la jeunesse et la transmission
+                  {campaignData.campaign.title}
                 </h2>
 
-                <p className="mt-5 max-w-lg text-sm font-medium leading-relaxed text-white/82 sm:text-base">
-                  La Biblio-Librairie du Grand Tambour est un dispositif 
-structurant au service de la jeunesse, de l éducation et 
-de l inclusion culturelle à Kinshasa.
-                </p>
+                {campaignData.campaign.description && (
+                  <p className="mt-5 max-w-lg text-sm font-medium leading-relaxed text-white/82 sm:text-base">
+                    {campaignData.campaign.description}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="grid gap-5 border-t border-white/12 p-6 sm:p-8">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-md bg-white/8 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-white/58">
-                    Objectif
-                  </p>
-                  <p className="mt-1 text-2xl font-bold">
-                    {formatUsd(campaignGoal)}
-                  </p>
-                  <p className="text-xs font-semibold text-white/58">USD</p>
-                </div>
-                <div className="rounded-md bg-white/8 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-white/58">
-                    Selection
-                  </p>
-                  <p className="mt-1 text-2xl font-bold">
-                    {formatUsd(selectedAmount || 0)}
-                  </p>
-                  <p className="text-xs font-semibold text-white/58">USD</p>
-                </div>
+                <StatCard
+                  label="Objectif"
+                  value={formatMoney(campaignData.campaign.goal_amount, currency)}
+                />
+                <StatCard
+                  label="Collecte"
+                  value={formatMoney(campaignData.stats.raised_amount, currency)}
+                />
               </div>
 
               <div>
                 <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-white/62">
-                  <span>Impact estime</span>
-                  <span>{progressPercent}% de l&apos;objectif</span>
+                  <span>Progression de la collecte</span>
+                  <span>{progressPercent.toFixed(1)}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white/14">
                   <div
                     className="h-full rounded-full bg-[#ffcc02]"
-                    style={{ width: `${Math.max(progressPercent, 3)}%` }}
+                    style={{ width: `${Math.max(progressPercent, 2)}%` }}
                   />
                 </div>
+                <p className="mt-3 text-xs font-medium text-white/62">
+                  {campaignData.stats.succeeded_donations_count} dons confirmés
+                  par {campaignData.stats.unique_donors_count} donateurs.
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -264,11 +503,11 @@ de l inclusion culturelle à Kinshasa.
             <div className="border-b border-[#eadcc7] px-5 py-5 sm:px-7">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#9a5f32]">
-                    Parcours de contribution
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-secondary">
+                    Faire un don
                   </p>
                   <h3 className="mt-2 text-2xl font-bold uppercase leading-tight text-primary sm:text-3xl">
-                    Choisir un niveau et preparer le don
+                    Choisissez votre contribution
                   </h3>
                 </div>
 
@@ -281,8 +520,7 @@ de l inclusion culturelle à Kinshasa.
                     const active = step === id;
                     const done =
                       (step === "identity" && index === 0) ||
-                      (step === "payment" && index < 2) ||
-                      step === "confirmed";
+                      (step === "payment" && index < 2);
 
                     return (
                       <li
@@ -302,58 +540,68 @@ de l inclusion culturelle à Kinshasa.
             </div>
 
             <div className="p-5 sm:p-7">
+              {!campaignIsActive && (
+                <div className="mb-5 rounded-md border border-secondary/20 bg-secondary/5 p-4 text-sm font-semibold text-primary">
+                  Les contributions en ligne ne sont pas ouvertes pour le moment.
+                </div>
+              )}
+
               {step === "amount" && (
                 <div className="space-y-6">
                   <div className="grid gap-3">
-                    {levels.map((level, index) => {
+                    {tiers.map((tier) => {
                       const isSelected =
-                        selectedLevel === index && !useCustomAmount;
+                        selectedTierId === tier.id && !useCustomAmount;
 
                       return (
                         <button
-                          key={level.name}
+                          key={tier.id}
                           type="button"
                           onClick={() => {
-                            setSelectedLevel(index);
+                            setSelectedTierId(tier.id);
                             setUseCustomAmount(false);
                             setCustomAmount("");
                             setErrors({});
                           }}
                           className={`group grid gap-3 rounded-md border p-4 text-left transition duration-200 sm:grid-cols-[1fr_auto] sm:items-center ${
                             isSelected
-                              ? "border-[#804423] bg-primary text-white shadow-lg"
-                              : "border-[#eadcc7] bg-[#fdfbf6] text-primary hover:border-[#cd935b] hover:bg-white"
+                              ? "border-primary bg-primary text-white shadow-lg"
+                              : "border-[#eadcc7] bg-[#fdfbf6] text-primary hover:border-secondary hover:bg-white"
                           }`}
                         >
                           <span>
-                            <span className="block text-sm font-bold uppercase tracking-wide">
-                              {level.name}
+                            <span className="block text-sm font-bold text-black uppercase tracking-wide">
+                              {tier.name}
                             </span>
-                            <span
-                              className={`mt-1 block text-xs font-medium ${
-                                isSelected
-                                  ? "text-white/72"
-                                  : "text-[#804423]/65"
-                              }`}
-                            >
-                              {level.note}
-                            </span>
+                            {tier.description && (
+                              <span
+                                className={`mt-1 block text-xs font-medium ${
+                                  isSelected ? "text-white/72" : "text-black/65"
+                                }`}
+                              >
+                                {tier.description}
+                              </span>
+                            )}
                           </span>
                           <span
                             className={`rounded-md px-3 py-2 text-sm font-bold ${
                               isSelected
                                 ? "bg-[#ffcc02] text-[#3a2014]"
-                                : "bg-white text-[#804423] shadow-sm"
+                                : "bg-white text-primary shadow-sm"
                             }`}
                           >
-                            {level.range}
+                            {formatTierRange(
+                              tier.min_amount,
+                              tier.max_amount,
+                              currency
+                            )}
                           </span>
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="rounded-md border border-dashed border-[#cd935b]/55 bg-[#f8f1e7] p-4">
+                  <div className="rounded-md border border-dashed border-secondary/55 bg-[#f8f1e7] p-4">
                     <button
                       type="button"
                       onClick={() => {
@@ -366,26 +614,26 @@ de l inclusion culturelle à Kinshasa.
                         <span className="block text-sm font-bold uppercase tracking-wide">
                           Montant libre
                         </span>
-                        <span className="text-xs font-medium text-[#804423]/65">
-                          Pour une contribution hors niveaux standards.
+                        <span className="text-xs font-medium text-primary/65">
+                          A partir de {formatMoney(minimumAmount, currency)}.
                         </span>
                       </span>
                       <span
                         className={`h-4 w-4 rounded-full border ${
                           useCustomAmount
-                            ? "border-[#804423] bg-[#804423]"
-                            : "border-[#804423]/35 bg-white"
+                            ? "border-primary bg-primary"
+                            : "border-primary/35 bg-white"
                         }`}
                       />
                     </button>
 
                     <label className="relative block">
-                      <span className="absolute inset-y-0 left-4 flex items-center text-xs font-bold text-[#804423]/55">
-                        USD
+                      <span className="absolute inset-y-0 left-4 flex items-center text-xs font-bold text-primary/55">
+                        {currency}
                       </span>
                       <input
                         type="number"
-                        min="100"
+                        min={minimumAmount}
                         value={customAmount}
                         onFocus={() => setUseCustomAmount(true)}
                         onChange={(event) => {
@@ -393,7 +641,7 @@ de l inclusion culturelle à Kinshasa.
                           updateError("amount");
                         }}
                         placeholder="Saisir un montant"
-                        className="h-12 w-full rounded-md border border-[#eadcc7] bg-white pl-14 pr-4 text-sm font-bold text-primary outline-none transition focus:border-[#804423]"
+                        className="h-12 w-full rounded-md border border-[#eadcc7] bg-white pl-16 pr-4 text-sm font-bold text-primary outline-none transition focus:border-primary"
                       />
                     </label>
                     {errors.amount && (
@@ -406,7 +654,9 @@ de l inclusion culturelle à Kinshasa.
                   <SummaryBar
                     label={selectedLabel}
                     amount={selectedAmount}
+                    currency={currency}
                     actionLabel="Continuer"
+                    disabled={!campaignIsActive}
                     onAction={goToIdentity}
                   />
                 </div>
@@ -437,7 +687,7 @@ de l inclusion culturelle à Kinshasa.
                       error={errors.email}
                     />
                     <Field
-                      label="Telephone"
+                      label="Téléphone"
                       type="tel"
                       value={phone}
                       onChange={setPhone}
@@ -452,7 +702,7 @@ de l inclusion culturelle à Kinshasa.
                       Retour
                     </SecondaryButton>
                     <PrimaryButton onClick={goToPayment}>
-                      Choisir le paiement
+                      Continuer
                       <ArrowRight className="h-4 w-4" />
                     </PrimaryButton>
                   </div>
@@ -473,13 +723,13 @@ de l inclusion culturelle à Kinshasa.
                           onClick={() => setPaymentMethod(method.id)}
                           className={`rounded-md border p-4 text-left transition ${
                             isSelected
-                              ? "border-[#804423] bg-primary text-white shadow-lg"
-                              : "border-[#eadcc7] bg-[#fdfbf6] text-primary hover:border-[#cd935b]"
+                              ? "border-primary bg-primary text-white shadow-lg"
+                              : "border-[#eadcc7] bg-[#fdfbf6] text-primary hover:border-secondary"
                           }`}
                         >
                           <Icon
                             className={`mb-3 h-5 w-5 ${
-                              isSelected ? "text-[#ffcc02]" : "text-[#9a5f32]"
+                              isSelected ? "text-[#ffcc02]" : "text-secondary"
                             }`}
                           />
                           <span className="block text-sm font-bold uppercase">
@@ -487,7 +737,7 @@ de l inclusion culturelle à Kinshasa.
                           </span>
                           <span
                             className={`mt-1 block text-xs leading-relaxed ${
-                              isSelected ? "text-white/72" : "text-[#804423]/65"
+                              isSelected ? "text-white/72" : "text-primary/65"
                             }`}
                           >
                             {method.detail}
@@ -497,37 +747,51 @@ de l inclusion culturelle à Kinshasa.
                     })}
                   </div>
 
-                  {paymentMethod === "transfer" && (
-                    <div className="rounded-md border border-[#eadcc7] bg-[#f8f1e7] p-4">
-                      <p className="mb-3 text-xs font-bold uppercase tracking-wide text-[#804423]/65">
-                        Comptes disponibles
+                  {paymentMethod === "mobile_money" && mobileDonation && (
+                    <div className="rounded-md border border-secondary/25 bg-[#f8f1e7] p-4">
+                      <p className="text-sm font-bold uppercase text-primary">
+                        Confirmez sur votre telephone
                       </p>
-                      <div className="space-y-2">
-                        {bankAccounts.map((account) => (
-                          <div
-                            key={account.number}
-                            className="flex items-center justify-between gap-3 rounded-md bg-white p-3"
-                          >
-                            <div>
-                              <p className="text-sm font-bold">{account.bank}</p>
-                              <p className="break-all font-mono text-xs text-[#804423]/70">
-                                {account.number}
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => copyAccount(account.number)}
-                              className="grid h-9 w-9 flex-none place-items-center rounded-md border border-[#eadcc7] text-[#804423] transition hover:bg-[#f4efe4]"
-                              aria-label={`Copier le compte ${account.bank}`}
-                            >
-                              {copiedAccount === account.number ? (
-                                <Check className="h-4 w-4 text-green-700" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-                        ))}
+                      <p className="mt-2 text-sm font-medium leading-relaxed text-primary/75">
+                        {mobileDonation.provider_instructions ||
+                          "Validez la demande de paiement recue sur votre telephone."}
+                      </p>
+
+                      {mobileDonation.pawapay?.provider_amount &&
+                        mobileDonation.pawapay.provider_currency && (
+                          <p className="mt-3 text-sm font-semibold text-primary">
+                            Montant a valider:{" "}
+                            {formatMoney(
+                              mobileDonation.pawapay.provider_amount,
+                              mobileDonation.pawapay.provider_currency
+                            )}
+                          </p>
+                        )}
+
+                      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="rounded-md bg-white px-3 py-2 text-xs font-bold uppercase text-primary">
+                          Paiement: {formatDonationStatus(mobileDonation.status)}
+                          {mobileDonation.pawapay?.last_provider_status
+                            ? ` - ${formatProviderStatus(
+                                mobileDonation.pawapay.last_provider_status
+                              )}`
+                            : ""}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={
+                            isVerifyingDonation ||
+                            mobileDonation.status !== "pending"
+                          }
+                          onClick={() =>
+                            verifyMobileDonation(mobileDonation.donation_id)
+                          }
+                          className="rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isVerifyingDonation
+                            ? "Confirmation..."
+                            : "Actualiser"}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -537,78 +801,78 @@ de l inclusion culturelle à Kinshasa.
                       <ReceiptLine label="Niveau" value={selectedLabel} />
                       <ReceiptLine
                         label="Montant"
-                        value={`${formatUsd(selectedAmount)} USD`}
+                        value={formatMoney(selectedAmount, currency)}
                       />
                       <ReceiptLine label="Donateur" value={fullName || "-"} />
                     </div>
                   </div>
 
+                  {checkoutError && (
+                    <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
+                      {checkoutError}
+                    </p>
+                  )}
+
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <SecondaryButton onClick={() => setStep("identity")}>
+                    <SecondaryButton
+                      disabled={isCreatingCheckout}
+                      onClick={() => setStep("identity")}
+                    >
                       <ArrowLeft className="h-4 w-4" />
                       Retour
                     </SecondaryButton>
-                    <PrimaryButton onClick={() => setStep("confirmed")}>
-                      Finaliser l&apos;aperçu
+                    <PrimaryButton
+                      disabled={isCreatingCheckout}
+                      onClick={createCheckout}
+                    >
+                      {isCreatingCheckout
+                        ? "Preparation du paiement..."
+                        : paymentMethod === "mobile_money"
+                        ? "Recevoir la demande"
+                        : "Payer maintenant"}
                       <ShieldCheck className="h-4 w-4" />
                     </PrimaryButton>
                   </div>
                 </div>
               )}
-
-              {step === "confirmed" && (
-                <div className="mx-auto max-w-lg py-8 text-center">
-                  <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full bg-green-100 text-green-800">
-                    <CheckCircle2 className="h-7 w-7" />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#9a5f32]">
-                    Engagement confirme
-                  </p>
-                  <h4 className="mt-2 text-2xl font-bold uppercase text-primary">
-                    Contribution preparee pour validation
-                  </h4>
-                  <p className="mt-3 text-sm font-medium leading-relaxed text-[#804423]/72">
-                    Votre choix de contribution est pret. L&apos;equipe CCAPAC peut
-                    reprendre ces informations pour confirmer le canal de don et
-                    accompagner la suite.
-                  </p>
-
-                  <div className="mt-6 rounded-md border border-[#eadcc7] bg-[#fdfbf6] p-4 text-left">
-                    <ReceiptLine label="Niveau" value={selectedLabel} />
-                    <ReceiptLine
-                      label="Montant"
-                      value={`${formatUsd(selectedAmount)} USD`}
-                    />
-                    <ReceiptLine label="Contact" value={email || "-"} />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setStep("amount")}
-                    className="mt-6 inline-flex items-center justify-center rounded-md bg-[#804423] px-6 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-[#5f321d]"
-                  >
-                    Revenir aux niveaux
-                  </button>
-                </div>
-              )}
             </div>
 
-            {step !== "confirmed" && (
-              <div className="flex flex-col gap-3 border-t border-[#eadcc7] bg-[#fdfbf6] px-5 py-4 text-xs font-semibold text-[#804423]/65 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-                <span className="inline-flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-[#9a5f32]" />
-                  Canaux prevus : Mobile Money, carte bancaire et virement.
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-[#9a5f32]" />
-                  info@centreculturel.cd
-                </span>
-              </div>
-            )}
+            <div className="flex flex-col gap-3 border-t border-[#eadcc7] bg-[#fdfbf6] px-5 py-4 text-xs font-semibold text-primary/65 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-secondary" />
+                Paiement sécurisé
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Mail className="h-4 w-4 text-secondary" />
+                info@centreculturel.cd
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function FundraisingShell({ children }: { children: React.ReactNode }) {
+  return (
+    <section
+      id="fundraising"
+      className="relative overflow-hidden bg-[#f4efe4] py-16 text-primary sm:py-20 lg:py-24"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
+    </section>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md bg-white/8 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-white/58">
+        {label}
+      </p>
+      <p className="mt-1 text-2xl font-bold">{value}</p>
+    </div>
   );
 }
 
@@ -631,7 +895,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-[#804423]/68">
+      <span className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-primary/68">
         {label}
         {optional && <span className="font-semibold normal-case">Optionnel</span>}
       </span>
@@ -640,9 +904,13 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-md border border-[#eadcc7] bg-[#fdfbf6] px-4 text-sm font-semibold text-primary outline-none transition placeholder:text-[#804423]/35 focus:border-[#804423] focus:bg-white"
+        className="h-12 w-full rounded-md border border-[#eadcc7] bg-[#fdfbf6] px-4 text-sm font-semibold text-primary outline-none transition placeholder:text-primary/35 focus:border-primary focus:bg-white"
       />
-      {error && <span className="mt-2 block text-xs font-semibold text-red-700">{error}</span>}
+      {error && (
+        <span className="mt-2 block text-xs font-semibold text-red-700">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -650,15 +918,18 @@ function Field({
 function PrimaryButton({
   children,
   onClick,
+  disabled = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
-      className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-[#804423] px-5 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-[#5f321d] active:scale-[0.99]"
+      className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-primary/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {children}
     </button>
@@ -668,15 +939,18 @@ function PrimaryButton({
 function SecondaryButton({
   children,
   onClick,
+  disabled = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
-      className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-[#d5b58d] bg-white px-5 py-3 text-xs font-bold uppercase tracking-wide text-[#804423] transition hover:bg-[#f8f1e7]"
+      className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-secondary/35 bg-white px-5 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {children}
     </button>
@@ -686,12 +960,16 @@ function SecondaryButton({
 function SummaryBar({
   label,
   amount,
+  currency,
   actionLabel,
+  disabled,
   onAction,
 }: {
   label: string;
   amount: number;
+  currency: string;
   actionLabel: string;
+  disabled: boolean;
   onAction: () => void;
 }) {
   return (
@@ -702,13 +980,14 @@ function SummaryBar({
           <p className="text-xs font-semibold uppercase tracking-wide text-white/58">
             {label}
           </p>
-          <p className="text-xl font-bold">{formatUsd(amount || 0)} USD</p>
+          <p className="text-xl font-bold">{formatMoney(amount || 0, currency)}</p>
         </div>
       </div>
       <button
         type="button"
+        disabled={disabled}
         onClick={onAction}
-        className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ffcc02] px-5 py-3 text-xs font-bold uppercase tracking-wide text-[#3a2014] transition hover:bg-white"
+        className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ffcc02] px-5 py-3 text-xs font-bold uppercase tracking-wide text-[#3a2014] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
       >
         {actionLabel}
         <ArrowRight className="h-4 w-4" />
@@ -720,7 +999,7 @@ function SummaryBar({
 function ReceiptLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-[#eadcc7] py-2 text-sm last:border-b-0">
-      <span className="font-semibold text-[#804423]/58">{label}</span>
+      <span className="font-semibold text-primary/58">{label}</span>
       <span className="text-right font-bold text-primary">{value}</span>
     </div>
   );
