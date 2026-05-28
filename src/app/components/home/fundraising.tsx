@@ -10,12 +10,14 @@ import {
   CheckCircle2,
   CreditCard,
   HandCoins,
+  Landmark,
   Loader2,
   Mail,
   Phone,
   RefreshCw,
   ShieldCheck,
   WalletCards,
+  XCircle,
 } from "lucide-react";
 import {
   Dialog,
@@ -86,7 +88,7 @@ const paymentMethods = [
   {
     id: "mobile_money" as const,
     title: "Mobile Money",
-    detail: "Validation sur votre téléphone",
+    detail: "Paiement par mobile money",
     icon: Phone,
   },
   {
@@ -100,6 +102,21 @@ const paymentMethods = [
     title: "PayPal",
     detail: "Paiement avec votre compte",
     icon: WalletCards,
+  },
+];
+
+const bankAccounts = [
+  {
+    bank: "Rawbank",
+    number: "CD48 05100051010120306000152",
+  },
+  {
+    bank: "Equity BCDC",
+    number: "00011150511200194697606 USD",
+  },
+  {
+    bank: "Ecobank",
+    number: "0026000013508010061362 USD",
   },
 ];
 
@@ -126,24 +143,14 @@ const formatTierRange = (
 const formatDonationStatus = (status: DonationStatus) => {
   const labels: Record<DonationStatus, string> = {
     pending: "en attente",
-    succeeded: "confirme",
+    succeeded: "confirmé",
     failed: "non abouti",
-    cancelled: "annule",
-    refunded: "rembourse",
+    cancelled: "annulé",
+    refunded: "remboursé",
   };
 
   return labels[status];
 };
-
-const formatProviderStatus = (status: string) =>
-  status
-    .toLowerCase()
-    .replaceAll("_", " ")
-    .replace("submitted", "envoye")
-    .replace("accepted", "accepte")
-    .replace("completed", "confirme")
-    .replace("failed", "non abouti")
-    .replace("rejected", "refuse");
 
 export default function FundraisingSection() {
   const [campaignData, setCampaignData] = useState<CampaignResponse | null>(
@@ -753,7 +760,7 @@ export default function FundraisingSection() {
                           className={`rounded-md border p-4 text-left transition ${
                             isSelected
                               ? "border-primary bg-primary text-white shadow-lg"
-                              : "border-[#eadcc7] bg-[#fdfbf6] text-primary hover:border-secondary"
+                              : "border-[#eadcc7] bg-[#fdfbf6] text-black hover:border-secondary"
                           }`}
                         >
                           <Icon
@@ -766,7 +773,7 @@ export default function FundraisingSection() {
                           </span>
                           <span
                             className={`mt-1 block text-xs leading-relaxed ${
-                              isSelected ? "text-white/72" : "text-primary/65"
+                              isSelected ? "text-white/72" : "text-secondary/65"
                             }`}
                           >
                             {method.detail}
@@ -786,6 +793,8 @@ export default function FundraisingSection() {
                       <ReceiptLine label="Donateur" value={fullName || "-"} />
                     </div>
                   </div>
+
+                  <BankTransferInfo />
 
                   {checkoutError && (
                     <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
@@ -808,8 +817,8 @@ export default function FundraisingSection() {
                       {isCreatingCheckout
                         ? "Preparation du paiement..."
                         : paymentMethod === "mobile_money"
-                        ? "Recevoir la demande"
-                        : "Payer maintenant"}
+                        ? "Finaliser le paiement"
+                        : "Continuer au paiement"}
                       <ShieldCheck className="h-4 w-4" />
                     </PrimaryButton>
                   </div>
@@ -826,6 +835,12 @@ export default function FundraisingSection() {
                 <Mail className="h-4 w-4 text-secondary" />
                 info@centreculturel.cd
               </span>
+              <span className="inline-flex items-center gap-2">
+                <Phone className="h-4 w-4 text-secondary" />
+                +243 890 809 745
+              </span>
+ 
+              
             </div>
           </div>
         </div>
@@ -836,8 +851,14 @@ export default function FundraisingSection() {
         open={isMobileModalOpen}
         isVerifying={isVerifyingDonation}
         onOpenChange={(open) => {
-          if (mobileDonation?.status === "pending") return;
+          if (!open && mobileDonation?.status === "pending") {
+            setMobileDonation(null);
+          }
           setIsMobileModalOpen(open);
+        }}
+        onCancel={() => {
+          setMobileDonation(null);
+          setIsMobileModalOpen(false);
         }}
         onVerify={() => {
           if (mobileDonation) {
@@ -855,16 +876,22 @@ function MobileMoneyStatusDialog({
   open,
   isVerifying,
   onOpenChange,
+  onCancel,
   onVerify,
 }: {
   donation: CreatedDonation | null;
   open: boolean;
   isVerifying: boolean;
   onOpenChange: (open: boolean) => void;
+  onCancel: () => void;
   onVerify: () => void;
 }) {
   const isPending = donation?.status === "pending";
   const isConfirmed = donation?.status === "succeeded";
+  const hasFailed =
+    donation?.status === "failed" ||
+    donation?.status === "cancelled" ||
+    donation?.status === "refunded";
   const amount =
     donation?.pawapay?.provider_amount && donation.pawapay.provider_currency
       ? formatMoney(
@@ -876,7 +903,7 @@ function MobileMoneyStatusDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        showCloseButton={!isPending}
+        showCloseButton
         className="max-w-[560px] overflow-hidden p-0"
       >
         <div className="bg-primary px-6 py-5 text-white">
@@ -886,8 +913,8 @@ function MobileMoneyStatusDialog({
             </DialogTitle>
             <DialogDescription className="text-sm font-medium text-white/72">
               {isConfirmed
-                ? "Merci pour votre soutien. Votre contribution est confirmee."
-                : "Une demande de paiement a ete envoyee sur votre telephone."}
+                ? "Merci pour votre soutien. Votre contribution est confirmée."
+                : "Une demande de paiement a été envoyée sur votre téléphone."}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -895,12 +922,12 @@ function MobileMoneyStatusDialog({
         <div className="space-y-5 p-6">
           <div className="rounded-md border border-secondary/20 bg-[#f8f1e7] p-4">
             <p className="text-sm font-semibold leading-relaxed text-primary">
-              {donation?.provider_instructions ||
-                "Entrez votre code secret sur votre telephone pour valider la transaction."}
+              Entrez votre code secret sur votre téléphone pour valider la
+              transaction. La confirmation s&apos;affichera automatiquement ici.
             </p>
             {amount && (
               <p className="mt-3 text-sm font-bold text-primary">
-                Montant a valider: {amount}
+                Montant à valider: {amount}
               </p>
             )}
           </div>
@@ -908,10 +935,10 @@ function MobileMoneyStatusDialog({
           <StatusPanel
             status={donation?.status || "pending"}
             detail={
-              donation?.pawapay?.last_provider_status
-                ? formatProviderStatus(donation.pawapay.last_provider_status)
-                : isPending
+              isPending
                 ? "En attente de votre validation."
+                : hasFailed
+                ? "Le paiement n'a pas abouti."
                 : "Confirmation recue."
             }
           />
@@ -919,26 +946,69 @@ function MobileMoneyStatusDialog({
           {isPending && (
             <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-relaxed text-red-800">
               Ne fermez pas cette page avant la confirmation. Validez la
-              transaction depuis votre telephone avec votre code secret.
+              transaction depuis votre téléphone avec votre code secret.
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={isVerifying || !donation || donation.status !== "pending"}
-            onClick={onVerify}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isVerifying ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              disabled={isVerifying || !donation || donation.status !== "pending"}
+              onClick={onVerify}
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isVerifying ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {isVerifying ? "Confirmation..." : "Actualiser"}
+            </button>
+            {isPending ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7]"
+              >
+                Annuler
+              </button>
             ) : (
-              <RefreshCw className="h-4 w-4" />
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7]"
+              >
+                Fermer
+              </button>
             )}
-            {isVerifying ? "Confirmation..." : "Actualiser"}
-          </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function BankTransferInfo() {
+  return (
+    <div className="rounded-md border border-[#eadcc7] bg-[#fdfbf6] p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm font-bold uppercase text-primary">
+        <Landmark className="h-4 w-4 text-secondary" />
+        Virement bancaire
+      </div>
+      <div className="grid gap-2">
+        {bankAccounts.map((account) => (
+          <div
+            key={account.number}
+            className="flex flex-col gap-1 rounded-md bg-white px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
+          >
+            <span className="font-bold text-primary">{account.bank}</span>
+            <span className="break-all font-semibold text-primary/70">
+              {account.number}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -950,18 +1020,29 @@ function StatusPanel({
   detail: string;
 }) {
   const isConfirmed = status === "succeeded";
+  const isPending = status === "pending";
+  const isFailed =
+    status === "failed" || status === "cancelled" || status === "refunded";
 
   return (
     <div className="flex items-start gap-3 rounded-md border border-[#eadcc7] bg-white p-4">
       <div
         className={`grid h-10 w-10 flex-none place-items-center rounded-full ${
-          isConfirmed ? "bg-green-100 text-green-800" : "bg-secondary/12 text-primary"
+          isConfirmed
+            ? "bg-green-100 text-green-800"
+            : isFailed
+            ? "bg-red-100 text-red-800"
+            : "bg-secondary/12 text-primary"
         }`}
       >
         {isConfirmed ? (
           <CheckCircle2 className="h-5 w-5" />
-        ) : (
+        ) : isFailed ? (
+          <XCircle className="h-5 w-5" />
+        ) : isPending ? (
           <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          <RefreshCw className="h-5 w-5" />
         )}
       </div>
       <div>
@@ -1017,7 +1098,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-primary/68">
+      <span className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-secondary">
         {label}
         {optional && <span className="font-semibold normal-case">Optionnel</span>}
       </span>
@@ -1026,7 +1107,7 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-md border border-[#eadcc7] bg-[#fdfbf6] px-4 text-sm font-semibold text-primary outline-none transition placeholder:text-primary/35 focus:border-primary focus:bg-white"
+        className="h-12 w-full rounded-md border border-[#eadcc7] bg-[#fdfbf6] px-4 text-sm font-semibold text-black outline-none transition placeholder:text-primary/35 focus:border-primary focus:bg-white"
       />
       {error && (
         <span className="mt-2 block text-xs font-semibold text-red-700">
@@ -1121,7 +1202,7 @@ function SummaryBar({
 function ReceiptLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-[#eadcc7] py-2 text-sm last:border-b-0">
-      <span className="font-semibold text-primary/58">{label}</span>
+      <span className="font-semibold text-secondary">{label}</span>
       <span className="text-right font-bold text-primary">{value}</span>
     </div>
   );

@@ -8,12 +8,16 @@ import {
 
 export const runtime = "nodejs";
 
+const donorNamePattern = /^[\p{L}\p{N} .,'&-]{2,160}$/u;
+const phonePattern = /^\+243\d{9}$/;
+const maxDonationAmount = 1000000;
+
 const createDonationSchema = z.object({
-  amount: z.number().positive(),
+  amount: z.number().positive().max(maxDonationAmount),
   payment_method: z.enum(["card", "paypal", "mobile_money"]),
   client_request_id: z.string().uuid(),
   donor: z.object({
-    name: z.string().trim().min(1).max(160),
+    name: z.string().trim().min(2).max(160).regex(donorNamePattern),
     email: z.string().trim().email().max(254),
     phone: z.string().trim().max(40).optional(),
   }),
@@ -42,16 +46,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const normalizedPhone = result.data.donor.phone?.replace(/[\s-]/g, "");
+
+  if (normalizedPhone && !phonePattern.test(normalizedPhone)) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "invalid_phone",
+          message:
+            "Veuillez entrer un numero valide au format +243 suivi de 9 chiffres.",
+          param: "donor.phone",
+        },
+      },
+      { status: 400 }
+    );
+  }
+
   if (
     result.data.payment_method === "mobile_money" &&
-    !result.data.donor.phone
+    !normalizedPhone
   ) {
     return NextResponse.json(
       {
         error: {
           code: "missing_phone",
           message:
-            "Indiquez votre numero de telephone pour recevoir la demande de paiement.",
+            "Pour Mobile Money, veuillez entrer votre numero en commencant par l'indicatif pays +243.",
           param: "donor.phone",
         },
       },
@@ -70,8 +90,8 @@ export async function POST(req: NextRequest) {
         payment_method: paymentMethodMap[result.data.payment_method],
         donor: {
           name: result.data.donor.name,
-          email: result.data.donor.email,
-          phone: result.data.donor.phone || undefined,
+          email: result.data.donor.email.toLowerCase(),
+          phone: normalizedPhone || undefined,
           is_anonymous: false,
         },
         success_url: `${appBaseUrl}/don-merci?session_id={CHECKOUT_SESSION_ID}`,
