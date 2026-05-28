@@ -63,7 +63,7 @@ export function GoogleAuthButton({
           className="w-5 h-5 mr-3 opacity-90"
         />
       )}
-      <span>{isRedirecting ? "Redirection..." : "Continuer avec Google"}</span>
+      <span>{isRedirecting ? "Connexion..." : "Continuer avec Google"}</span>
     </Button>
   );
 }
