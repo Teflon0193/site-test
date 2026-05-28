@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -10,11 +10,20 @@ import {
   CheckCircle2,
   CreditCard,
   HandCoins,
+  Loader2,
   Mail,
   Phone,
+  RefreshCw,
   ShieldCheck,
   WalletCards,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type Step = "amount" | "identity" | "payment";
 type PaymentMethod = "card" | "paypal" | "mobile_money";
@@ -157,6 +166,7 @@ export default function FundraisingSection() {
   const [mobileDonation, setMobileDonation] = useState<CreatedDonation | null>(
     null
   );
+  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -200,16 +210,6 @@ export default function FundraisingSection() {
       ignore = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (!mobileDonation || mobileDonation.status !== "pending") return;
-
-    const interval = window.setInterval(() => {
-      verifyMobileDonation(mobileDonation.donation_id);
-    }, 5000);
-
-    return () => window.clearInterval(interval);
-  }, [mobileDonation]);
 
   const tiers = campaignData?.tiers || [];
   const currency = campaignData?.campaign.currency || "USD";
@@ -333,12 +333,13 @@ export default function FundraisingSection() {
           provider_instructions: data.provider_instructions,
           pawapay: data.pawapay,
         });
+        setIsMobileModalOpen(true);
         setIsCreatingCheckout(false);
         return;
       }
 
       sessionStorage.setItem("ccapac.last_donation_id", data.donation_id);
-      window.location.href = data.checkout_url;
+      window.location.assign(data.checkout_url);
     } catch (error) {
       setCheckoutError(
         error instanceof Error
@@ -349,22 +350,49 @@ export default function FundraisingSection() {
     }
   };
 
-  const verifyMobileDonation = async (donationId: string) => {
+  const fetchDonationStatus = useCallback(async (donationId: string) => {
+    const response = await fetch(
+      `/api/fundraising/donations/${donationId}/verify`,
+      { method: "POST" }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error?.message ||
+          "Nous ne pouvons pas confirmer le paiement pour le moment."
+      );
+    }
+
+    return data as {
+      status: DonationStatus;
+      provider_instructions: string | null;
+      pawapay: CreatedDonation["pawapay"];
+    };
+  }, []);
+
+  const withDonationVerification = useCallback(async (
+    action: () => Promise<void>
+  ) => {
     setIsVerifyingDonation(true);
+    setCheckoutError("");
 
     try {
-      const response = await fetch(
-        `/api/fundraising/donations/${donationId}/verify`,
-        { method: "POST" }
+      await action();
+    } catch (error) {
+      setCheckoutError(
+        error instanceof Error
+          ? error.message
+          : "Nous ne pouvons pas confirmer le paiement pour le moment."
       );
-      const data = await response.json();
+    } finally {
+      setIsVerifyingDonation(false);
+    }
+  }, []);
 
-      if (!response.ok) {
-        throw new Error(
-          data?.error?.message ||
-            "Nous ne pouvons pas confirmer le paiement pour le moment."
-        );
-      }
+  const verifyMobileDonation = useCallback((donationId: string) =>
+    withDonationVerification(async () => {
+      const data = await fetchDonationStatus(donationId);
 
       setMobileDonation((current) =>
         current
@@ -377,16 +405,17 @@ export default function FundraisingSection() {
             }
           : current
       );
-    } catch (error) {
-      setCheckoutError(
-        error instanceof Error
-          ? error.message
-          : "Nous ne pouvons pas confirmer le paiement pour le moment."
-      );
-    } finally {
-      setIsVerifyingDonation(false);
-    }
-  };
+    }), [fetchDonationStatus, withDonationVerification]);
+
+  useEffect(() => {
+    if (!mobileDonation || mobileDonation.status !== "pending") return;
+
+    const interval = window.setInterval(() => {
+      verifyMobileDonation(mobileDonation.donation_id);
+    }, 5000);
+
+    return () => window.clearInterval(interval);
+  }, [mobileDonation, verifyMobileDonation]);
 
   if (isLoadingCampaign) {
     return <FundraisingShell>Chargement de la campagne...</FundraisingShell>;
@@ -570,7 +599,7 @@ export default function FundraisingSection() {
                           }`}
                         >
                           <span>
-                            <span className="block text-sm font-bold text-black uppercase tracking-wide">
+                            <span className={`block text-sm font-bold ${isSelected ? "text-white" : "text-black"} uppercase tracking-wide`}>
                               {tier.name}
                             </span>
                             {tier.description && (
@@ -747,55 +776,6 @@ export default function FundraisingSection() {
                     })}
                   </div>
 
-                  {paymentMethod === "mobile_money" && mobileDonation && (
-                    <div className="rounded-md border border-secondary/25 bg-[#f8f1e7] p-4">
-                      <p className="text-sm font-bold uppercase text-primary">
-                        Confirmez sur votre telephone
-                      </p>
-                      <p className="mt-2 text-sm font-medium leading-relaxed text-primary/75">
-                        {mobileDonation.provider_instructions ||
-                          "Validez la demande de paiement recue sur votre telephone."}
-                      </p>
-
-                      {mobileDonation.pawapay?.provider_amount &&
-                        mobileDonation.pawapay.provider_currency && (
-                          <p className="mt-3 text-sm font-semibold text-primary">
-                            Montant a valider:{" "}
-                            {formatMoney(
-                              mobileDonation.pawapay.provider_amount,
-                              mobileDonation.pawapay.provider_currency
-                            )}
-                          </p>
-                        )}
-
-                      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <span className="rounded-md bg-white px-3 py-2 text-xs font-bold uppercase text-primary">
-                          Paiement: {formatDonationStatus(mobileDonation.status)}
-                          {mobileDonation.pawapay?.last_provider_status
-                            ? ` - ${formatProviderStatus(
-                                mobileDonation.pawapay.last_provider_status
-                              )}`
-                            : ""}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={
-                            isVerifyingDonation ||
-                            mobileDonation.status !== "pending"
-                          }
-                          onClick={() =>
-                            verifyMobileDonation(mobileDonation.donation_id)
-                          }
-                          className="rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {isVerifyingDonation
-                            ? "Confirmation..."
-                            : "Actualiser"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                   <div className="rounded-md border border-[#eadcc7] bg-white p-4">
                     <div className="grid gap-3 text-sm sm:grid-cols-3">
                       <ReceiptLine label="Niveau" value={selectedLabel} />
@@ -850,7 +830,149 @@ export default function FundraisingSection() {
           </div>
         </div>
       </div>
+
+      <MobileMoneyStatusDialog
+        donation={mobileDonation}
+        open={isMobileModalOpen}
+        isVerifying={isVerifyingDonation}
+        onOpenChange={(open) => {
+          if (mobileDonation?.status === "pending") return;
+          setIsMobileModalOpen(open);
+        }}
+        onVerify={() => {
+          if (mobileDonation) {
+            verifyMobileDonation(mobileDonation.donation_id);
+          }
+        }}
+      />
+
     </section>
+  );
+}
+
+function MobileMoneyStatusDialog({
+  donation,
+  open,
+  isVerifying,
+  onOpenChange,
+  onVerify,
+}: {
+  donation: CreatedDonation | null;
+  open: boolean;
+  isVerifying: boolean;
+  onOpenChange: (open: boolean) => void;
+  onVerify: () => void;
+}) {
+  const isPending = donation?.status === "pending";
+  const isConfirmed = donation?.status === "succeeded";
+  const amount =
+    donation?.pawapay?.provider_amount && donation.pawapay.provider_currency
+      ? formatMoney(
+          donation.pawapay.provider_amount,
+          donation.pawapay.provider_currency
+        )
+      : null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={!isPending}
+        className="max-w-[560px] overflow-hidden p-0"
+      >
+        <div className="bg-primary px-6 py-5 text-white">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-xl font-bold uppercase">
+              {isConfirmed ? "Paiement confirme" : "Validez sur votre telephone"}
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium text-white/72">
+              {isConfirmed
+                ? "Merci pour votre soutien. Votre contribution est confirmee."
+                : "Une demande de paiement a ete envoyee sur votre telephone."}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <div className="space-y-5 p-6">
+          <div className="rounded-md border border-secondary/20 bg-[#f8f1e7] p-4">
+            <p className="text-sm font-semibold leading-relaxed text-primary">
+              {donation?.provider_instructions ||
+                "Entrez votre code secret sur votre telephone pour valider la transaction."}
+            </p>
+            {amount && (
+              <p className="mt-3 text-sm font-bold text-primary">
+                Montant a valider: {amount}
+              </p>
+            )}
+          </div>
+
+          <StatusPanel
+            status={donation?.status || "pending"}
+            detail={
+              donation?.pawapay?.last_provider_status
+                ? formatProviderStatus(donation.pawapay.last_provider_status)
+                : isPending
+                ? "En attente de votre validation."
+                : "Confirmation recue."
+            }
+          />
+
+          {isPending && (
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-relaxed text-red-800">
+              Ne fermez pas cette page avant la confirmation. Validez la
+              transaction depuis votre telephone avec votre code secret.
+            </div>
+          )}
+
+          <button
+            type="button"
+            disabled={isVerifying || !donation || donation.status !== "pending"}
+            onClick={onVerify}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isVerifying ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {isVerifying ? "Confirmation..." : "Actualiser"}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function StatusPanel({
+  status,
+  detail,
+}: {
+  status: DonationStatus;
+  detail: string;
+}) {
+  const isConfirmed = status === "succeeded";
+
+  return (
+    <div className="flex items-start gap-3 rounded-md border border-[#eadcc7] bg-white p-4">
+      <div
+        className={`grid h-10 w-10 flex-none place-items-center rounded-full ${
+          isConfirmed ? "bg-green-100 text-green-800" : "bg-secondary/12 text-primary"
+        }`}
+      >
+        {isConfirmed ? (
+          <CheckCircle2 className="h-5 w-5" />
+        ) : (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-bold uppercase text-primary">
+          {formatDonationStatus(status)}
+        </p>
+        <p className="mt-1 text-sm font-medium leading-relaxed text-primary/68">
+          {detail}
+        </p>
+      </div>
+    </div>
   );
 }
 
