@@ -7,6 +7,7 @@ import Link from "next/link";
 import { getUpcomingEvents } from "@/services/eventService";
 import { Event } from "@/types/events";
 import { formatEventPeriod, formatTimePeriod } from "@/lib/dateUtils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function QuickAgenda() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -46,14 +47,7 @@ export default function QuickAgenda() {
               Prochains Événements
             </h2>
           </div>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">
-                Chargement des événements...
-              </p>
-            </div>
-          </div>
+          <QuickAgendaSkeleton />
         </div>
       </section>
     );
@@ -356,5 +350,70 @@ export default function QuickAgenda() {
         </div>
       </div>
     </section>
+  );
+}
+
+function QuickAgendaSkeleton() {
+  return (
+    <div className="flex flex-col gap-8 mb-12 lg:flex-row">
+      {/* Featured Event Skeleton (Left) */}
+      <div className="w-full flex justify-center lg:w-1/3 lg:justify-start">
+        <div className="relative rounded-2xl overflow-hidden shadow-lg h-80 w-80 sm:h-96 sm:w-96 lg:h-[28rem] lg:w-[28rem] border border-muted/20 bg-white p-6 flex flex-col justify-between">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-16" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-6 w-5/6" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+          <div className="relative h-2/5 sm:h-1/2 rounded-lg overflow-hidden mt-4">
+            <Skeleton className="h-full w-full" />
+          </div>
+        </div>
+      </div>
+
+      {/* Grid of Secondary Events Skeleton (Right) */}
+      <div className="w-full lg:w-2/3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 lg:h-[28rem]">
+          {[1, 2, 3].map((_, index) => {
+            let gridClass = "lg:col-span-3";
+            if (index === 0) gridClass = "sm:col-span-2 lg:col-span-6 lg:h-52";
+            
+            return (
+              <div
+                key={index}
+                className={`${gridClass} rounded-xl bg-white shadow-lg overflow-hidden border border-muted/20 flex flex-col`}
+              >
+                {index === 0 ? (
+                  <div className="h-full flex flex-col sm:flex-row">
+                    <div className="relative h-44 sm:h-full sm:w-1/2 bg-muted/20">
+                      <Skeleton className="h-full w-full" />
+                    </div>
+                    <div className="p-4 sm:p-5 sm:w-1/2 flex flex-col justify-center space-y-3">
+                      <Skeleton className="h-8 w-12" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-5 w-5/6" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full grid grid-rows-[auto_1fr]">
+                    <div className="relative aspect-[16/9] bg-muted/20">
+                      <Skeleton className="h-full w-full" />
+                    </div>
+                    <div className="p-4 sm:p-5 space-y-3">
+                      <Skeleton className="h-8 w-12" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-5 w-5/6" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Step = "amount" | "identity" | "payment";
 type PaymentMethod = "card" | "paypal" | "mobile_money";
@@ -425,7 +426,11 @@ export default function FundraisingSection() {
   }, [mobileDonation, verifyMobileDonation]);
 
   if (isLoadingCampaign) {
-    return <FundraisingShell>Chargement de la campagne...</FundraisingShell>;
+    return (
+      <FundraisingShell>
+        <FundraisingSkeleton />
+      </FundraisingShell>
+    );
   }
 
   if (campaignError || !campaignData) {
@@ -1204,6 +1209,91 @@ function ReceiptLine({ label, value }: { label: string; value: string }) {
     <div className="flex items-start justify-between gap-4 border-b border-[#eadcc7] py-2 text-sm last:border-b-0">
       <span className="font-semibold text-secondary">{label}</span>
       <span className="text-right font-bold text-primary">{value}</span>
+    </div>
+  );
+}
+
+function FundraisingSkeleton() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-start animate-pulse">
+      {/* Left side: Campaign Info Card (Aside) */}
+      <aside className="overflow-hidden rounded-lg bg-primary text-white shadow-2xl">
+        <div className="relative min-h-[410px] p-6 sm:p-8 flex flex-col justify-end">
+          {/* Badge skeleton */}
+          <div className="mb-5 inline-flex h-8 w-44 rounded-full bg-white/10" />
+          {/* Title skeleton */}
+          <div className="space-y-3">
+            <Skeleton className="h-8 w-5/6 bg-white/10" />
+            <Skeleton className="h-8 w-2/3 bg-white/10" />
+          </div>
+          {/* Description skeleton */}
+          <div className="space-y-2 mt-5">
+            <Skeleton className="h-4 w-full bg-white/10" />
+            <Skeleton className="h-4 w-4/5 bg-white/10" />
+          </div>
+        </div>
+
+        {/* Stats and Impact */}
+        <div className="grid gap-5 border-t border-white/12 p-6 sm:p-8">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-md bg-white/5 p-4 space-y-2">
+              <Skeleton className="h-3 w-16 bg-white/10" />
+              <Skeleton className="h-6 w-24 bg-white/10" />
+            </div>
+            <div className="rounded-md bg-white/5 p-4 space-y-2">
+              <Skeleton className="h-3 w-16 bg-white/10" />
+              <Skeleton className="h-6 w-24 bg-white/10" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-3 w-32 bg-white/10" />
+              <Skeleton className="h-3 w-8 bg-white/10" />
+            </div>
+            <Skeleton className="h-2 w-full rounded-full bg-white/10" />
+            <Skeleton className="h-3 w-48 bg-white/10" />
+          </div>
+
+          <div className="space-y-3 border-t border-white/12 pt-4">
+            <Skeleton className="h-4 w-36 bg-white/10" />
+            <ul className="space-y-2.5">
+              {[1, 2, 3, 4].map((i) => (
+                <li key={i} className="flex gap-3">
+                  <Skeleton className="h-4 w-4 rounded-full bg-white/10 flex-shrink-0" />
+                  <Skeleton className="h-4 w-5/6 bg-white/10" />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </aside>
+
+      {/* Right side: Donation Flow Card */}
+      <div className="rounded-lg border border-[#d5b58d]/45 bg-white shadow-xl p-5 sm:p-7">
+        <div className="space-y-5">
+          <div>
+            <Skeleton className="h-3 w-20 bg-secondary/15" />
+            <Skeleton className="h-7 w-3/4 bg-primary/10 mt-2" />
+          </div>
+
+          {/* Steps indicator skeleton */}
+          <div className="grid grid-cols-3 gap-1 rounded-md border border-secondary/10 bg-secondary/5 p-1 h-9" />
+
+          {/* Donation options skeleton */}
+          <div className="grid gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 rounded-md border border-secondary/10 bg-secondary/5" />
+            ))}
+          </div>
+
+          {/* Custom amount field skeleton */}
+          <div className="h-20 rounded-md border border-secondary/10 bg-secondary/5" />
+
+          {/* Summary bar skeleton */}
+          <div className="h-16 rounded-md bg-primary/10" />
+        </div>
+      </div>
     </div>
   );
 }

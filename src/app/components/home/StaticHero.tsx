@@ -5,11 +5,17 @@ import Link from "next/link";
 
 interface StaticHeroProps {
   isLoading?: boolean;
+  ariaHidden?: boolean;
 }
 
-export default function StaticHero({ isLoading = false }: StaticHeroProps) {
+export default function StaticHero({
+  ariaHidden = false,
+}: StaticHeroProps) {
   return (
-    <section className="relative w-full h-[70vh] min-h-[500px] sm:h-[80vh] sm:min-h-[600px] lg:h-screen lg:min-h-[700px] overflow-hidden bg-gradient-to-br from-muted/20 via-muted/10 to-muted/5">
+    <section
+      aria-hidden={ariaHidden}
+      className="relative w-full h-[70vh] min-h-[500px] sm:h-[80vh] sm:min-h-[600px] lg:h-screen lg:min-h-[700px] overflow-hidden bg-gradient-to-br from-muted/20 via-muted/10 to-muted/5"
+    >
       {/* Background*/}
       <div className="absolute inset-0">
         <div className="relative w-full h-full">
@@ -38,19 +44,6 @@ export default function StaticHero({ isLoading = false }: StaticHeroProps) {
               Où la culture africaine prend vie
             </p>
 
-            {/* <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
-              <div className="flex items-center gap-2 text-gray-200">
-                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">
-                  Découvrez nos événements
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-200">
-                <FaBuilding className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Grand Tambour</span>
-              </div>
-            </div> */}
-
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Link
                 href="/agenda"
@@ -59,18 +52,6 @@ export default function StaticHero({ isLoading = false }: StaticHeroProps) {
                 Voir l&apos;agenda
               </Link>
             </div>
-
-            {/* Indicateur de chargement */}
-            {isLoading && (
-              <div className="mt-6 sm:mt-8">
-                <div className="flex items-center gap-3 text-gray-300 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 shadow-lg">
-                  <div className="w-5 h-5 border-2 border-accent border-r-transparent rounded-full animate-spin"></div>
-                  <span className="text-sm sm:text-base font-medium">
-                    Chargement des événements...
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

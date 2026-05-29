@@ -157,7 +157,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="font-bold text-white hover:text-white transition-colors"
               >
-                GoFreelance
+                Go freelance
               </a>
             </div>
           </div>
