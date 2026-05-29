@@ -72,6 +72,60 @@ export interface SuggestionsResponse {
   totalSuggestions: number;
 }
 
+export type FundraisingDonationStatus =
+  | "pending"
+  | "succeeded"
+  | "failed"
+  | "cancelled"
+  | "refunded";
+
+export type FundraisingPaymentMethod = "stripe" | "paypal" | "pawapay";
+
+export interface FundraisingQueryParams {
+  status?: FundraisingDonationStatus | "all";
+  payment_method?: FundraisingPaymentMethod | "all";
+}
+
+export interface AdminFundraisingDonation {
+  id: string;
+  amount: number;
+  currency: string;
+  status: FundraisingDonationStatus;
+  payment_method: FundraisingPaymentMethod;
+  payment_method_label: string;
+  donor: {
+    name: string;
+    email: string;
+    phone?: string;
+    is_anonymous?: boolean;
+  };
+  created_at: string;
+  updated_at: string;
+  succeeded_at: string | null;
+  notification_status: "none" | "pending" | "sending" | "sent" | "failed";
+  notified_at: string | null;
+}
+
+export interface AdminFundraisingResponse {
+  campaign: {
+    id: string;
+    title: string;
+    status: string;
+    goal_amount: number;
+    currency: string;
+  };
+  stats: {
+    raised_amount: number;
+    progress_percent: number;
+    succeeded_donations_count: number;
+    unique_donors_count: number;
+    pending_donations_count: number;
+  };
+  donations: AdminFundraisingDonation[];
+  has_more: boolean;
+  next_cursor: string | null;
+}
+
 async function handleJsonResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -155,4 +209,30 @@ export async function updateSuggestionStatus(
   });
 
   return handleJsonResponse<AdminSuggestion>(res);
+}
+
+export async function getFundraisingAdminData(
+  params: FundraisingQueryParams
+): Promise<AdminFundraisingResponse> {
+  const searchParams = new URLSearchParams();
+
+  if (params.status && params.status !== "all") {
+    searchParams.set("status", params.status);
+  }
+
+  if (params.payment_method && params.payment_method !== "all") {
+    searchParams.set("payment_method", params.payment_method);
+  }
+
+  const queryString = searchParams.toString();
+  const url = queryString
+    ? `/api/admin/fundraising?${queryString}`
+    : "/api/admin/fundraising";
+
+  const res = await fetch(url, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  return handleJsonResponse<AdminFundraisingResponse>(res);
 }

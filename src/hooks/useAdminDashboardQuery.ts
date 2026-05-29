@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   getAdminStats,
+  getFundraisingAdminData,
   getMembers,
   getSuggestions,
+  type AdminFundraisingResponse,
   type AdminStatsResponse,
+  type FundraisingQueryParams,
   type MembersQueryParams,
   type MembersResponse,
   type SuggestionsQueryParams,
@@ -33,4 +36,13 @@ export const useSuggestionsQuery = (params: SuggestionsQueryParams) =>
     queryFn: () => getSuggestions(params),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
+  });
+
+export const useAdminFundraisingQuery = (params: FundraisingQueryParams) =>
+  useQuery<AdminFundraisingResponse, Error>({
+    queryKey: ["admin", "fundraising", params],
+    queryFn: () => getFundraisingAdminData(params),
+    staleTime: 15 * 1000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30 * 1000,
   });

@@ -16,6 +16,7 @@ import {
   X,
   Loader2,
   Home,
+  HandCoins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { User as PrismaUserType } from "@prisma/client";
@@ -61,6 +62,11 @@ export default function DashboardLayoutClient({
             href: "/espace-membre/admin/suggestions",
             label: "Suggestions",
             icon: MessageSquare,
+          },
+          {
+            href: "/espace-membre/admin/fundraising",
+            label: "Dons",
+            icon: HandCoins,
           },
         ]
       : [

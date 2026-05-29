@@ -111,7 +111,7 @@ export type AksessifyDonation = {
   updated_at: string;
 };
 
-type AksessifyList<T> = {
+export type AksessifyList<T> = {
   object?: "list";
   data: T[];
   has_more?: boolean;
@@ -314,6 +314,32 @@ export async function verifyFundraisingDonation(donationId: string) {
       method: "POST",
     },
   });
+}
+
+export async function listFundraisingDonations({
+  status,
+  limit = 50,
+}: {
+  status?: AksessifyDonation["status"];
+  limit?: number;
+} = {}) {
+  const { campaignId } = getAksessifyConfig();
+  const searchParams = new URLSearchParams({
+    campaign_id: campaignId,
+    limit: String(Math.min(Math.max(limit, 1), 100)),
+  });
+
+  if (status) {
+    searchParams.set("status", status);
+  }
+
+  return aksessifyRequest<AksessifyList<AksessifyDonation>>(
+    "api-v1-donations",
+    {
+      path: `?${searchParams.toString()}`,
+      init: { next: { revalidate: 15 } },
+    }
+  );
 }
 
 export function aksessifyErrorResponse(error: unknown) {
