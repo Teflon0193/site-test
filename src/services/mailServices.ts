@@ -105,6 +105,21 @@ function alternativeLink(url: string): string {
   `;
 }
 
+function escapeHtml(value: string | number | null | undefined): string {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatDonationAmount(amount: number, currency: string): string {
+  return `${new Intl.NumberFormat("fr-FR", {
+    maximumFractionDigits: 2,
+  }).format(amount)} ${currency}`;
+}
+
 // =============================================================================
 // EMAIL TEMPLATE GENERATORS
 // =============================================================================
@@ -232,6 +247,49 @@ export const emailTemplates = {
     `;
     return baseEmailLayout(content);
   },
+
+  fundraisingDonationSucceeded: (data: {
+    donationId: string;
+    donorName: string;
+    donorEmail: string;
+    donorPhone?: string | null;
+    amount: number;
+    currency: string;
+    paymentMethod: string;
+    succeededAt?: string | null;
+  }): string => {
+    const succeededAt = data.succeededAt
+      ? new Date(data.succeededAt).toLocaleDateString("fr-FR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : new Date().toLocaleDateString("fr-FR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+    const content = `
+      <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Nouveau don confirme</h2>
+
+      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 4px; border: 1px solid #eee;">
+        <p style="margin: 0 0 10px 0;"><strong>Montant :</strong> ${escapeHtml(formatDonationAmount(data.amount, data.currency))}</p>
+        <p style="margin: 0 0 10px 0;"><strong>Moyen de paiement :</strong> ${escapeHtml(data.paymentMethod)}</p>
+        <p style="margin: 0 0 10px 0;"><strong>Donateur :</strong> ${escapeHtml(data.donorName)}</p>
+        <p style="margin: 0 0 10px 0;"><strong>Email :</strong> <a href="mailto:${escapeHtml(data.donorEmail)}" style="color: #804423; text-decoration: none;">${escapeHtml(data.donorEmail)}</a></p>
+        ${data.donorPhone ? `<p style="margin: 0 0 10px 0;"><strong>Telephone :</strong> ${escapeHtml(data.donorPhone)}</p>` : ""}
+        <p style="margin: 0 0 10px 0;"><strong>Date :</strong> ${escapeHtml(succeededAt)}</p>
+        <p style="margin: 0;"><strong>Reference :</strong> ${escapeHtml(data.donationId)}</p>
+      </div>
+    `;
+
+    return baseEmailLayout(content);
+  },
 };
 
 // =============================================================================
@@ -328,5 +386,21 @@ export async function sendMemberSuggestionEmail(
     to: adminEmail,
     subject: `Nouvelle suggestion membre - ${suggestionData.category}`,
     html: emailTemplates.memberSuggestion(suggestionData),
+  });
+}
+
+export async function sendFundraisingDonationSucceededEmail(
+  adminEmail: string,
+  donationData: Parameters<
+    typeof emailTemplates.fundraisingDonationSucceeded
+  >[0]
+): Promise<boolean> {
+  return sendEmail({
+    to: adminEmail,
+    subject: `Nouveau don confirme - ${formatDonationAmount(
+      donationData.amount,
+      donationData.currency
+    )}`,
+    html: emailTemplates.fundraisingDonationSucceeded(donationData),
   });
 }
