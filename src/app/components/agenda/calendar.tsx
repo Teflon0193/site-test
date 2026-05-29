@@ -13,12 +13,14 @@ import {
 } from "react-icons/fa6";
 import Image from "next/image";
 import type { Event } from "@/types/events";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CalendarProps {
   events: Event[];
+  loading?: boolean;
 }
 
-export default function Calendar({ events }: CalendarProps) {
+export default function Calendar({ events, loading = false }: CalendarProps) {
   const router = useRouter();
   const [visibleEvents, setVisibleEvents] = useState(6);
 
@@ -37,7 +39,15 @@ export default function Calendar({ events }: CalendarProps) {
   return (
     <section className="py-8 sm:py-10 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-muted/5 to-background">
       <div className="max-w-7xl mx-auto">
-        {sortedEvents.length === 0 && (
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <EventCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {!loading && sortedEvents.length === 0 && (
           <div className="text-center py-12 sm:py-16 md:py-20">
             <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12 lg:p-16 max-w-lg mx-auto border border-muted/20 shadow-lg">
               <FaMagnifyingGlass className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-muted-foreground mx-auto mb-4 sm:mb-5 md:mb-6" />
@@ -52,7 +62,7 @@ export default function Calendar({ events }: CalendarProps) {
           </div>
         )}
 
-        {sortedEvents.length > 0 && (
+        {!loading && sortedEvents.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
             {displayedEvents.map((event) => (
               <Card
@@ -139,5 +149,31 @@ export default function Calendar({ events }: CalendarProps) {
         )}
       </div>
     </section>
+  );
+}
+
+function EventCardSkeleton() {
+  return (
+    <Card className="border-muted/30 rounded-xl overflow-hidden bg-white animate-pulse">
+      <div className="relative aspect-[16/9] bg-muted/20 flex items-start p-4">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-6 w-16" />
+        </div>
+      </div>
+      <div className="p-4 sm:p-5 md:p-6 space-y-4">
+        <div className="mb-3 sm:mb-4 md:mb-5">
+          <Skeleton className="h-6 w-5/6" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-lg flex-shrink-0" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }

@@ -17,7 +17,7 @@ export default function AgendaContainer() {
         eventCount={event.filteredEvents.length}
       />
 
-      <Calendar events={event.filteredEvents} />
+      <Calendar events={event.filteredEvents} loading={event.loading} />
     </div>
   );
 }
