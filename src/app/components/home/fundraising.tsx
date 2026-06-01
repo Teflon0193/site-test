@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   ArrowRight,
@@ -27,6 +28,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { StripeEmbeddedCheckout } from "./StripeEmbeddedCheckoutDialog";
+
+const StripeEmbeddedCheckoutDialog = dynamic(
+  () =>
+    import("./StripeEmbeddedCheckoutDialog").then(
+      (module) => module.StripeEmbeddedCheckoutDialog
+    ),
+  { ssr: false }
+);
 
 type Step = "amount" | "identity" | "payment";
 type PaymentMethod = "card" | "paypal" | "mobile_money";
@@ -175,6 +185,9 @@ export default function FundraisingSection() {
     null
   );
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
+  const [stripeCheckout, setStripeCheckout] =
+    useState<StripeEmbeddedCheckout | null>(null);
+  const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -347,6 +360,18 @@ export default function FundraisingSection() {
       }
 
       sessionStorage.setItem("ccapac.last_donation_id", data.donation_id);
+
+      if (paymentMethod === "card") {
+        setStripeCheckout({
+          donationId: data.donation_id,
+          publishableKey: data.stripe.publishable_key,
+          clientSecret: data.stripe.client_secret,
+        });
+        setIsStripeModalOpen(true);
+        setIsCreatingCheckout(false);
+        return;
+      }
+
       window.location.assign(data.checkout_url);
     } catch (error) {
       setCheckoutError(
@@ -870,6 +895,12 @@ export default function FundraisingSection() {
             verifyMobileDonation(mobileDonation.donation_id);
           }
         }}
+      />
+
+      <StripeEmbeddedCheckoutDialog
+        checkout={stripeCheckout}
+        open={isStripeModalOpen}
+        onOpenChange={setIsStripeModalOpen}
       />
 
     </section>

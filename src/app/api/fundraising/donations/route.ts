@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
   const appBaseUrl = getAppBaseUrl();
   const idempotencyKey = `ccapac-donation-${result.data.client_request_id}`;
   const isMobileMoney = result.data.payment_method === "mobile_money";
+  const isCard = result.data.payment_method === "card";
+  const isPaypal = result.data.payment_method === "paypal";
 
   try {
     const donation = await createFundraisingDonation(
@@ -94,8 +96,13 @@ export async function POST(req: NextRequest) {
           phone: normalizedPhone || undefined,
           is_anonymous: false,
         },
-        success_url: `${appBaseUrl}/don-merci?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${appBaseUrl}/?don=cancelled#fundraising`,
+        return_url: isCard
+          ? `${appBaseUrl}/don-merci?donation_id={DONATION_ID}&session_id={CHECKOUT_SESSION_ID}`
+          : undefined,
+        success_url: isPaypal ? `${appBaseUrl}/don-merci` : undefined,
+        cancel_url: isPaypal
+          ? `${appBaseUrl}/?don=cancelled#fundraising`
+          : undefined,
         pawapay: isMobileMoney ? {} : undefined,
         metadata: {
           source: "ccapac_homepage",
@@ -105,7 +112,33 @@ export async function POST(req: NextRequest) {
       idempotencyKey
     );
 
-    if (!isMobileMoney && !donation.checkout_url) {
+    const stripe = donation.stripe;
+
+    if (isCard && !stripe?.publishable_key) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "missing_stripe_configuration",
+            message: "Le paiement ne peut pas etre demarre pour le moment.",
+          },
+        },
+        { status: 502 }
+      );
+    }
+
+    if (isCard && !stripe?.client_secret) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "missing_stripe_client_secret",
+            message: "Le paiement ne peut pas etre demarre pour le moment.",
+          },
+        },
+        { status: 502 }
+      );
+    }
+
+    if (!isCard && !isMobileMoney && !donation.checkout_url) {
       return NextResponse.json(
         {
           error: {
@@ -121,6 +154,7 @@ export async function POST(req: NextRequest) {
       donation_id: donation.id,
       checkout_url: donation.checkout_url,
       status: donation.status,
+      stripe: isCard ? stripe : null,
       provider_instructions: donation.provider_instructions || null,
       pawapay: donation.pawapay || null,
     });

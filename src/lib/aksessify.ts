@@ -12,6 +12,7 @@ export type AksessifyCampaign = {
   ends_at: string | null;
   success_url: string | null;
   cancel_url: string | null;
+  return_url: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -67,8 +68,9 @@ export type CreateAksessifyDonationInput = {
     phone?: string;
     is_anonymous?: boolean;
   };
-  success_url: string;
-  cancel_url: string;
+  success_url?: string;
+  cancel_url?: string;
+  return_url?: string;
   pawapay?: {
     country?: string;
     provider?: string;
@@ -94,6 +96,10 @@ export type AksessifyDonation = {
   };
   provider_session_id: string | null;
   checkout_url: string | null;
+  stripe?: {
+    publishable_key: string;
+    client_secret: string;
+  } | null;
   provider_instructions?: string | null;
   pawapay?: {
     country?: string;
@@ -291,6 +297,7 @@ export async function createFundraisingDonation(
     donor: input.donor,
     success_url: input.success_url,
     cancel_url: input.cancel_url,
+    return_url: input.return_url,
     metadata: input.metadata || {},
   } as Record<string, unknown>;
 

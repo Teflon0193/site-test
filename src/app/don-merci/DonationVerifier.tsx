@@ -12,7 +12,9 @@ export default function DonationVerifier() {
   );
 
   useEffect(() => {
-    const donationId = sessionStorage.getItem("ccapac.last_donation_id");
+    const donationId =
+      new URLSearchParams(window.location.search).get("donation_id") ||
+      sessionStorage.getItem("ccapac.last_donation_id");
 
     if (!donationId) {
       return;
