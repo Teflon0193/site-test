@@ -290,6 +290,44 @@ export const emailTemplates = {
 
     return baseEmailLayout(content);
   },
+
+  fundraisingDonorThankYou: (data: {
+    donationId: string;
+    donorName: string;
+    amount: number;
+    currency: string;
+    signupUrl?: string;
+  }): string => {
+    const signupInvitation = data.signupUrl
+      ? `
+        <p>
+          Vous pouvez également rejoindre le centre culturel pour suivre nos
+          activités et accéder à votre espace membre.
+        </p>
+        ${ctaButton(data.signupUrl, "Créer mon compte")}
+      `
+      : "";
+
+    const content = `
+      <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Merci pour votre soutien</h2>
+
+      <p>Bonjour ${escapeHtml(data.donorName || "cher donateur")},</p>
+
+      <p>
+        Nous vous remercions pour votre contribution de
+        <strong>${escapeHtml(formatDonationAmount(data.amount, data.currency))}</strong>.
+        Votre soutien participe directement à nos actions culturelles.
+      </p>
+
+      <p style="font-size: 13px; color: #666;">
+        Référence du don : ${escapeHtml(data.donationId)}
+      </p>
+
+      ${signupInvitation}
+    `;
+
+    return baseEmailLayout(content);
+  },
 };
 
 // =============================================================================
@@ -402,5 +440,16 @@ export async function sendFundraisingDonationSucceededEmail(
       donationData.currency
     )}`,
     html: emailTemplates.fundraisingDonationSucceeded(donationData),
+  });
+}
+
+export async function sendFundraisingDonorThankYouEmail(
+  donorEmail: string,
+  donationData: Parameters<typeof emailTemplates.fundraisingDonorThankYou>[0]
+): Promise<boolean> {
+  return sendEmail({
+    to: donorEmail,
+    subject: "Merci pour votre soutien - CCAPAC",
+    html: emailTemplates.fundraisingDonorThankYou(donationData),
   });
 }

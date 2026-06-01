@@ -67,6 +67,9 @@ export async function GET(req: NextRequest) {
             donationId: true,
             notificationStatus: true,
             notifiedAt: true,
+            donorNotificationStatus: true,
+            donorNotifiedAt: true,
+            donorIsMember: true,
           },
         })
       : [];
@@ -109,6 +112,11 @@ export async function GET(req: NextRequest) {
           succeeded_at: donation.succeeded_at || null,
           notification_status: notification?.notificationStatus || "none",
           notified_at: notification?.notifiedAt?.toISOString() || null,
+          donor_notification_status:
+            notification?.donorNotificationStatus || "none",
+          donor_notified_at:
+            notification?.donorNotifiedAt?.toISOString() || null,
+          donor_is_member: notification?.donorIsMember ?? null,
         };
       }),
       has_more: donationsList.has_more || false,

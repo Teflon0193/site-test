@@ -1,12 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import {
   type AksessifyDonation,
   aksessifyErrorResponse,
+  getAppBaseUrl,
   verifyFundraisingDonation,
 } from "@/lib/aksessify";
-import { sendFundraisingDonationSucceededEmail } from "@/services/mailServices";
+import {
+  sendFundraisingDonationSucceededEmail,
+  sendFundraisingDonorThankYouEmail,
+} from "@/services/mailServices";
 
 export const runtime = "nodejs";
 
@@ -27,48 +31,63 @@ function paymentMethodLabel(method: AksessifyDonation["payment_method"]) {
   return labels[method];
 }
 
-async function notifyAdminOnce(donation: AksessifyDonation) {
-  if (donation.status !== "succeeded" || !ADMIN_EMAIL) return;
-
-  const existing = await prisma.fundraisingDonationNotification.findUnique({
+async function ensureNotificationRecord(donation: AksessifyDonation) {
+  return prisma.fundraisingDonationNotification.upsert({
     where: { donationId: donation.id },
+    create: {
+      donationId: donation.id,
+      status: donation.status,
+      amount: donation.amount,
+      currency: donation.currency,
+      paymentMethod: donation.payment_method,
+      donorName: donation.donor.name,
+      donorEmail: donation.donor.email.toLowerCase(),
+      donorPhone: donation.donor.phone || null,
+    },
+    update: {
+      status: donation.status,
+      amount: donation.amount,
+      currency: donation.currency,
+      paymentMethod: donation.payment_method,
+      donorName: donation.donor.name,
+      donorEmail: donation.donor.email.toLowerCase(),
+      donorPhone: donation.donor.phone || null,
+    },
+  });
+}
+
+async function lockNotification(
+  donationId: string,
+  field: "notificationStatus" | "donorNotificationStatus"
+) {
+  const locked = await prisma.fundraisingDonationNotification.updateMany({
+    where: {
+      donationId,
+      [field]: { in: ["pending", "failed", "skipped"] },
+    },
+    data: {
+      [field]: "sending",
+    },
   });
 
-  if (
-    existing?.notificationStatus === "sent" ||
-    existing?.notificationStatus === "sending"
-  ) {
+  return locked.count === 1;
+}
+
+async function notifyAdminOnce(donation: AksessifyDonation) {
+  if (!ADMIN_EMAIL) {
+    await prisma.fundraisingDonationNotification.updateMany({
+      where: {
+        donationId: donation.id,
+        notificationStatus: "pending",
+      },
+      data: {
+        notificationStatus: "skipped",
+      },
+    });
     return;
   }
 
-  if (!existing) {
-    await prisma.fundraisingDonationNotification.create({
-      data: {
-        donationId: donation.id,
-        status: donation.status,
-        amount: donation.amount,
-        currency: donation.currency,
-        paymentMethod: donation.payment_method,
-        donorName: donation.donor.name,
-        donorEmail: donation.donor.email,
-        donorPhone: donation.donor.phone || null,
-        notificationStatus: "sending",
-      },
-    });
-  } else {
-    const locked = await prisma.fundraisingDonationNotification.updateMany({
-      where: {
-        donationId: donation.id,
-        notificationStatus: "failed",
-      },
-      data: {
-        notificationStatus: "sending",
-        status: donation.status,
-      },
-    });
-
-    if (locked.count === 0) return;
-  }
+  if (!(await lockNotification(donation.id, "notificationStatus"))) return;
 
   try {
     await sendFundraisingDonationSucceededEmail(ADMIN_EMAIL, {
@@ -101,6 +120,80 @@ async function notifyAdminOnce(donation: AksessifyDonation) {
   }
 }
 
+async function notifyDonorOnce(donation: AksessifyDonation) {
+  const donorEmail = donation.donor.email.trim().toLowerCase();
+  const donor = await prisma.user.findFirst({
+    where: {
+      email: {
+        equals: donorEmail,
+        mode: "insensitive",
+      },
+    },
+    select: { id: true },
+  });
+  const donorIsMember = Boolean(donor);
+
+  await prisma.fundraisingDonationNotification.update({
+    where: { donationId: donation.id },
+    data: { donorIsMember },
+  });
+
+  if (!(await lockNotification(donation.id, "donorNotificationStatus"))) {
+    return;
+  }
+
+  const signupUrl = donorIsMember
+    ? undefined
+    : `${getAppBaseUrl()}/auth/signup?email=${encodeURIComponent(donorEmail)}`;
+
+  try {
+    await sendFundraisingDonorThankYouEmail(donorEmail, {
+      donationId: donation.id,
+      donorName: donation.donor.name,
+      amount: donation.amount,
+      currency: donation.currency,
+      signupUrl,
+    });
+
+    await prisma.fundraisingDonationNotification.update({
+      where: { donationId: donation.id },
+      data: {
+        donorNotificationStatus: "sent",
+        donorNotifiedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("[Fundraising] Echec notification donateur:", error);
+
+    await prisma.fundraisingDonationNotification.update({
+      where: { donationId: donation.id },
+      data: {
+        donorNotificationStatus: "failed",
+      },
+    });
+  }
+}
+
+async function processSucceededDonationNotifications(
+  donation: AksessifyDonation
+) {
+  try {
+    await ensureNotificationRecord(donation);
+    const results = await Promise.allSettled([
+      notifyAdminOnce(donation),
+      notifyDonorOnce(donation),
+    ]);
+
+    for (const result of results) {
+      if (result.status === "rejected") {
+        console.error("[Fundraising] Echec notification:", result.reason);
+      }
+    }
+  } catch (error) {
+    console.error("[Fundraising] Echec traitement notifications:", error);
+  }
+}
+
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -122,7 +215,10 @@ export async function POST(
 
   try {
     const donation = await verifyFundraisingDonation(result.data.id);
-    await notifyAdminOnce(donation);
+
+    if (donation.status === "succeeded") {
+      after(() => processSucceededDonationNotifications(donation));
+    }
 
     return NextResponse.json({
       id: donation.id,

@@ -102,9 +102,20 @@ export interface AdminFundraisingDonation {
   created_at: string;
   updated_at: string;
   succeeded_at: string | null;
-  notification_status: "none" | "pending" | "sending" | "sent" | "failed";
+  notification_status: FundraisingNotificationStatus;
   notified_at: string | null;
+  donor_notification_status: FundraisingNotificationStatus;
+  donor_notified_at: string | null;
+  donor_is_member: boolean | null;
 }
+
+export type FundraisingNotificationStatus =
+  | "none"
+  | "pending"
+  | "sending"
+  | "sent"
+  | "failed"
+  | "skipped";
 
 export interface AdminFundraisingResponse {
   campaign: {

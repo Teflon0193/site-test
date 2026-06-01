@@ -26,10 +26,11 @@ const schema = z
 export type SignupFormValues = z.infer<typeof schema>;
 
 interface SignupFormProps {
+  initialEmail?: string;
   onSubmit: (values: SignupFormValues) => Promise<void> | void;
 }
 
-export function SignupForm({ onSubmit }: SignupFormProps) {
+export function SignupForm({ initialEmail = "", onSubmit }: SignupFormProps) {
   const {
     register,
     handleSubmit,
@@ -39,7 +40,7 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
     defaultValues: {
       firstName: "",
       lastName: "",
-      email: "",
+      email: initialEmail,
       phone: "",
       password: "",
       confirmPassword: "",

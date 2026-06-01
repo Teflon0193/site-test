@@ -55,11 +55,12 @@ const notificationLabels: Record<
   AdminFundraisingDonation["notification_status"],
   string
 > = {
-  none: "Non envoyée",
+  none: "Non configuré",
   pending: "En attente",
   sending: "En cours",
-  sent: "Envoyée",
+  sent: "Envoyé",
   failed: "Échec",
+  skipped: "Non configuré",
 };
 
 function formatMoney(value: number, currency: string) {
@@ -86,6 +87,14 @@ function donationStatusIcon(status: FundraisingDonationStatus) {
   return XCircle;
 }
 
+function notificationClassName(
+  status: AdminFundraisingDonation["notification_status"]
+) {
+  if (status === "sent") return "bg-green-50 text-green-700 border-green-100";
+  if (status === "failed") return "bg-red-50 text-red-700 border-red-100";
+  return "bg-slate-50 text-slate-700 border-slate-100";
+}
+
 export function FundraisingPageClient() {
   const [status, setStatus] = useState<FundraisingDonationStatus | "all">("all");
   const [paymentMethod, setPaymentMethod] = useState<
@@ -110,7 +119,7 @@ export function FundraisingPageClient() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Suivez la collecte, les paiements confirmés et les notifications
-            envoyées à l&apos;administration.
+            envoyées.
           </p>
         </div>
         <button
@@ -316,6 +325,11 @@ function DonationRow({ donation }: { donation: AdminFundraisingDonation }) {
           {donation.donor.email}
           {donation.donor.phone ? ` · ${donation.donor.phone}` : ""}
         </p>
+        {donation.donor_is_member !== null && (
+          <p className="mt-1 text-xs font-medium text-muted-foreground">
+            {donation.donor_is_member ? "Membre" : "Invité"}
+          </p>
+        )}
       </div>
 
       <div>
@@ -332,26 +346,43 @@ function DonationRow({ donation }: { donation: AdminFundraisingDonation }) {
         )}
       </div>
 
-      <div className="lg:text-right">
-        <Badge
-          variant="outline"
-          className={
-            donation.notification_status === "sent"
-              ? "bg-green-50 text-green-700 border-green-100"
-              : donation.notification_status === "failed"
-              ? "bg-red-50 text-red-700 border-red-100"
-              : "bg-slate-50 text-slate-700 border-slate-100"
-          }
-        >
-          <Bell className="mr-1 h-3 w-3" />
-          {notificationLabels[donation.notification_status]}
-        </Badge>
-        {donation.notified_at && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {formatDate(donation.notified_at)}
-          </p>
-        )}
+      <div className="space-y-3 lg:text-right">
+        <NotificationStatus
+          label="Email admin"
+          status={donation.notification_status}
+          notifiedAt={donation.notified_at}
+        />
+        <NotificationStatus
+          label="Email donateur"
+          status={donation.donor_notification_status}
+          notifiedAt={donation.donor_notified_at}
+        />
       </div>
+    </div>
+  );
+}
+
+function NotificationStatus({
+  label,
+  status,
+  notifiedAt,
+}: {
+  label: string;
+  status: AdminFundraisingDonation["notification_status"];
+  notifiedAt: string | null;
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-xs font-medium text-muted-foreground">{label}</p>
+      <Badge variant="outline" className={notificationClassName(status)}>
+        <Bell className="mr-1 h-3 w-3" />
+        {notificationLabels[status]}
+      </Badge>
+      {notifiedAt && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {formatDate(notifiedAt)}
+        </p>
+      )}
     </div>
   );
 }
