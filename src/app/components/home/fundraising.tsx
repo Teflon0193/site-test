@@ -9,6 +9,8 @@ import {
   Banknote,
   BookOpen,
   CheckCircle2,
+  ChevronDown,
+  Copy,
   CreditCard,
   HandCoins,
   Landmark,
@@ -824,8 +826,6 @@ export default function FundraisingSection() {
                     </div>
                   </div>
 
-                  <BankTransferInfo />
-
                   {checkoutError && (
                     <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
                       {checkoutError}
@@ -852,6 +852,8 @@ export default function FundraisingSection() {
                       <ShieldCheck className="h-4 w-4" />
                     </PrimaryButton>
                   </div>
+
+                  <BankTransferInfo />
                 </div>
               )}
             </div>
@@ -1025,25 +1027,86 @@ function MobileMoneyStatusDialog({
 }
 
 function BankTransferInfo() {
+  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
+
+  const copyAccountNumber = async (accountNumber: string) => {
+    await navigator.clipboard.writeText(accountNumber);
+    setCopiedAccount(accountNumber);
+
+    window.setTimeout(() => {
+      setCopiedAccount((current) =>
+        current === accountNumber ? null : current
+      );
+    }, 2000);
+  };
+
   return (
-    <div className="rounded-md border border-[#eadcc7] bg-[#fdfbf6] p-4">
-      <div className="mb-3 flex items-center gap-2 text-sm font-bold uppercase text-primary">
-        <Landmark className="h-4 w-4 text-secondary" />
-        Virement bancaire
-      </div>
-      <div className="grid gap-2">
-        {bankAccounts.map((account) => (
-          <div
-            key={account.number}
-            className="flex flex-col gap-1 rounded-md bg-white px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
-          >
-            <span className="font-bold text-primary">{account.bank}</span>
-            <span className="break-all font-semibold text-primary/70">
-              {account.number}
+    <div className="border-t border-[#eadcc7] pt-5">
+      <details className="group rounded-md border border-[#eadcc7] bg-[#fdfbf6]">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 text-left marker:hidden">
+          <span className="flex items-center gap-3">
+            <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-secondary/10 text-secondary">
+              <Landmark className="h-4 w-4" />
             </span>
+            <span>
+              <span className="block text-xs font-bold uppercase tracking-wide text-primary">
+                Vous préférez effectuer un virement bancaire ?
+              </span>
+              <span className="mt-1 block text-xs font-medium leading-relaxed text-primary/60">
+                Consultez les coordonnées bancaires
+              </span>
+            </span>
+          </span>
+          <ChevronDown className="h-4 w-4 flex-none text-secondary transition-transform group-open:rotate-180" />
+        </summary>
+
+        <div className="border-t border-[#eadcc7] px-4 py-4">
+          <p className="mb-4 text-sm font-medium leading-relaxed text-primary/72">
+            Le virement bancaire est une alternative aux paiements en ligne.
+            Choisissez un compte ci-dessous, puis contactez-nous après votre
+            transfert pour nous permettre de l&apos;identifier.
+          </p>
+
+          <div className="grid gap-2">
+            {bankAccounts.map((account) => {
+              const isCopied = copiedAccount === account.number;
+
+              return (
+                <div
+                  key={account.number}
+                  className="flex flex-col gap-3 rounded-md border border-[#eadcc7]/80 bg-white px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <span className="block font-bold text-primary">
+                      {account.bank}
+                    </span>
+                    <span className="mt-1 block break-all font-semibold text-primary/70">
+                      {account.number}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyAccountNumber(account.number)}
+                    className="inline-flex flex-none items-center justify-center gap-2 rounded-md border border-secondary/30 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-secondary/5"
+                    aria-label={`Copier le compte ${account.bank}`}
+                  >
+                    {isCopied ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green-700" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5 text-secondary" />
+                    )}
+                    {isCopied ? "Copié" : "Copier"}
+                  </button>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+
+          <p className="mt-4 text-xs font-semibold text-primary/60">
+            Besoin d&apos;aide ? info@centreculturel.cd
+          </p>
+        </div>
+      </details>
     </div>
   );
 }
