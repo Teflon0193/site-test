@@ -11,6 +11,7 @@ import {
   FaTiktok,
   FaChevronDown,
   FaUser,
+  FaTimes,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { BiMenu } from "react-icons/bi";
@@ -92,11 +93,14 @@ const SOCIAL_LINKS: SocialLink[] = [
   },
 ];
 
+const FANZONE_URL = "https://fanzone.centreculturel.cd";
+
 export default function Header() {
   const pathname = usePathname();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showAnnouncementBar, setShowAnnouncementBar] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -129,6 +133,33 @@ export default function Header() {
           isScrolled ? "shadow-lg" : ""
         }`}
       >
+        {/* Announcement Bar – FanZone */}
+        {showAnnouncementBar && (
+          <div className="bg-accent text-black py-2 px-4">
+            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 relative">
+              <span className="text-sm font-semibold text-center leading-snug">
+                🎉 La FanZone est là !&nbsp;
+                <a
+                  href={FANZONE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 font-bold hover:opacity-75 transition-opacity"
+                >
+                  fanzone.centreculturel.cd
+                </a>
+                &nbsp;— Rejoignez-nous maintenant
+              </span>
+              <button
+                onClick={() => setShowAnnouncementBar(false)}
+                aria-label="Fermer l'annonce"
+                className="absolute right-0 p-1 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
+              >
+                <FaTimes className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Social Bar */}
         <div className="hidden sm:block bg-secondary py-2 border-b border-secondary/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-end">
@@ -255,6 +286,16 @@ export default function Header() {
 
             {/* Header Actions */}
             <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+              {/* FanZone Button */}
+              <a
+                href={FANZONE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:flex items-center gap-2 rounded-xl bg-accent text-black px-4 py-2 font-bold text-sm hover:bg-accent/80 transition-all duration-300 hover:scale-105 shadow-lg whitespace-nowrap"
+              >
+                🎉 FanZone
+              </a>
+
               {/* Desktop Member Button */}
               <Link
                 href="/espace-membre"
