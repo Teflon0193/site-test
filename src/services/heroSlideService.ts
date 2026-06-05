@@ -1,37 +1,8 @@
-import {
-  generateCacheKey,
-  getCachedData,
-  setCachedData,
-} from "@/lib/cacheData";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { transformStrapiHeroSlide } from "@/lib/strapi";
 import { HeroSlide } from "@/types/hero-slide";
 
-interface HeroSlideCacheEntry {
-  data: HeroSlide[];
-  timestamp: number;
-  key: string;
-}
-
-const heroSlideCache = new Map<string, HeroSlideCacheEntry>();
-
-const getCachedHeroSlideData = (cacheKey: string): HeroSlide[] | null => {
-  return getCachedData(cacheKey, heroSlideCache);
-};
-
-const setCachedHeroSlideData = (cacheKey: string, data: HeroSlide[]): void => {
-  setCachedData(cacheKey, data, heroSlideCache);
-};
-
 const fetchHeroSlidesFromStrapi = async (): Promise<HeroSlide[]> => {
-  const cacheKey = generateCacheKey({ type: "hero-slides" });
-
-  // Vérifier le cache
-  const cachedData = getCachedHeroSlideData(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
-
   try {
     const queryParams = new URLSearchParams();
     queryParams.append("filters[isActive][$eq]", "true");
@@ -44,9 +15,6 @@ const fetchHeroSlidesFromStrapi = async (): Promise<HeroSlide[]> => {
       queryParams,
       transformStrapiHeroSlide
     );
-
-    // Mettre en cache
-    setCachedHeroSlideData(cacheKey, transformedData);
 
     return transformedData;
   } catch (error) {
@@ -72,11 +40,4 @@ const fetchHeroSlidesFromStrapi = async (): Promise<HeroSlide[]> => {
  */
 export const getHeroSlides = async (): Promise<HeroSlide[]> => {
   return fetchHeroSlidesFromStrapi();
-};
-
-/**
- * Fonction pour vider le cache des slides du hero
- */
-export const clearHeroSlideCache = (): void => {
-  heroSlideCache.clear();
 };

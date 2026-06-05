@@ -23,6 +23,7 @@ export interface Event {
   requirements?: string;
   accessibility?: string;
   tags?: string[];
+  isRegistrationOpen?: boolean;
   // Propriétés de compatibilité
   date: string; // Alias pour startDate
   time: string; // Alias pour startTime
@@ -61,6 +62,7 @@ export interface StrapiEvent {
   requirements?: string;
   accessibility?: string;
   tags?: string[];
+  isRegistrationOpen?: boolean;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
@@ -87,4 +89,17 @@ export interface StrapiResponse {
       total: number;
     };
   };
+}
+
+export interface EventRegistration {
+  id: string;
+  userName: string;
+  userEmail: string;
+  status: string;
+  registeredAt: string;
+}
+
+export interface EventWithRegistrations extends Event {
+  registrationsCount: number;
+  registrations: EventRegistration[];
 }

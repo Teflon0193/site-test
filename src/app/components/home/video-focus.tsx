@@ -14,7 +14,7 @@ export default function VideoFocus() {
     youtubeId: "6snOnJ-AlwY", // Exemple - remplacez par votre vraie vidéo
 
     // Option 2: Vidéo locale
-    localVideo: "/videos/grand-tambour-presentation.mp4",
+    localVideo: null as string | null,
 
     // Image de fallback
     posterImage: "/images/grand-tambour.jpg",
@@ -37,13 +37,13 @@ export default function VideoFocus() {
   };
 
   return (
-    <section className="relative h-[70vh] min-h-[500px] sm:h-[80vh] sm:min-h-[600px] lg:h-screen lg:min-h-[700px] overflow-hidden">
+    <section className="relative h-[60vh] min-h-[500px] lg:h-[80vh] w-full overflow-hidden bg-black">
       {/* Background avec image ou vidéo locale */}
       <div className="absolute inset-0">
-        {!hasVideoError ? (
+        {videoConfig.localVideo && !hasVideoError ? (
           // Essayer d'abord la vidéo locale
           <video
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-80"
             autoPlay
             muted
             loop
@@ -60,37 +60,42 @@ export default function VideoFocus() {
               src={videoConfig.posterImage}
               alt="Grand Tambour"
               fill
-              className="object-cover object-center sm:object-[60%_center]"
+              className="object-cover"
               priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-              quality={90}
+              sizes="100vw"
             />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 sm:from-black/70 sm:via-black/40 sm:to-black/20"></div>
+        {/* Overlay sombre pour la lisibilité du texte - Simple et efficace */}
+        <div className="absolute inset-0 bg-black/40"></div>
       </div>
 
       {/* Contenu principal */}
-      <div className="relative z-10 h-full flex items-center justify-center">
-        <div className="text-center text-white max-w-4xl px-6">
-          <h1 className="uppercase text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg">
-            {videoConfig.title}
-          </h1>
-          <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 text-white/90 leading-relaxed drop-shadow-md">
-            {videoConfig.subtitle}
-          </p>
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="space-y-4">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight drop-shadow-md">
+              {videoConfig.title}
+            </h1>
+            <p className="text-xl sm:text-2xl text-white/90 font-medium tracking-wide">
+              {videoConfig.subtitle}
+            </p>
+          </div>
 
-          {/* Bouton play pour vidéo YouTube */}
+          {/* Bouton play - Design sobre et accessible */}
           <button
             onClick={handlePlayVideo}
-            className="group inline-flex cursor-pointer items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-md rounded-full border-2 border-primary hover:from-white/30 hover:to-white/20 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+            className="group relative inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full transition-transform duration-300 hover:scale-110 shadow-xl focus:outline-none focus:ring-4 focus:ring-white/30"
             aria-label="Lire la vidéo de présentation"
           >
-            <FaPlay className="w-6 h-6 sm:w-8 sm:h-8 text-primary ml-1 group-hover:scale-110 transition-transform duration-300" />
+            {/* Pulsation subtile */}
+            <span className="absolute inset-0 rounded-full bg-white opacity-20 animate-ping group-hover:animate-none"></span>
+
+            <FaPlay className="w-8 h-8 sm:w-10 sm:h-10 text-black ml-1.5" />
           </button>
 
-          <p className="mt-4 text-sm sm:text-base text-white/70 drop-shadow-sm">
-            Cliquez pour voir notre vidéo de présentation
+          <p className="text-sm font-medium text-white/80 uppercase tracking-widest">
+            Regarder la vidéo
           </p>
         </div>
       </div>
@@ -98,19 +103,19 @@ export default function VideoFocus() {
       {/* Modal YouTube Video */}
       {isVideoPlaying && (
         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-6xl aspect-video">
-            {/* Bouton fermer */}
+          <div className="relative w-full max-w-6xl aspect-video bg-black rounded-lg shadow-2xl overflow-hidden">
+            {/* Bouton fermer - Clair et accessible */}
             <button
               onClick={handleCloseVideo}
-              className="absolute -top-12 right-0 text-white hover:text-primary transition-colors z-10 bg-black/50 backdrop-blur-sm rounded-full p-2 hover:bg-black/70"
+              className="absolute top-4 right-4 z-10 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white"
               aria-label="Fermer la vidéo"
             >
-              <FaTimes className="w-6 h-6 sm:w-8 sm:h-8" />
+              <FaTimes className="w-6 h-6" />
             </button>
 
             {/* YouTube iframe */}
             <iframe
-              className="w-full h-full rounded-2xl shadow-2xl"
+              className="w-full h-full"
               src={`https://www.youtube.com/embed/${videoConfig.youtubeId}?autoplay=1&mute=0&controls=1&rel=0`}
               title="Vidéo de présentation Grand Tambour"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -118,7 +123,7 @@ export default function VideoFocus() {
             ></iframe>
           </div>
 
-          {/* Clic pour fermer */}
+          {/* Clic pour fermer (Overlay) */}
           <div
             className="absolute inset-0 -z-10"
             onClick={handleCloseVideo}

@@ -12,36 +12,49 @@ import {
   FaMagnifyingGlass,
 } from "react-icons/fa6";
 import Image from "next/image";
-import type { useEventFilters } from "../../../hooks/useEventFilters";
+import type { Event } from "@/types/events";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CalendarProps {
-  filters: ReturnType<typeof useEventFilters>;
+  events: Event[];
+  loading?: boolean;
 }
 
-export default function Calendar({ filters }: CalendarProps) {
+export default function Calendar({ events, loading = false }: CalendarProps) {
   const router = useRouter();
   const [visibleEvents, setVisibleEvents] = useState(6);
 
-  const { filteredEvents } = filters;
+  // Trie les événements du plus récent au plus ancien
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+  );
 
   const loadMoreEvents = () => {
     setVisibleEvents((prev) => prev + 6);
   };
 
-  const displayedEvents = filteredEvents.slice(0, visibleEvents);
-  const hasMoreEvents = visibleEvents < filteredEvents.length;
+  const displayedEvents = sortedEvents.slice(0, visibleEvents);
+  const hasMoreEvents = visibleEvents < sortedEvents.length;
 
   return (
-    <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-muted/5 to-background">
+    <section className="py-8 sm:py-10 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-muted/5 to-background">
       <div className="max-w-7xl mx-auto">
-        {filteredEvents.length === 0 && (
-          <div className="text-center py-16 sm:py-20">
-            <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-2xl p-12 sm:p-16 max-w-lg mx-auto border border-muted/20 shadow-lg">
-              <FaMagnifyingGlass className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-6" />
-              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4">
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <EventCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {!loading && sortedEvents.length === 0 && (
+          <div className="text-center py-12 sm:py-16 md:py-20">
+            <div className="bg-gradient-to-br from-muted/20 to-muted/10 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12 lg:p-16 max-w-lg mx-auto border border-muted/20 shadow-lg">
+              <FaMagnifyingGlass className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-muted-foreground mx-auto mb-4 sm:mb-5 md:mb-6" />
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2 sm:mb-3 md:mb-4">
                 Aucun événement trouvé
               </h3>
-              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+              <p className="text-muted-foreground text-xs sm:text-sm md:text-base leading-relaxed px-2">
                 Essayez de modifier vos critères de recherche pour découvrir nos
                 événements
               </p>
@@ -49,68 +62,70 @@ export default function Calendar({ filters }: CalendarProps) {
           </div>
         )}
 
-        {filteredEvents.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+        {!loading && sortedEvents.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
             {displayedEvents.map((event) => (
               <Card
                 key={event.id}
-                className="group cursor-pointer transition-all duration-300 hover:shadow-xl border-muted/20 rounded-2xl hover:border-primary/50 overflow-hidden bg-gradient-to-br from-white to-muted/10"
+                className="group cursor-pointer transition-all duration-300 hover:shadow-lg border-muted/30 rounded-xl hover:border-primary/40 overflow-hidden bg-white"
                 onClick={() => router.push(`/evenement/${event.slug}`)}
               >
-                <div className="relative h-52 sm:h-60 overflow-hidden">
+                <div className="relative aspect-[16/9] overflow-hidden bg-muted/20">
                   <Image
-                    src={event.image}
+                    src={event.image || "/placeholder.svg"}
                     alt={event.title}
                     fill
-                    className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
                     priority={false}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
-                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg">
-                      {event.discipline}
+                  <div className="absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 flex flex-col gap-1.5 sm:gap-2">
+                    <Badge className="bg-primary text-primary-foreground shadow-sm text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+                      <span className="truncate max-w-[80px] sm:max-w-none">
+                        {event.discipline}
+                      </span>
                     </Badge>
-                    <Badge className="bg-gradient-to-r from-muted/80 to-muted/60 text-foreground shadow-lg">
-                      {event.public}
+                    <Badge className="bg-white/90 text-foreground shadow-sm text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+                      <span className="truncate max-w-[80px] sm:max-w-none">
+                        {event.public}
+                      </span>
                     </Badge>
                   </div>
                 </div>
 
-                <div className="p-6 sm:p-7">
-                  <CardHeader className="p-0 mb-5">
-                    <CardTitle className="text-lg sm:text-xl font-bold uppercase text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                <div className="p-4 sm:p-5 md:p-6">
+                  <CardHeader className="p-0 mb-3 sm:mb-4 md:mb-5">
+                    <CardTitle className="text-base sm:text-lg md:text-xl font-bold uppercase text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                       {event.title}
                     </CardTitle>
                   </CardHeader>
 
                   <CardContent className="p-0">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
-                          <FaCalendar className="h-4 w-4 text-primary" />
+                    <div className="space-y-2.5 sm:space-y-3">
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                          <FaCalendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
-                        <span className="line-clamp-1 font-medium">
+                        <span className="line-clamp-1 font-medium truncate">
                           {formatEventDateTime(event.startDate, event.endDate)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
-                          <FaClock className="h-4 w-4 text-primary" />
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                          <FaClock className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
-                        <span className="font-medium">
+                        <span className="font-medium truncate">
                           {formatTimePeriod(event.startTime, event.endTime)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20">
-                          <FaMapPin className="h-4 w-4 text-primary" />
+                      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 text-xs sm:text-sm text-muted-foreground">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                          <FaMapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary" />
                         </div>
-                        <span className="line-clamp-1 font-medium">
+                        <span className="line-clamp-1 font-medium truncate">
                           {event.location}
                         </span>
                       </div>
@@ -122,11 +137,11 @@ export default function Calendar({ filters }: CalendarProps) {
           </div>
         )}
 
-        {filteredEvents.length > 0 && hasMoreEvents && (
-          <div className="text-center mt-16 sm:mt-20">
+        {sortedEvents.length > 0 && hasMoreEvents && (
+          <div className="text-center mt-12 sm:mt-14 md:mt-16 lg:mt-20">
             <button
               onClick={loadMoreEvents}
-              className="justify-center cursor-pointer space-x-2 bg-gradient-to-r from-accent to-accent/90 text-black px-6 sm:px-8 py-3 sm:py-4 font-bold text-sm sm:text-base hover:from-accent/90 hover:to-accent transition-all duration-300 shadow-lg hover:shadow-xl rounded-xl hover:scale-105"
+              className="justify-center cursor-pointer space-x-2 bg-gradient-to-r from-accent to-accent/90 text-black px-4 sm:px-5 md:px-6 lg:px-8 py-2.5 sm:py-3 md:py-4 font-bold text-xs sm:text-sm md:text-base hover:from-accent/90 hover:to-accent transition-all duration-300 shadow-lg hover:shadow-xl rounded-lg sm:rounded-xl hover:scale-105"
             >
               Charger plus d&apos;événements
             </button>
@@ -134,5 +149,31 @@ export default function Calendar({ filters }: CalendarProps) {
         )}
       </div>
     </section>
+  );
+}
+
+function EventCardSkeleton() {
+  return (
+    <Card className="border-muted/30 rounded-xl overflow-hidden bg-white animate-pulse">
+      <div className="relative aspect-[16/9] bg-muted/20 flex items-start p-4">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-6 w-16" />
+        </div>
+      </div>
+      <div className="p-4 sm:p-5 md:p-6 space-y-4">
+        <div className="mb-3 sm:mb-4 md:mb-5">
+          <Skeleton className="h-6 w-5/6" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-lg flex-shrink-0" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }

@@ -1,27 +1,6 @@
-import {
-  generateCacheKey,
-  getCachedData,
-  setCachedData,
-} from "@/lib/cacheData";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { transformStrapiMedia } from "@/lib/strapi";
 import { Media, MediaFilters } from "@/types/media";
-
-interface MediaCacheEntry {
-  data: Media[];
-  timestamp: number;
-  key: string;
-}
-
-const mediaCache = new Map<string, MediaCacheEntry>();
-
-const getCachedMediaData = (cacheKey: string): Media[] | null => {
-  return getCachedData(cacheKey, mediaCache);
-};
-
-const setCachedMediaData = (cacheKey: string, data: Media[]): void => {
-  setCachedData(cacheKey, data, mediaCache);
-};
 
 const buildMediaQuery = (filters: MediaFilters): URLSearchParams => {
   const queryParams = new URLSearchParams();
@@ -105,14 +84,6 @@ const buildMediaQuery = (filters: MediaFilters): URLSearchParams => {
 const fetchMediaFromStrapi = async (
   filters: MediaFilters = {}
 ): Promise<Media[]> => {
-  const cacheKey = generateCacheKey(filters);
-
-  // Vérifier le cache
-  const cachedData = getCachedMediaData(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
-
   try {
     const queryParams = buildMediaQuery(filters);
     const transformedData = await fetchFromStrapi(
@@ -120,9 +91,6 @@ const fetchMediaFromStrapi = async (
       queryParams,
       transformStrapiMedia
     );
-
-    // Mettre en cache
-    setCachedMediaData(cacheKey, transformedData);
 
     return transformedData;
   } catch (error) {
@@ -180,9 +148,4 @@ export const getMediaByGallery = async (gallery: string): Promise<Media[]> => {
   return fetchMediaFromStrapi({ gallery });
 };
 
-/**
- * Fonction pour vider le cache des médias
- */
-export const clearMediaCache = (): void => {
-  mediaCache.clear();
-};
+// Plus de fonction pour vider le cache : TanStack Query gère désormais le cache côté client

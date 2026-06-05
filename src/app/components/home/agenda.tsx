@@ -7,6 +7,7 @@ import Link from "next/link";
 import { getUpcomingEvents } from "@/services/eventService";
 import { Event } from "@/types/events";
 import { formatEventPeriod, formatTimePeriod } from "@/lib/dateUtils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function QuickAgenda() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -46,14 +47,7 @@ export default function QuickAgenda() {
               Prochains Événements
             </h2>
           </div>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">
-                Chargement des événements...
-              </p>
-            </div>
-          </div>
+          <QuickAgendaSkeleton />
         </div>
       </section>
     );
@@ -89,6 +83,25 @@ export default function QuickAgenda() {
     );
   }
 
+  const hasSecondaryEvents = events.length > 1;
+  const secondaryEvents = events.slice(1);
+  const secondaryCount = secondaryEvents.length;
+  const useFourCardLayout = events.length === 4;
+
+  const getSecondaryCardClass = (index: number) => {
+    if (secondaryCount === 1) return "sm:col-span-2 lg:col-span-6 lg:h-full";
+    if (secondaryCount === 2) return "lg:col-span-3";
+    if (secondaryCount === 3) {
+      return index === 0
+        ? "sm:col-span-2 lg:col-span-6 lg:h-52"
+        : "lg:col-span-3";
+    }
+
+    return index === 0 || index === 3
+      ? "sm:col-span-2 lg:col-span-4"
+      : "lg:col-span-2";
+  };
+
   return (
     <section className="py-16 sm:py-20 bg-gradient-to-br from-background via-muted/5 to-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -104,48 +117,135 @@ export default function QuickAgenda() {
           </h2>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 mb-12">
+        {useFourCardLayout ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 mb-12">
+            {events.map((event) => (
+              <Link
+                key={event.id}
+                href={`/evenement/${event.slug}`}
+                className="group rounded-xl bg-white shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-muted/20"
+              >
+                <div className="relative aspect-[16/9] overflow-hidden bg-muted/20">
+                  <Image
+                    src={event.image || "/placeholder.svg"}
+                    alt={event.title}
+                    fill
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+                </div>
+
+                <div className="p-4 sm:p-5">
+                  <div className="text-2xl sm:text-3xl font-bold text-black leading-none mb-2">
+                    {
+                      formatEventPeriod(event.startDate, event.endDate).dayMonth
+                        .day
+                    }
+                  </div>
+                  <div className="text-xs sm:text-sm uppercase tracking-wide text-black/70 mb-2 sm:mb-3">
+                    {
+                      formatEventPeriod(event.startDate, event.endDate).dayMonth
+                        .month
+                    }
+                  </div>
+                  <div className="text-[11px] sm:text-xs uppercase tracking-wide text-primary mb-2">
+                    {event.category || event.discipline}
+                  </div>
+                  <h3 className="text-sm uppercase sm:text-base font-bold text-black mb-2 line-clamp-2">
+                    {event.title}
+                  </h3>
+                  <div className="text-xs sm:text-sm text-black/70 line-clamp-2">
+                    {event.location} -{" "}
+                    {formatTimePeriod(event.startTime, event.endTime)}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div
+            className={`flex flex-col gap-8 mb-12 ${
+              hasSecondaryEvents
+                ? "lg:flex-row"
+                : "max-w-4xl mx-auto lg:max-w-5xl"
+            }`}
+          >
           {/* Featured Event - Left Side */}
-          <div className="w-full lg:w-1/3 flex justify-center lg:justify-start">
+          <div
+            className={`w-full flex justify-center ${
+              hasSecondaryEvents ? "lg:w-1/3 lg:justify-start" : ""
+            }`}
+          >
             <Link
               href={`/evenement/${events[0].slug}`}
-              className="relative rounded-2xl overflow-hidden shadow-xl group cursor-pointer h-80 w-80 sm:h-96 sm:w-96 lg:h-[28rem] lg:w-[28rem] hover:shadow-2xl transition-all duration-300"
+              className={`relative rounded-2xl overflow-hidden shadow-xl group cursor-pointer hover:shadow-2xl transition-all duration-300 ${
+                hasSecondaryEvents
+                  ? "h-80 w-80 sm:h-96 sm:w-96 lg:h-[28rem] lg:w-[28rem]"
+                  : "w-full max-w-4xl"
+              }`}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary/80 flex flex-col">
-                {/* Top section with details - 60% sur mobile, 50% sur desktop */}
-                <div className="h-3/5 sm:h-1/2 p-4 sm:p-6 lg:p-8 flex flex-col justify-center text-white">
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-none mt-6 lg:mb-3 drop-shadow-lg">
-                    {
-                      formatEventPeriod(events[0].startDate, events[0].endDate)
-                        .dayMonth.day
-                    }
-                  </div>
-                  <div className="text-sm lg:text-base uppercase tracking-wide mb-4 lg:mb-6 drop-shadow-md">
-                    {
-                      formatEventPeriod(events[0].startDate, events[0].endDate)
-                        .dayMonth.month
-                    }
-                  </div>
-                  <div className="text-xs lg:text-sm uppercase tracking-wide opacity-90 mb-2 lg:mb-3">
-                    {events[0].category || events[0].discipline}
-                  </div>
-                  <h3 className="text-lg uppercase lg:text-xl font-bold mb-3 lg:mb-4 drop-shadow-md">
-                    {events[0].title}
-                  </h3>
-                  <div className="text-xs lg:text-sm opacity-90">
-                    {events[0].location} -{" "}
-                    {formatTimePeriod(events[0].startTime, events[0].endTime)}
+              <div
+                className={`bg-gradient-to-br from-primary to-primary/80 flex ${
+                  hasSecondaryEvents
+                    ? "absolute inset-0 flex-col"
+                    : "flex-col md:grid md:grid-cols-[0.9fr_1.4fr]"
+                }`}
+              >
+                <div
+                  className={`p-4 sm:p-6 lg:p-8 flex flex-col justify-center text-white ${
+                    hasSecondaryEvents
+                      ? "h-3/5 sm:h-1/2 pt-8 sm:pt-10 lg:pt-12"
+                      : "min-h-72"
+                  }`}
+                >
+                  <div>
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-none mb-4 lg:mb-5 drop-shadow-lg">
+                      {
+                        formatEventPeriod(
+                          events[0].startDate,
+                          events[0].endDate
+                        ).dayMonth.day
+                      }
+                    </div>
+                    <div className="text-sm lg:text-base uppercase tracking-wide mb-4 lg:mb-5 drop-shadow-md">
+                      {
+                        formatEventPeriod(
+                          events[0].startDate,
+                          events[0].endDate
+                        ).dayMonth.month
+                      }
+                    </div>
+                    <div className="text-xs lg:text-sm uppercase tracking-wide opacity-90 mb-2 lg:mb-3">
+                      {events[0].category || events[0].discipline}
+                    </div>
+                    <h3 className="text-lg uppercase lg:text-xl font-bold mb-3 lg:mb-4 drop-shadow-md">
+                      {events[0].title}
+                    </h3>
+                    <div className="text-xs lg:text-sm opacity-90">
+                      {events[0].location} -{" "}
+                      {formatTimePeriod(events[0].startTime, events[0].endTime)}
+                    </div>
                   </div>
                 </div>
 
-                {/* Bottom section with image - 40% sur mobile, 50% sur desktop */}
-                <div className="h-2/5 sm:h-1/2 relative p-3 lg:p-4">
+                <div
+                  className={`relative ${
+                    hasSecondaryEvents
+                      ? "h-2/5 sm:h-1/2 p-3 lg:p-4"
+                      : "aspect-[16/9] md:h-full md:aspect-auto"
+                  }`}
+                >
                   <div className="relative h-full overflow-hidden rounded-lg">
                     <Image
                       src={events[0].image || "/placeholder.svg"}
                       alt={events[0].title}
                       fill
-                      className="object-cover transition-transform duration-500"
+                      className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                      sizes={
+                        hasSecondaryEvents
+                          ? "(max-width: 1024px) 20rem, 28rem"
+                          : "(max-width: 768px) 100vw, 55vw"
+                      }
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
@@ -155,166 +255,89 @@ export default function QuickAgenda() {
           </div>
 
           {/* Events Grid - Right Side */}
-          {events.length > 1 && (
+          {hasSecondaryEvents && (
             <div className="w-full lg:w-2/3">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 lg:h-[28rem]">
-                {/* Top Left */}
-                {events[1] && (
-                  <Link
-                    href={`/evenement/${events[1].slug}`}
-                    className="sm:col-span-2 rounded-xl lg:col-span-4 bg-gradient-to-br from-white to-muted/10 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer h-48 sm:h-52 lg:h-52 border border-muted/20"
-                  >
-                    <div className="flex flex-col sm:flex-row h-full">
-                      <div className="w-full sm:w-1/2 p-4 sm:p-6">
-                        <div className="text-2xl sm:text-3xl font-bold text-black leading-none mb-2">
-                          {
-                            formatEventPeriod(
-                              events[1].startDate,
-                              events[1].endDate
-                            ).dayMonth.day
-                          }
-                        </div>
-                        <div className="text-xs sm:text-sm uppercase tracking-wide text-black mb-2 sm:mb-3">
-                          {
-                            formatEventPeriod(
-                              events[1].startDate,
-                              events[1].endDate
-                            ).dayMonth.month
-                          }
-                        </div>
-                        <h3 className="text-sm uppercase sm:text-base font-bold text-black mb-2 sm:mb-3">
-                          {events[1].title}
-                        </h3>
-                        <div className="text-xs sm:text-sm text-black">
-                          {events[1].location} - {events[1].time}
-                        </div>
-                      </div>
-                      <div className="w-full sm:w-1/2 relative p-3 sm:p-4">
-                        <div className="relative h-full overflow-hidden rounded-lg">
-                          <Image
-                            src={events[1].image || "/placeholder.svg"}
-                            alt={events[1].title}
-                            fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                )}
+                {secondaryEvents.map((event, index) => {
+                  const isFiveEventWideCard =
+                    secondaryCount === 4 && (index === 0 || index === 3);
+                  const isFiveEventTextCard =
+                    secondaryCount === 4 && !isFiveEventWideCard;
 
-                {/* Top Right - Small square card */}
-                {events[4] && (
-                  <Link
-                    href={`/evenement/${events[4].slug}`}
-                    className="sm:col-span-1 lg:col-span-2 rounded-xl bg-gradient-to-br from-white to-muted/10 shadow-lg p-4 sm:p-6 hover:shadow-xl transition-all duration-300 cursor-pointer h-48 sm:h-52 lg:h-52 border border-muted/20"
-                  >
-                    <div className="text-2xl sm:text-3xl font-bold text-black leading-none mb-2">
-                      {
-                        formatEventPeriod(
-                          events[4].startDate,
-                          events[4].endDate
-                        ).dayMonth.day
-                      }
-                    </div>
-                    <div className="text-xs sm:text-sm uppercase tracking-wide text-black/70 mb-2 sm:mb-3">
-                      {
-                        formatEventPeriod(
-                          events[4].startDate,
-                          events[4].endDate
-                        ).dayMonth.month
-                      }
-                    </div>
-                    <h3 className="text-sm uppercase sm:text-base font-bold text-black mb-2 sm:mb-3">
-                      {events[4].title}
-                    </h3>
-                    <div className="text-xs sm:text-sm text-black/70">
-                      {events[4].location} - {events[4].time}
-                    </div>
-                  </Link>
-                )}
+                  return (
+                    <Link
+                      key={event.id}
+                      href={`/evenement/${event.slug}`}
+                      className={`${getSecondaryCardClass(
+                        index
+                      )} group rounded-xl bg-white shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-muted/20 min-h-0`}
+                    >
+                      <div
+                        className={`h-full min-h-0 ${
+                          isFiveEventWideCard
+                            ? "flex flex-col sm:flex-row"
+                            : secondaryCount === 1
+                            ? "grid lg:grid-cols-[0.9fr_1.1fr]"
+                            : "grid grid-rows-[auto_1fr]"
+                        }`}
+                      >
+                        {!isFiveEventTextCard && (
+                          <div
+                            className={`relative overflow-hidden bg-muted/20 ${
+                              isFiveEventWideCard
+                                ? "h-44 sm:h-full sm:w-1/2"
+                                : secondaryCount === 1
+                                ? "aspect-[16/9] lg:aspect-auto lg:h-full"
+                                : "aspect-[16/9]"
+                            }`}
+                          >
+                            <Image
+                              src={event.image || "/placeholder.svg"}
+                              alt={event.title}
+                              fill
+                              className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            />
+                          </div>
+                        )}
 
-                {/* Bottom Left - Small square card */}
-                {events[2] && (
-                  <Link
-                    href={`/evenement/${events[2].slug}`}
-                    className="sm:col-span-1 lg:col-span-2 rounded-xl bg-gradient-to-br from-white to-muted/10 shadow-lg p-4 sm:p-6 hover:shadow-xl transition-all duration-300 cursor-pointer h-48 sm:h-52 lg:h-52 border border-muted/20"
-                  >
-                    <div className="text-2xl sm:text-3xl font-bold text-black leading-none mb-2">
-                      {
-                        formatEventPeriod(
-                          events[2].startDate,
-                          events[2].endDate
-                        ).dayMonth.day
-                      }
-                    </div>
-                    <div className="text-xs sm:text-sm uppercase tracking-wide text-black/70 mb-2 sm:mb-3">
-                      {
-                        formatEventPeriod(
-                          events[2].startDate,
-                          events[2].endDate
-                        ).dayMonth.month
-                      }
-                    </div>
-                    <h3 className="text-sm uppercase sm:text-base font-bold text-black mb-2 sm:mb-3">
-                      {events[2].title}
-                    </h3>
-                    <div className="text-xs sm:text-sm text-black/70">
-                      {events[2].location} - {events[2].time}
-                    </div>
-                  </Link>
-                )}
-
-                {/* Bottom Right - Long rectangular card with image */}
-                {events[3] && (
-                  <Link
-                    href={`/evenement/${events[3].slug}`}
-                    className="sm:col-span-2 lg:col-span-4 rounded-xl bg-gradient-to-br from-white to-muted/10 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer h-48 sm:h-52 lg:h-52 border border-muted/20"
-                  >
-                    <div className="flex flex-col sm:flex-row h-full">
-                      <div className="w-full sm:w-1/2 p-4 sm:p-6">
-                        <div className="text-2xl sm:text-3xl font-bold text-black leading-none mb-2">
-                          {
-                            formatEventPeriod(
-                              events[3].startDate,
-                              events[3].endDate
-                            ).dayMonth.day
-                          }
-                        </div>
-                        <div className="text-xs sm:text-sm uppercase tracking-wide text-black/70 mb-2 sm:mb-3">
-                          {
-                            formatEventPeriod(
-                              events[3].startDate,
-                              events[3].endDate
-                            ).dayMonth.month
-                          }
-                        </div>
-                        <h3 className="text-sm uppercase sm:text-base font-bold text-black mb-2 sm:mb-3">
-                          {events[3].title}
-                        </h3>
-                        <div className="text-xs sm:text-sm text-black/70">
-                          {events[3].location} - {events[3].time}
+                        <div
+                          className={`min-h-0 p-4 sm:p-5 ${
+                            isFiveEventWideCard ? "sm:w-1/2" : ""
+                          }`}
+                        >
+                          <div className="text-2xl sm:text-3xl font-bold text-black leading-none mb-2">
+                            {
+                              formatEventPeriod(event.startDate, event.endDate)
+                                .dayMonth.day
+                            }
+                          </div>
+                          <div className="text-xs sm:text-sm uppercase tracking-wide text-black/70 mb-2 sm:mb-3">
+                            {
+                              formatEventPeriod(event.startDate, event.endDate)
+                                .dayMonth.month
+                            }
+                          </div>
+                          <div className="text-[11px] sm:text-xs uppercase tracking-wide text-primary mb-2">
+                            {event.category || event.discipline}
+                          </div>
+                          <h3 className="text-sm uppercase sm:text-base font-bold text-black mb-2 line-clamp-2">
+                            {event.title}
+                          </h3>
+                          <div className="text-xs sm:text-sm text-black/70 line-clamp-2">
+                            {event.location} -{" "}
+                            {formatTimePeriod(event.startTime, event.endTime)}
+                          </div>
                         </div>
                       </div>
-                      <div className="w-full sm:w-1/2 relative p-3 sm:p-4">
-                        <div className="relative h-full overflow-hidden rounded-lg">
-                          <Image
-                            src={events[3].image || "/placeholder.svg"}
-                            alt={events[3].title}
-                            fill
-                            className="object-cover transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                )}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Call to action */}
         <div className="text-center">
@@ -327,5 +350,70 @@ export default function QuickAgenda() {
         </div>
       </div>
     </section>
+  );
+}
+
+function QuickAgendaSkeleton() {
+  return (
+    <div className="flex flex-col gap-8 mb-12 lg:flex-row">
+      {/* Featured Event Skeleton (Left) */}
+      <div className="w-full flex justify-center lg:w-1/3 lg:justify-start">
+        <div className="relative rounded-2xl overflow-hidden shadow-lg h-80 w-80 sm:h-96 sm:w-96 lg:h-[28rem] lg:w-[28rem] border border-muted/20 bg-white p-6 flex flex-col justify-between">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-16" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-6 w-5/6" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+          <div className="relative h-2/5 sm:h-1/2 rounded-lg overflow-hidden mt-4">
+            <Skeleton className="h-full w-full" />
+          </div>
+        </div>
+      </div>
+
+      {/* Grid of Secondary Events Skeleton (Right) */}
+      <div className="w-full lg:w-2/3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 lg:h-[28rem]">
+          {[1, 2, 3].map((_, index) => {
+            let gridClass = "lg:col-span-3";
+            if (index === 0) gridClass = "sm:col-span-2 lg:col-span-6 lg:h-52";
+            
+            return (
+              <div
+                key={index}
+                className={`${gridClass} rounded-xl bg-white shadow-lg overflow-hidden border border-muted/20 flex flex-col`}
+              >
+                {index === 0 ? (
+                  <div className="h-full flex flex-col sm:flex-row">
+                    <div className="relative h-44 sm:h-full sm:w-1/2 bg-muted/20">
+                      <Skeleton className="h-full w-full" />
+                    </div>
+                    <div className="p-4 sm:p-5 sm:w-1/2 flex flex-col justify-center space-y-3">
+                      <Skeleton className="h-8 w-12" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-5 w-5/6" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full grid grid-rows-[auto_1fr]">
+                    <div className="relative aspect-[16/9] bg-muted/20">
+                      <Skeleton className="h-full w-full" />
+                    </div>
+                    <div className="p-4 sm:p-5 space-y-3">
+                      <Skeleton className="h-8 w-12" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-5 w-5/6" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

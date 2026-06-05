@@ -5,12 +5,10 @@ import EventFilters from "./eventFilters";
 import Calendar from "./calendar";
 
 export default function AgendaContainer() {
-  // Utilisation du hook personnalisé pour gérer les filtres
   const event = useEventFilters();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
-      {/* Composant de filtres */}
       <EventFilters
         filters={event.filters}
         onFilterChange={event.updateFilter}
@@ -19,8 +17,7 @@ export default function AgendaContainer() {
         eventCount={event.filteredEvents.length}
       />
 
-      {/* Composant de calendrier avec événements filtrés */}
-      <Calendar filters={event} />
+      <Calendar events={event.filteredEvents} loading={event.loading} />
     </div>
   );
 }

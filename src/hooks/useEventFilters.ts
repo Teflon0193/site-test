@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { getFilteredEvents } from "@/services/eventService";
-import { Event } from "@/types/events";
+import { useState } from "react";
+import { DEFAULT_FILTER_VALUE } from "@/data/events";
+import { useFilteredEventsQuery } from "./useEventsQuery";
 
 export interface FilterState {
   month: string;
   discipline: string;
-  public: string;
+  publicTarget: string;
 }
 
 /**
@@ -15,14 +15,18 @@ export interface FilterState {
  */
 export const useEventFilters = () => {
   const [filters, setFilters] = useState<FilterState>({
-    month: "Tous",
-    discipline: "Tous",
-    public: "Tous",
+    month: DEFAULT_FILTER_VALUE,
+    discipline: DEFAULT_FILTER_VALUE,
+    publicTarget: DEFAULT_FILTER_VALUE,
   });
 
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Chargement des événements filtrés
+  const {
+    data: filteredEvents = [],
+    isLoading,
+    isError,
+    error,
+  } = useFilteredEventsQuery(filters);
 
   /**
    * Met à jour un filtre spécifique
@@ -39,56 +43,26 @@ export const useEventFilters = () => {
    */
   const clearFilters = () => {
     setFilters({
-      month: "Tous",
-      discipline: "Tous",
-      public: "Tous",
+      month: DEFAULT_FILTER_VALUE,
+      discipline: DEFAULT_FILTER_VALUE,
+      publicTarget: DEFAULT_FILTER_VALUE,
     });
   };
 
   /**
-   * Charge les événements filtrés depuis Strapi quand les filtres changent
-   */
-  useEffect(() => {
-    const loadFilteredEvents = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const events = await getFilteredEvents(filters);
-        setFilteredEvents(events);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Erreur lors du chargement des événements";
-
-        setError(errorMessage);
-        console.error("Erreur filtres:", err);
-
-        // En cas d'erreur, on vide la liste plutôt que de garder d'anciennes données
-        setFilteredEvents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFilteredEvents();
-  }, [filters]);
-
-  /**
-   * Vérifie si des filtres sont actifs (différents de "Tous")
+   * Vérifie si des filtres sont actifs (différents de la valeur par défaut)
    */
   const hasActiveFilters =
-    filters.month !== "Tous" ||
-    filters.discipline !== "Tous" ||
-    filters.public !== "Tous";
+    filters.month !== DEFAULT_FILTER_VALUE ||
+    filters.discipline !== DEFAULT_FILTER_VALUE ||
+    filters.publicTarget !== DEFAULT_FILTER_VALUE;
 
   return {
     // État
     filters,
     filteredEvents,
-    loading,
-    error,
+    loading: isLoading,
+    error: isError ? (error as Error | null)?.message ?? null : null,
 
     // Actions
     updateFilter,
@@ -97,7 +71,6 @@ export const useEventFilters = () => {
     // Computed
     hasActiveFilters,
 
-    // Stats utiles
     eventCount: filteredEvents.length,
   };
 };

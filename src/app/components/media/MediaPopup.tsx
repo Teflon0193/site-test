@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Media } from "@/types/media";
 import { formatDate } from "@/lib/mediaUtils";
+import { useEffect } from "react";
 
 interface MediaPopupProps {
   isOpen: boolean;
@@ -27,125 +28,98 @@ export default function MediaPopup({
   onClose,
   onNext,
   onPrev,
-  onGoToImage,
 }: MediaPopupProps) {
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") onNext();
+      if (e.key === "ArrowLeft") onPrev();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, onNext, onPrev]);
+
   if (!isOpen || mediaItems.length === 0) return null;
 
   const currentItem = mediaItems[currentIndex];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm">
-      <div className="relative w-full h-full flex items-center justify-center p-4">
-        {/* Close Button */}
+    <div className="fixed inset-0 z-[60] flex flex-col bg-black/95 animate-in fade-in duration-200">
+      {/* Search/Controls Header */}
+      <div className="absolute top-0 left-0 right-0 p-3 sm:p-4 z-50 flex justify-between items-start">
+        <div className="text-white/70 text-xs sm:text-sm font-medium">
+          {currentIndex + 1} / {mediaItems.length}
+        </div>
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-10 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-300 hover:scale-110 shadow-lg"
+          className="p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
           aria-label="Fermer"
         >
-          <X size={24} />
+          <X size={20} className="sm:w-6 sm:h-6" />
         </button>
+      </div>
 
-        {/* Previous Button */}
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center relative w-full h-full overflow-hidden">
+        {/* Navigation Buttons (Hidden on mobile interactions sometimes, but kept for clarity) */}
         <button
           onClick={onPrev}
-          className="absolute left-6 z-10 p-4 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-300 hover:scale-110 shadow-lg"
-          aria-label="Image précédente"
+          className="absolute left-2 sm:left-4 z-40 p-2 sm:p-3 text-white/50 hover:text-white transition-colors hidden sm:block"
+          aria-label="Précédent"
         >
-          <ChevronLeft size={32} />
+          <ChevronLeft size={32} className="sm:w-10 sm:h-10" strokeWidth={1} />
         </button>
 
-        {/* Next Button */}
         <button
           onClick={onNext}
-          className="absolute right-6 z-10 p-4 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-300 hover:scale-110 shadow-lg"
-          aria-label="Image suivante"
+          className="absolute right-2 sm:right-4 z-40 p-2 sm:p-3 text-white/50 hover:text-white transition-colors hidden sm:block"
+          aria-label="Suivant"
         >
-          <ChevronRight size={32} />
+          <ChevronRight size={32} className="sm:w-10 sm:h-10" strokeWidth={1} />
         </button>
 
-        {/* Image Container */}
-        <div className="relative max-w-6xl max-h-[90vh] w-full h-full flex flex-col items-center justify-center">
-          <div className="relative w-full h-[80vh]">
+        {/* Image */}
+        <div className="relative w-full h-full p-3 sm:p-4 md:p-8 lg:p-12 xl:p-20 flex items-center justify-center">
+          <div className="relative w-full h-full max-w-7xl max-h-[75vh] sm:max-h-[80vh] md:max-h-[85vh]">
             <Image
               src={currentItem.image || "/placeholder.svg"}
               alt={currentItem.title}
               fill
               className="object-contain"
               priority
+              quality={90}
             />
           </div>
-
-          {/* Image Info */}
-          <div className="mt-6 text-center text-white max-w-2xl">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="inline-block px-4 py-2 bg-gradient-to-r from-primary to-primary/80 rounded-full text-sm font-semibold shadow-lg">
-                {currentItem.category}
-              </div>
-              {currentItem.eventType && (
-                <div className="inline-block px-4 py-2 bg-gradient-to-r from-accent/90 to-accent/80 rounded-full text-sm font-semibold shadow-lg">
-                  {currentItem.eventType}
-                </div>
-              )}
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold mb-3 drop-shadow-lg">
-              {currentItem.title}
-            </h3>
-            {currentItem.description && (
-              <p className="text-gray-300 mb-6 leading-relaxed">
-                {currentItem.description}
-              </p>
-            )}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 space-y-3 text-sm">
-              <div className="flex items-center justify-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/20">
-                  <Calendar className="w-4 h-4 text-primary" />
-                </div>
-                <span className="font-medium">
-                  {formatDate(currentItem.eventDate)}
-                </span>
-              </div>
-              {currentItem.location && (
-                <div className="flex items-center justify-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/20">
-                    <MapPin className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="font-medium">{currentItem.location}</span>
-                </div>
-              )}
-              {currentItem.photographer && (
-                <div className="flex items-center justify-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/20">
-                    <Camera className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="font-medium">
-                    Photo: {currentItem.photographer}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
+      </div>
 
-        {/* Counter and Dots */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
-            <p className="text-white text-sm font-semibold">
-              {currentIndex + 1} / {mediaItems.length}
-            </p>
-          </div>
-          <div className="flex space-x-2">
-            {mediaItems.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => onGoToImage(index)}
-                className={`rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? "bg-white w-8 h-2 shadow-lg"
-                    : "bg-white/40 hover:bg-white/60 w-2 h-2 hover:scale-125"
-                }`}
-                aria-label={`Aller à l'image ${index + 1}`}
-              />
-            ))}
+      {/* Footer / Caption Overlay */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-8 sm:pt-10 md:pt-12 pb-4 sm:pb-6 md:pb-8 px-3 sm:px-4 md:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-1.5 sm:mb-2 line-clamp-2">
+            {currentItem.title}
+          </h2>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-white/70">
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <Calendar size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+              <span className="truncate">{formatDate(currentItem.eventDate)}</span>
+            </div>
+            {currentItem.location && (
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <MapPin size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                <span className="truncate">{currentItem.location}</span>
+              </div>
+            )}
+            {currentItem.photographer && (
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <Camera size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                <span className="truncate">{currentItem.photographer}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

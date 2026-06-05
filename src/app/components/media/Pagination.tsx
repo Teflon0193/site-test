@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PaginationProps {
   currentPage: number;
@@ -14,35 +15,40 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="mt-12 flex justify-center items-center gap-2">
+    <div className="mt-8 sm:mt-12 md:mt-16 flex justify-center items-center gap-1.5 sm:gap-2">
       <button
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="p-3 border border-muted/30 rounded-xl hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 shadow-lg"
+        className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors"
+        aria-label="Previous Page"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
       </button>
 
-      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`min-w-[44px] h-11 font-semibold transition-all duration-300 rounded-xl ${
-            currentPage === page
-              ? "bg-gradient-to-r from-accent to-accent/90 text-black shadow-lg scale-105"
-              : "border border-muted/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/20 text-foreground hover:scale-105 shadow-lg"
-          }`}
-        >
-          {page}
-        </button>
-      ))}
+      <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto max-w-full">
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={cn(
+              "w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md text-xs sm:text-sm font-medium transition-colors flex-shrink-0",
+              currentPage === page
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted"
+            )}
+          >
+            {page}
+          </button>
+        ))}
+      </div>
 
       <button
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage === totalPages}
-        className="p-3 border border-muted/30 rounded-xl hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 shadow-lg"
+        className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors"
+        aria-label="Next Page"
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={18} className="sm:w-5 sm:h-5" />
       </button>
     </div>
   );

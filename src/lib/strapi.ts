@@ -5,6 +5,23 @@ import { Event, StrapiEvent, EventFilters } from "@/types/events";
 import { HeroSlide, StrapiHeroSlide } from "@/types/hero-slide";
 import { Media, StrapiMedia } from "@/types/media";
 
+type StrapiImage = {
+  url?: string;
+  formats?: Record<string, unknown>;
+} | null;
+
+const getOptimizedImageUrl = (image: StrapiImage): string => {
+  const formats = image?.formats;
+
+  return (
+    (formats?.large as { url?: string } | undefined)?.url ||
+    (formats?.medium as { url?: string } | undefined)?.url ||
+    (formats?.small as { url?: string } | undefined)?.url ||
+    image?.url ||
+    ""
+  );
+};
+
 export const buildStrapiQuery = (filters: EventFilters): URLSearchParams => {
   const queryParams = new URLSearchParams();
 
@@ -92,16 +109,6 @@ export const fetchFromStrapi = async <T>(
 };
 
 export const transformStrapiEvent = (strapiEvent: StrapiEvent): Event => {
-  // Fonction pour construire l'URL d'image correctement
-  const getImageUrl = (imageUrl: string): string => {
-    // Si l'URL commence par "http", c'est déjà une URL complète
-    if (imageUrl.startsWith("http")) {
-      return imageUrl;
-    }
-    // Sinon, on ajoute l'URL de base
-    return `${STRAPI_BASE_URL}${imageUrl}`;
-  };
-
   return {
     id: strapiEvent.id,
     title: strapiEvent.title,
@@ -114,9 +121,7 @@ export const transformStrapiEvent = (strapiEvent: StrapiEvent): Event => {
     discipline: strapiEvent.discipline,
     public: strapiEvent.public,
     description: strapiEvent.description,
-    image: strapiEvent.image?.url
-      ? getImageUrl(strapiEvent.image.url)
-      : "/images/events/event1.jpg",
+    image: getOptimizedImageUrl(strapiEvent.image),
     capacity: strapiEvent.capacity,
     featured: strapiEvent.featured || false,
     category: strapiEvent.category,
@@ -124,11 +129,12 @@ export const transformStrapiEvent = (strapiEvent: StrapiEvent): Event => {
     targetAudience: strapiEvent.targetAudience,
     impact: strapiEvent.impact,
     slogan: strapiEvent.slogan,
-    organizer: strapiEvent.organizer || "Centre Culturel Grand Tambour",
+    organizer: strapiEvent.organizer || "",
     contact: strapiEvent.contact,
     requirements: strapiEvent.requirements,
     accessibility: strapiEvent.accessibility,
     tags: strapiEvent.tags || [],
+    isRegistrationOpen: strapiEvent.isRegistrationOpen ?? false,
     // Propriétés de compatibilité pour le code existant
     date: strapiEvent.startDate,
     time: strapiEvent.startTime,
@@ -138,14 +144,6 @@ export const transformStrapiEvent = (strapiEvent: StrapiEvent): Event => {
 export const transformStrapiHeroSlide = (
   strapiSlide: StrapiHeroSlide
 ): HeroSlide => {
-  // Fonction pour construire l'URL d'image correctement
-  const getImageUrl = (imageUrl: string): string => {
-    if (imageUrl.startsWith("http")) {
-      return imageUrl;
-    }
-    return `${STRAPI_BASE_URL}${imageUrl}`;
-  };
-
   return {
     id: strapiSlide.id,
     title: strapiSlide.title,
@@ -153,9 +151,7 @@ export const transformStrapiHeroSlide = (
     description: strapiSlide.description,
     buttonText: strapiSlide.buttonText || "En savoir plus",
     buttonLink: strapiSlide.buttonLink || "/",
-    image: strapiSlide.image?.url
-      ? getImageUrl(strapiSlide.image.url)
-      : "/images/media/media1.jpg",
+    image: getOptimizedImageUrl(strapiSlide.image),
     order: strapiSlide.order || 0,
     isActive: strapiSlide.isActive !== false,
     createdAt: strapiSlide.createdAt,
@@ -165,21 +161,11 @@ export const transformStrapiHeroSlide = (
 };
 
 export const transformStrapiMedia = (strapiMedia: StrapiMedia): Media => {
-  // Fonction pour construire l'URL d'image correctement
-  const getImageUrl = (imageUrl: string): string => {
-    if (imageUrl.startsWith("http")) {
-      return imageUrl;
-    }
-    return `${STRAPI_BASE_URL}${imageUrl}`;
-  };
-
   return {
     id: strapiMedia.id,
     title: strapiMedia.title,
     description: strapiMedia.description,
-    image: strapiMedia.image?.url
-      ? getImageUrl(strapiMedia.image.url)
-      : "/placeholder.svg",
+    image: getOptimizedImageUrl(strapiMedia.image),
     eventDate: strapiMedia.eventDate,
     category: strapiMedia.category,
     eventType: strapiMedia.eventType,

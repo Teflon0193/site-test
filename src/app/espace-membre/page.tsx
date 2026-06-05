@@ -1,182 +1,283 @@
-import { Mail, Phone, MapPin } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import Header from "../components/home/header";
-import Footer from "../components/home/footer";
+  Calendar,
+  Clock,
+  // CheckCircle2,
+  User,
+  Activity,
+  LogIn,
+  UserPlus,
+  FileEdit,
+  XCircle,
+  Settings,
+  Mail,
+  MessageSquare,
+} from "lucide-react";
+import { getUser } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
+import prisma from "@/lib/prisma";
+import { cn } from "@/lib/utils";
 
-export default function EspaceMembres() {
+export default async function DashboardPage() {
+  const user = await getUser();
+
+  // Vérifier que l'utilisateur existe (devrait être géré par le layout, mais sécurité supplémentaire)
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  if (user.role === "ADMIN") {
+    redirect("/espace-membre/admin");
+  }
+
+  const [eventsRegistered, recentActivities] = await Promise.all([
+    // Nombre d'événements inscrits
+    prisma.eventRegistration.count({
+      where: {
+        userId: user.id,
+        status: { in: ["CONFIRMED", "PENDING"] },
+      },
+    }),
+    // 5 dernières activités
+    prisma.memberActivity.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+  ]);
+
+  // const confirmedEvents = await prisma.eventRegistration.count({
+  //   where: {
+  //     userId: user!.id,
+  //     status: "CONFIRMED",
+  //   },
+  // });
+
+  const memberSince = new Date(user.createdAt).toLocaleDateString("fr-FR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const stats = [
+    {
+      title: "Événements Inscrits",
+      value: eventsRegistered.toString(),
+      icon: Calendar,
+      description: "Inscriptions en cours",
+      className: "text-blue-600 bg-blue-50",
+    },
+    // {
+    //   title: "Événements Confirmés",
+    //   value: confirmedEvents.toString(),
+    //   icon: CheckCircle2,
+    //   description: "Participation assurée",
+    //   className: "text-green-600 bg-green-50",
+    // },
+    {
+      title: "Activités Récentes",
+      value: recentActivities.length.toString(),
+      icon: Clock,
+      description: "Dernières actions",
+      className: "text-purple-600 bg-purple-50",
+    },
+    {
+      title: "Statut Membre",
+      value: user.emailVerified ? "Actif" : "Email non vérifié",
+      icon: User,
+      description: `Membre depuis ${memberSince.split(" ")[2]}`,
+      className: "text-orange-600 bg-orange-50",
+    },
+  ];
+
   return (
-    <>
-      <Header />
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Bienvenue, {user.name}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Heureux de vous revoir. Voici un aperçu de votre activité.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground bg-white px-4 py-2 rounded-full border shadow-sm">
+          <User size={16} />
+          <span>Membre depuis le {memberSince}</span>
+        </div>
+      </div>
 
-      <main className="min-h-screen bg-background">
-        {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-muted/10 via-muted/5 to-muted/0 py-20 md:py-32">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-10">
-            <h1 className="text-4xl md:text-5xl uppercase font-bold text-foreground mb-6 drop-shadow-sm">
-              Espace Membres
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Rejoignez la communauté du CCAPAC et bénéficiez d&apos;avantages
-              exclusifs pour soutenir les arts et la culture.
-            </p>
-          </div>
-        </section>
-
-        {/* Content Section */}
-        <section className="py-16 md:py-24">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Main Message */}
-            <Card className="mb-12 rounded-2xl bg-gradient-to-br from-white to-muted/10 border border-muted/20 shadow-lg py-6 sm:py-8">
-              <CardHeader className="text-center pb-4 sm:pb-6">
-                <CardTitle className="text-2xl md:text-3xl font-bold drop-shadow-sm">
-                  Devenez Membre du CCAPAC
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card
+              key={index}
+              className="border-none shadow-sm hover:shadow-md transition-all duration-200 bg-white py-4"
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
                 </CardTitle>
-                <CardDescription className="text-base sm:text-lg mt-2 text-muted-foreground">
-                  Soutenez les arts et la culture tout en profitant
-                  d&apos;avantages exclusifs
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-muted-foreground text-center text-sm sm:text-base md:text-lg leading-relaxed">
-                  Le Centre Culturel et Artistique pour les Pays d&apos;Afrique
-                  Centrale (CCAPAC) propose un programme de membership pour tous
-                  ceux qui souhaitent soutenir notre mission de promotion des
-                  arts et de la culture.
-                </p>
-
-                {/* Benefits Grid */}
-                <div className="grid md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 pt-4">
-                  <div className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-xl p-4 sm:p-5 border border-muted/20 transition-all duration-300 hover:shadow-md">
-                    <h3 className="font-semibold text-foreground mb-2">
-                      Accès Prioritaire
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Réservations prioritaires pour les spectacles et
-                      événements
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-xl p-4 sm:p-5 border border-muted/20 transition-all duration-300 hover:shadow-md">
-                    <h3 className="font-semibold text-foreground mb-2">
-                      Tarifs Préférentiels
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Réductions sur les billets et les ateliers
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-xl p-4 sm:p-5 border border-muted/20 transition-all duration-300 hover:shadow-md">
-                    <h3 className="font-semibold text-foreground mb-2">
-                      Événements Exclusifs
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Invitations à des rencontres privées avec les artistes
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-xl p-4 sm:p-5 border border-muted/20 transition-all duration-300 hover:shadow-md">
-                    <h3 className="font-semibold text-foreground mb-2">
-                      Newsletter
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Informations en avant-première sur la programmation
-                    </p>
-                  </div>
+                <div className={cn("p-2 rounded-full", stat.className)}>
+                  <Icon className="h-4 w-4" />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Contact Section */}
-            <Card className="bg-gradient-to-br from-white to-muted/10 border border-muted/20 rounded-2xl shadow-lg py-6 sm:py-8">
-              <CardHeader className="text-center pb-2 sm:pb-4">
-                <CardTitle className="text-xl md:text-2xl font-bold drop-shadow-sm">
-                  Contactez-nous pour en savoir plus
-                </CardTitle>
-                <CardDescription>
-                  Notre équipe se fera un plaisir de vous renseigner sur les
-                  modalités d&apos;adhésion
-                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                  {/* Email */}
-                  <div className="flex flex-col items-center text-center space-y-2 p-4 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 transition-all duration-300 border border-transparent hover:border-primary/20">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl flex items-center justify-center shadow-sm">
-                      <Mail className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Email
-                      </p>
-                      <a
-                        href="mailto:info@centreculturel.cd"
-                        className="font-medium text-foreground hover:text-primary transition-colors"
-                      >
-                        info@centreculturel.cd
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Phone */}
-                  <div className="flex flex-col items-center text-center space-y-2 p-4 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 transition-all duration-300 border border-transparent hover:border-primary/20">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl flex items-center justify-center shadow-sm">
-                      <Phone className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Téléphone
-                      </p>
-                      <a
-                        href="tel:+243995505050"
-                        className="font-medium text-foreground hover:text-primary transition-colors"
-                      >
-                        +243 890 809 746
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Address */}
-                  <div className="flex flex-col items-center text-center space-y-2 p-4 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 transition-all duration-300 border border-transparent hover:border-primary/20">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl flex items-center justify-center shadow-sm">
-                      <MapPin className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Adresse
-                      </p>
-                      <p className="font-medium text-foreground">
-                        Kinshasa, République Démocratique du Congo
-                        <br />
-                        Boulevard Triomphal
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 text-center">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-black rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                  >
-                    <a href="mailto:info@centreculturel.cd">
-                      <span className="text-black font-bold">
-                        Nous Contacter
-                      </span>
-                    </a>
-                  </Button>
-                </div>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stat.description}
+                </p>
               </CardContent>
             </Card>
-          </div>
-        </section>
-      </main>
+          );
+        })}
+      </div>
 
-      <Footer />
-    </>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Activities - Takes full width if no newsletter, otherwise 2/3 */}
+        <div
+          className={cn(
+            "space-y-4",
+            user.newsletterOptIn ? "lg:col-span-2" : "lg:col-span-3"
+          )}
+        >
+          <h2 className="text-xl font-semibold tracking-tight">
+            Activités Récentes
+          </h2>
+          <Card className="border-none shadow-sm bg-white overflow-hidden">
+            <CardContent className="p-0">
+              {recentActivities.length > 0 ? (
+                <div className="divide-y divide-gray-100">
+                  {recentActivities.map((activity) => {
+                    const getActivityIcon = (type: string) => {
+                      switch (type) {
+                        case "SIGNUP":
+                          return UserPlus;
+                        case "LOGIN":
+                          return LogIn;
+                        case "PROFILE_UPDATE":
+                          return FileEdit;
+                        case "EVENT_REGISTER":
+                          return Calendar;
+                        case "EVENT_CANCEL":
+                          return XCircle;
+                        case "ADMIN_ACTION":
+                          return Settings;
+                        case "SUGGESTION_SUBMIT":
+                          return MessageSquare;
+                        default:
+                          return Activity;
+                      }
+                    };
+
+                    const getActivityLabel = (type: string) => {
+                      switch (type) {
+                        case "SIGNUP":
+                          return "Inscription au site";
+                        case "LOGIN":
+                          return "Connexion";
+                        case "PROFILE_UPDATE":
+                          return "Mise à jour du profil";
+                        case "EVENT_REGISTER":
+                          return "Inscription à un événement";
+                        case "EVENT_CANCEL":
+                          return "Annulation d'un événement";
+                        case "ADMIN_ACTION":
+                          return "Action administrative";
+                        case "SUGGESTION_SUBMIT":
+                          return "Suggestion envoyée";
+                        default:
+                          return "Activité";
+                      }
+                    };
+
+                    const Icon = getActivityIcon(activity.type);
+
+                    return (
+                      <div
+                        key={activity.id}
+                        className="flex items-center p-4 hover:bg-muted/30 transition-colors group"
+                      >
+                        <div className="flex-shrink-0 mr-4">
+                          <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                            <Icon size={18} />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {getActivityLabel(activity.type)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(activity.createdAt).toLocaleDateString(
+                              "fr-FR",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] uppercase tracking-wider font-normal bg-muted text-muted-foreground"
+                        >
+                          {activity.type}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                    <Activity className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-sm font-medium text-foreground">
+                    Aucune activité récente
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Vos actions apparaîtront ici
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar / Extra Info - Only rendered if needed */}
+        {user.newsletterOptIn && (
+          <div className="space-y-6 lg:col-span-1">
+            <div className="lg:pt-11">
+              {" "}
+              {/* Align with content below header */}
+              <Card className="border-none shadow-sm bg-gradient-to-br from-primary/5 to-transparent">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                      <Mail size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm mb-1">
+                        Newsletter Active
+                      </h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Vous recevez nos actualités et informations sur les
+                        événements à venir.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
