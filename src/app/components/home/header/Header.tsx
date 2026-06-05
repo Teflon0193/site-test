@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FaTimes } from "react-icons/fa";
 import MobileMenu from "../mobile-menu";
 import { SocialBar, Logo, DesktopNavigation, HeaderActions } from "./index";
 import { useScrollDetection } from "@/hooks/useScrollDetection";
@@ -14,6 +15,7 @@ interface MainHeaderProps {
 
 export default function Header({ user }: MainHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showAnnouncementBar, setShowAnnouncementBar] = useState(true);
   const isScrolled = useScrollDetection({ threshold: 10 });
   const { activeDropdown, openDropdown, closeDropdownDelayed } = useDropdown();
   const { isMenuItemActive, isSubmenuItemActive } = useActiveMenuItem();
@@ -33,6 +35,32 @@ export default function Header({ user }: MainHeaderProps) {
           isScrolled ? "shadow-lg" : ""
         }`}
       >
+        {showAnnouncementBar && (
+          <div className="bg-accent text-black py-2 px-4">
+            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 relative">
+              <span className="text-sm font-semibold text-center leading-snug">
+                La FanZone est là !&nbsp;
+                <a
+                  href="https://fanzone.centreculturel.cd"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 font-bold hover:opacity-75 transition-opacity"
+                >
+                  fanzone.centreculturel.cd
+                </a>
+                &nbsp;- Rejoignez-nous maintenant
+              </span>
+              <button
+                onClick={() => setShowAnnouncementBar(false)}
+                aria-label="Fermer l'annonce"
+                className="absolute right-0 p-1 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
+              >
+                <FaTimes className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         <SocialBar />
 
         <div
