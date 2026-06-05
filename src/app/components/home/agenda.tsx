@@ -17,7 +17,7 @@ export default function QuickAgenda() {
   useEffect(() => {
     const loadUpcomingEvents = async () => {
       try {
-        const upcomingEvents = await getUpcomingEvents(5);
+        const upcomingEvents = await getUpcomingEvents(6);
         setEvents(upcomingEvents);
       } catch (error) {
         console.error(
@@ -83,10 +83,12 @@ export default function QuickAgenda() {
     );
   }
 
-  const hasSecondaryEvents = events.length > 1;
-  const secondaryEvents = events.slice(1);
+  const displayedEvents = events.slice(0, 5);
+  const hasMoreEvents = events.length > 5;
+  const hasSecondaryEvents = displayedEvents.length > 1;
+  const secondaryEvents = displayedEvents.slice(1);
   const secondaryCount = secondaryEvents.length;
-  const useFourCardLayout = events.length === 4;
+  const useFourCardLayout = displayedEvents.length === 4;
 
   const getSecondaryCardClass = (index: number) => {
     if (secondaryCount === 1) return "sm:col-span-2 lg:col-span-6 lg:h-full";
@@ -119,7 +121,7 @@ export default function QuickAgenda() {
 
         {useFourCardLayout ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 mb-12">
-            {events.map((event) => (
+            {displayedEvents.map((event) => (
               <Link
                 key={event.id}
                 href={`/evenement/${event.slug}`}
@@ -177,7 +179,7 @@ export default function QuickAgenda() {
             }`}
           >
             <Link
-              href={`/evenement/${events[0].slug}`}
+              href={`/evenement/${displayedEvents[0].slug}`}
               className={`relative rounded-2xl overflow-hidden shadow-xl group cursor-pointer hover:shadow-2xl transition-all duration-300 ${
                 hasSecondaryEvents
                   ? "h-80 w-80 sm:h-96 sm:w-96 lg:h-[28rem] lg:w-[28rem]"
@@ -202,28 +204,32 @@ export default function QuickAgenda() {
                     <div className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-none mb-4 lg:mb-5 drop-shadow-lg">
                       {
                         formatEventPeriod(
-                          events[0].startDate,
-                          events[0].endDate
+                          displayedEvents[0].startDate,
+                          displayedEvents[0].endDate
                         ).dayMonth.day
                       }
                     </div>
                     <div className="text-sm lg:text-base uppercase tracking-wide mb-4 lg:mb-5 drop-shadow-md">
                       {
                         formatEventPeriod(
-                          events[0].startDate,
-                          events[0].endDate
+                          displayedEvents[0].startDate,
+                          displayedEvents[0].endDate
                         ).dayMonth.month
                       }
                     </div>
                     <div className="text-xs lg:text-sm uppercase tracking-wide opacity-90 mb-2 lg:mb-3">
-                      {events[0].category || events[0].discipline}
+                      {displayedEvents[0].category ||
+                        displayedEvents[0].discipline}
                     </div>
                     <h3 className="text-lg uppercase lg:text-xl font-bold mb-3 lg:mb-4 drop-shadow-md">
-                      {events[0].title}
+                      {displayedEvents[0].title}
                     </h3>
                     <div className="text-xs lg:text-sm opacity-90">
-                      {events[0].location} -{" "}
-                      {formatTimePeriod(events[0].startTime, events[0].endTime)}
+                      {displayedEvents[0].location} -{" "}
+                      {formatTimePeriod(
+                        displayedEvents[0].startTime,
+                        displayedEvents[0].endTime
+                      )}
                     </div>
                   </div>
                 </div>
@@ -237,8 +243,8 @@ export default function QuickAgenda() {
                 >
                   <div className="relative h-full overflow-hidden rounded-lg">
                     <Image
-                      src={events[0].image || "/placeholder.svg"}
-                      alt={events[0].title}
+                      src={displayedEvents[0].image || "/placeholder.svg"}
+                      alt={displayedEvents[0].title}
                       fill
                       className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
                       sizes={
@@ -339,15 +345,16 @@ export default function QuickAgenda() {
           </div>
         )}
 
-        {/* Call to action */}
-        <div className="text-center">
-          <Link href="/agenda">
-            <button className="bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent rounded-xl text-sm sm:text-base cursor-pointer text-black px-8 py-4 font-bold transition-all duration-300 inline-flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105">
-              Voir l&apos;agenda complet
-              <FaArrowRight className="w-4 h-4" />
-            </button>
-          </Link>
-        </div>
+        {hasMoreEvents && (
+          <div className="text-center">
+            <Link href="/agenda">
+              <button className="bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent rounded-xl text-sm sm:text-base cursor-pointer text-black px-8 py-4 font-bold transition-all duration-300 inline-flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105">
+                Voir l&apos;agenda complet
+                <FaArrowRight className="w-4 h-4" />
+              </button>
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );
