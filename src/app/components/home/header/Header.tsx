@@ -36,9 +36,9 @@ export default function Header({ user }: MainHeaderProps) {
         }`}
       >
         {showAnnouncementBar && (
-          <div className="bg-accent text-black py-2 px-4">
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 relative">
-              <span className="text-sm font-semibold text-center leading-snug">
+          <div className="bg-accent text-black">
+            <div className="mx-auto flex min-h-9 max-w-[1440px] items-center justify-center px-10 sm:px-12 lg:px-8 relative">
+              <span className="text-xs sm:text-sm font-semibold text-center leading-snug">
                 La FanZone est là !&nbsp;
                 <a
                   href="https://fanzone.centreculturel.cd"
@@ -53,7 +53,7 @@ export default function Header({ user }: MainHeaderProps) {
               <button
                 onClick={() => setShowAnnouncementBar(false)}
                 aria-label="Fermer l'annonce"
-                className="absolute right-0 p-1 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
+                className="absolute right-3 lg:right-8 p-1.5 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
               >
                 <FaTimes className="w-3.5 h-3.5" />
               </button>
@@ -65,10 +65,10 @@ export default function Header({ user }: MainHeaderProps) {
 
         <div
           className={`bg-primary text-white transition-all duration-300 ${
-            isScrolled ? "h-14 sm:h-20 md:h-20" : "h-16 sm:h-24 md:h-24 lg:h-24"
+            isScrolled ? "h-16 sm:h-[4.5rem]" : "h-[4.5rem] sm:h-20"
           }`}
         >
-          <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 h-full flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">
+          <div className="mx-auto grid h-full max-w-[1440px] grid-cols-[1fr_auto] items-center gap-3 px-4 sm:px-6 lg:px-8 xl:grid-cols-[minmax(190px,1fr)_auto_minmax(190px,1fr)] xl:gap-6">
             <Logo />
 
             <DesktopNavigation

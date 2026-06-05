@@ -3,17 +3,17 @@ import Link from "next/link";
 
 export function Logo() {
   return (
-    <div className="flex items-center flex-shrink-0">
+    <div className="flex min-w-0 items-center justify-start xl:min-w-[12rem]">
       <Link
         href="/"
-        className="flex items-center transition-all duration-300 scale-105"
+        className="flex items-center rounded-lg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         <Image
           src="/logo-grand-tambour.png"
           alt="Logo Grand Tambour"
           width={100}
           height={100}
-          className="w-auto h-14 sm:h-20 md:h-20 lg:h-20 xl:h-20 transition-all duration-300 drop-shadow-lg flex-shrink-0"
+          className="h-12 w-auto flex-shrink-0 drop-shadow-md sm:h-16"
         />
       </Link>
     </div>

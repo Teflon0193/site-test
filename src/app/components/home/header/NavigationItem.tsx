@@ -27,12 +27,12 @@ export function NavigationItem({
         onMouseEnter={onDropdownEnter}
         onMouseLeave={onDropdownLeave}
       >
-        <div className="flex items-center gap-1 cursor-pointer py-2">
+        <div className="flex items-center cursor-pointer">
           <span
-            className={`font-bold uppercase transition-all duration-300 text-xs md:text-sm whitespace-nowrap flex items-center px-2 md:px-3 py-2 rounded-lg ${
+            className={`flex h-10 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold uppercase tracking-[0.025em] transition-colors 2xl:px-4 ${
               isActive
-                ? "text-foreground bg-white/10 border-b-2 border-foreground pb-1 shadow-lg"
-                : "text-white hover:text-secondary hover:bg-white/5"
+                ? "bg-white/15 text-white"
+                : "text-white/85 hover:bg-white/10 hover:text-white"
             }`}
           >
             {item.title}
@@ -57,10 +57,10 @@ export function NavigationItem({
   return (
     <Link
       href={item.href}
-      className={`font-bold uppercase transition-all duration-300 text-xs md:text-sm py-2 px-2 md:px-3 rounded-lg block whitespace-nowrap ${
+      className={`flex h-10 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold uppercase tracking-[0.025em] transition-colors 2xl:px-4 ${
         isActive
-          ? "text-foreground bg-white/10 border-b-2 border-foreground pb-1 shadow-lg"
-          : "text-white hover:text-secondary hover:bg-white/5"
+          ? "bg-white/15 text-white"
+          : "text-white/85 hover:bg-white/10 hover:text-white"
       }`}
     >
       {item.title}

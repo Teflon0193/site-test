@@ -1,5 +1,6 @@
 import { MemberButton } from "./MemberButton";
 import { MobileMenuToggle } from "./MobileMenuToggle";
+import { ArrowUpRight } from "lucide-react";
 import type { User } from "@prisma/client";
 
 interface HeaderActionsProps {
@@ -12,16 +13,23 @@ export function HeaderActions({
   onMobileMenuToggle,
 }: HeaderActionsProps) {
   return (
-    <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 flex-shrink-0">
+    <div className="flex items-center justify-end gap-2 sm:gap-2.5 xl:min-w-[16rem]">
       <a
         href="https://fanzone.centreculturel.cd"
         target="_blank"
         rel="noopener noreferrer"
-        className="hidden md:flex items-center gap-2 rounded-xl bg-accent text-black px-4 py-2 font-bold text-sm hover:bg-accent/80 transition-all duration-300 hover:scale-105 shadow-lg whitespace-nowrap"
+        className="group flex h-10 items-center gap-1.5 rounded-xl border border-white/30 bg-white/5 px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:border-accent hover:bg-accent hover:text-black sm:px-3.5 sm:text-sm"
       >
+        <span aria-hidden="true">🎉</span>
         FanZone
+        <ArrowUpRight
+          className="hidden h-3.5 w-3.5 opacity-70 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:block"
+          aria-hidden="true"
+        />
       </a>
-      <MemberButton user={user} />
+      <div className="hidden xl:block">
+        <MemberButton user={user} />
+      </div>
       <MobileMenuToggle onToggle={onMobileMenuToggle} />
     </div>
   );

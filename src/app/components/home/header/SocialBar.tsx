@@ -2,9 +2,9 @@ import { SOCIAL_LINKS } from "@/lib/header/constants";
 
 export function SocialBar() {
   return (
-    <div className="hidden sm:block bg-secondary py-2 border-b border-secondary/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-end">
-        <div className="flex items-center space-x-4">
+    <div className="hidden border-b border-white/10 bg-secondary sm:block">
+      <div className="mx-auto flex min-h-10 max-w-[1440px] items-center justify-end px-6 lg:px-8">
+        <div className="flex items-center gap-1.5">
           {SOCIAL_LINKS.map(({ href, icon: Icon, label }) => (
             <a
               key={label}
@@ -12,9 +12,9 @@ export function SocialBar() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={label}
-              className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white hover:text-white transition-all duration-300 hover:scale-110"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white"
             >
-              <Icon className="w-4 h-4 text-white cursor-pointer transition-all duration-200" />
+              <Icon className="h-3.5 w-3.5" />
             </a>
           ))}
         </div>

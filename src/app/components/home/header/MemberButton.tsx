@@ -1,20 +1,24 @@
 import Link from "next/link";
+import { LogIn, UserRound } from "lucide-react";
 import type { User } from "@prisma/client";
 
 interface MemberButtonProps {
   user: User | null;
+  fullWidth?: boolean;
 }
 
-export function MemberButton({ user }: MemberButtonProps) {
+export function MemberButton({ user, fullWidth = false }: MemberButtonProps) {
+  const Icon = user ? UserRound : LogIn;
+
   return (
     <Link
       href={user ? "/espace-membre" : "/auth/login"}
-      className="rounded-lg sm:rounded-lg flex items-center justify-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-accent to-accent/90 text-black px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 font-bold text-[11px] sm:text-xs md:text-sm hover:from-accent/90 hover:to-accent hover:text-black transition-all duration-300 hover:scale-105 shadow-lg whitespace-nowrap"
+      className={`flex items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-black shadow-sm transition-colors hover:bg-accent/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 whitespace-nowrap ${
+        fullWidth ? "h-11 w-full" : "h-10"
+      }`}
     >
-      <span className="hidden sm:inline">
-        {user ? "Espace Membre" : "Se connecter"}
-      </span>
-      <span className="sm:hidden">{user ? "Espace Membre" : "Connexion"}</span>
+      <Icon className="h-4 w-4" aria-hidden="true" />
+      <span>{user ? "Espace Membre" : "Se connecter"}</span>
     </Link>
   );
 }
