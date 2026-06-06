@@ -68,7 +68,7 @@ export default function Header({ user }: MainHeaderProps) {
             isScrolled ? "h-16 sm:h-[4.5rem]" : "h-[4.5rem] sm:h-20"
           }`}
         >
-          <div className="mx-auto grid h-full max-w-[1440px] grid-cols-[1fr_auto] items-center gap-3 px-4 sm:px-6 lg:px-8 xl:grid-cols-[minmax(190px,1fr)_auto_minmax(190px,1fr)] xl:gap-6">
+          <div className="mx-auto grid h-full max-w-[1720px] grid-cols-[1fr_auto] items-center gap-3 px-4 sm:px-6 lg:px-10 xl:grid-cols-[180px_minmax(0,1fr)_300px] xl:gap-6 xl:px-12 2xl:grid-cols-[220px_minmax(0,1fr)_340px] 2xl:px-16">
             <Logo />
 
             <DesktopNavigation
