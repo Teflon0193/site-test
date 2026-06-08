@@ -178,6 +178,7 @@ export default function FundraisingSection() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
@@ -240,8 +241,7 @@ export default function FundraisingSection() {
   const currency = campaignData?.campaign.currency || "USD";
   const selectedTier = tiers.find((tier) => tier.id === selectedTierId);
   const minimumAmount = Math.max(
-    tiers.length ? Math.min(...tiers.map((tier) => tier.min_amount)) : 100,
-    100
+    tiers.length ? Math.min(...tiers.map((tier) => tier.min_amount)) : 0,
   );
   const campaignIsActive = campaignData?.campaign.status === "active";
 
@@ -354,9 +354,9 @@ export default function FundraisingSection() {
   const createCheckout = async () => {
     setCheckoutError("");
 
-    if (paymentMethod === "mobile_money" && !phone.trim()) {
+    if (paymentMethod === "mobile_money" && !mobileMoneyPhone.trim()) {
       setCheckoutError(
-        "Indiquez votre numéro de téléphone pour recevoir la demande de paiement."
+        "Indiquez le numéro Mobile Money qui recevra la demande de paiement."
       );
       return;
     }
@@ -376,7 +376,10 @@ export default function FundraisingSection() {
           donor: {
             name: fullName,
             email,
-            phone: phone || undefined,
+            phone:
+              paymentMethod === "mobile_money"
+                ? mobileMoneyPhone
+                : phone || undefined,
           },
         }),
       });
@@ -884,6 +887,44 @@ export default function FundraisingSection() {
                     })}
                   </div>
 
+                  {paymentMethod === "mobile_money" && (
+                    <div className="rounded-md border border-secondary/25 bg-[#f8f1e7] p-4">
+                      <div className="mb-4 flex items-start gap-3">
+                        <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-secondary/12 text-secondary">
+                          <Phone className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-bold uppercase tracking-wide text-primary">
+                            Numéro de paiement Mobile Money
+                          </p>
+                          <p className="mt-1 text-sm font-medium leading-relaxed text-black/65">
+                            Saisissez le numéro qui recevra la demande de
+                            paiement. Il peut être différent du numéro de
+                            contact renseigné à l&apos;étape précédente.
+                          </p>
+                        </div>
+                      </div>
+                      <Field
+                        label="Numéro Mobile Money"
+                        type="tel"
+                        value={mobileMoneyPhone}
+                        onChange={(value) => {
+                          setMobileMoneyPhone(value);
+                          setCheckoutError("");
+                        }}
+                        placeholder="+243 812 345 678"
+                        error={
+                          checkoutError && !mobileMoneyPhone.trim()
+                            ? checkoutError
+                            : undefined
+                        }
+                      />
+                      <p className="mt-3 text-xs font-semibold text-black/58">
+                        Utilisez le format international, par exemple +243 pour la RDC.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="rounded-md border border-[#eadcc7] bg-white p-4">
                     <div className="grid gap-3 text-sm sm:grid-cols-3">
                       <ReceiptLine label="Niveau" value={selectedLabel} />
@@ -895,7 +936,11 @@ export default function FundraisingSection() {
                     </div>
                   </div>
 
-                  {checkoutError && (
+                  {checkoutError &&
+                    !(
+                      paymentMethod === "mobile_money" &&
+                      !mobileMoneyPhone.trim()
+                    ) && (
                     <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
                       {checkoutError}
                     </p>
