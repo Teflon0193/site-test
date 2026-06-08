@@ -34,6 +34,21 @@ function paymentMethodLabel(method: AksessifyDonation["payment_method"]) {
   return labels[method];
 }
 
+function tierRangeLabel(
+  minAmount: number,
+  maxAmount: number | null,
+  currency: string
+) {
+  const format = (value: number) =>
+    `${new Intl.NumberFormat("fr-FR", {
+      maximumFractionDigits: 0,
+    }).format(value)} ${currency}`;
+
+  return maxAmount === null
+    ? `${format(minAmount)} +`
+    : `${format(minAmount)} - ${format(maxAmount)}`;
+}
+
 export async function GET(req: NextRequest) {
   const user = await getUser();
 
@@ -44,6 +59,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const paymentMethod = searchParams.get("payment_method");
+  const tierId = searchParams.get("tier_id");
   const selectedStatus = isDonationStatus(status) ? status : undefined;
 
   try {
@@ -52,12 +68,40 @@ export async function GET(req: NextRequest) {
       listFundraisingDonations({ status: selectedStatus, limit: 100 }),
     ]);
 
-    const filteredDonations =
-      paymentMethod && paymentMethod !== "all"
-        ? donationsList.data.filter(
-            (donation) => donation.payment_method === paymentMethod
-          )
-        : donationsList.data;
+    const tierById = new Map(
+      campaignData.tiers.map((tier) => [
+        tier.id,
+        {
+          id: tier.id,
+          name: tier.name,
+          range_label: tierRangeLabel(
+            tier.min_amount,
+            tier.max_amount,
+            campaignData.campaign.currency
+          ),
+        },
+      ])
+    );
+
+    const filteredDonations = donationsList.data.filter((donation) => {
+      if (
+        paymentMethod &&
+        paymentMethod !== "all" &&
+        donation.payment_method !== paymentMethod
+      ) {
+        return false;
+      }
+
+      if (tierId === "unassigned") {
+        return !donation.tier_id;
+      }
+
+      if (tierId && tierId !== "all" && donation.tier_id !== tierId) {
+        return false;
+      }
+
+      return true;
+    });
 
     const donationIds = filteredDonations.map((donation) => donation.id);
     const notifications = donationIds.length
@@ -96,11 +140,31 @@ export async function GET(req: NextRequest) {
         unique_donors_count: campaignData.stats.unique_donors_count,
         pending_donations_count: campaignData.stats.pending_donations_count,
       },
+      tiers: campaignData.tiers.map((tier) => ({
+        id: tier.id,
+        name: tier.name,
+        min_amount: tier.min_amount,
+        max_amount: tier.max_amount,
+        display_order: tier.display_order,
+        range_label: tierRangeLabel(
+          tier.min_amount,
+          tier.max_amount,
+          campaignData.campaign.currency
+        ),
+      })),
       donations: filteredDonations.map((donation) => {
         const notification = notificationByDonationId.get(donation.id);
+        const tier = donation.tier_id
+          ? tierById.get(donation.tier_id)
+          : undefined;
 
         return {
           id: donation.id,
+          tier_id: donation.tier_id,
+          tier_name: donation.tier_id
+            ? tier?.name || "Palier introuvable"
+            : "Sans palier",
+          tier_range: tier?.range_label || null,
           amount: donation.amount,
           currency: donation.currency,
           status: donation.status,

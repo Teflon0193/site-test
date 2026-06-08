@@ -9,6 +9,7 @@ import {
   Clock3,
   CreditCard,
   HandCoins,
+  Layers3,
   Loader2,
   RefreshCw,
   Users,
@@ -100,10 +101,12 @@ export function FundraisingPageClient() {
   const [paymentMethod, setPaymentMethod] = useState<
     FundraisingPaymentMethod | "all"
   >("all");
+  const [tierId, setTierId] = useState<string | "all" | "unassigned">("all");
   const { data, isLoading, isError, error, refetch, isFetching } =
     useAdminFundraisingQuery({
       status,
       payment_method: paymentMethod,
+      tier_id: tierId,
     });
 
   const donations = data?.donations ?? [];
@@ -203,7 +206,7 @@ export function FundraisingPageClient() {
             <CardTitle className="text-base font-semibold">
               Donations récentes
             </CardTitle>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <Select
                 value={status}
                 onValueChange={(value) =>
@@ -237,6 +240,21 @@ export function FundraisingPageClient() {
                   <SelectItem value="stripe">Carte bancaire</SelectItem>
                   <SelectItem value="paypal">PayPal</SelectItem>
                   <SelectItem value="pawapay">Mobile Money</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={tierId} onValueChange={setTierId}>
+                <SelectTrigger className="w-full bg-white sm:w-56">
+                  <SelectValue placeholder="Palier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les paliers</SelectItem>
+                  {(data?.tiers ?? []).map((tier) => (
+                    <SelectItem key={tier.id} value={tier.id}>
+                      {tier.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="unassigned">Sans palier</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -317,6 +335,10 @@ function DonationRow({ donation }: { donation: AdminFundraisingDonation }) {
             <CreditCard className="mr-1 h-3 w-3" />
             {donation.payment_method_label}
           </Badge>
+          <Badge variant="outline" className="bg-secondary/5 text-primary">
+            <Layers3 className="mr-1 h-3 w-3" />
+            {donation.tier_name}
+          </Badge>
         </div>
         <p className="mt-3 truncate text-sm font-bold text-foreground">
           {donation.donor.name || "Donateur"}
@@ -328,6 +350,11 @@ function DonationRow({ donation }: { donation: AdminFundraisingDonation }) {
         {donation.donor_is_member !== null && (
           <p className="mt-1 text-xs font-medium text-muted-foreground">
             {donation.donor_is_member ? "Membre" : "Invité"}
+          </p>
+        )}
+        {donation.tier_range && (
+          <p className="mt-1 text-xs font-medium text-muted-foreground">
+            Palier: {donation.tier_range}
           </p>
         )}
       </div>

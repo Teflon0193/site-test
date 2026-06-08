@@ -84,10 +84,14 @@ export type FundraisingPaymentMethod = "stripe" | "paypal" | "pawapay";
 export interface FundraisingQueryParams {
   status?: FundraisingDonationStatus | "all";
   payment_method?: FundraisingPaymentMethod | "all";
+  tier_id?: string | "all" | "unassigned";
 }
 
 export interface AdminFundraisingDonation {
   id: string;
+  tier_id: string | null;
+  tier_name: string;
+  tier_range: string | null;
   amount: number;
   currency: string;
   status: FundraisingDonationStatus;
@@ -132,6 +136,14 @@ export interface AdminFundraisingResponse {
     unique_donors_count: number;
     pending_donations_count: number;
   };
+  tiers: Array<{
+    id: string;
+    name: string;
+    min_amount: number;
+    max_amount: number | null;
+    display_order: number;
+    range_label: string;
+  }>;
   donations: AdminFundraisingDonation[];
   has_more: boolean;
   next_cursor: string | null;
@@ -233,6 +245,10 @@ export async function getFundraisingAdminData(
 
   if (params.payment_method && params.payment_method !== "all") {
     searchParams.set("payment_method", params.payment_method);
+  }
+
+  if (params.tier_id && params.tier_id !== "all") {
+    searchParams.set("tier_id", params.tier_id);
   }
 
   const queryString = searchParams.toString();
