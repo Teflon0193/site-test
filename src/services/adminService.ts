@@ -85,6 +85,8 @@ export interface FundraisingQueryParams {
   status?: FundraisingDonationStatus | "all";
   payment_method?: FundraisingPaymentMethod | "all";
   tier_id?: string | "all" | "unassigned";
+  page?: number;
+  per_page?: number;
 }
 
 export interface AdminFundraisingDonation {
@@ -145,6 +147,14 @@ export interface AdminFundraisingResponse {
     range_label: string;
   }>;
   donations: AdminFundraisingDonation[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total_count: number;
+    total_pages: number;
+    has_next_page: boolean;
+    has_previous_page: boolean;
+  };
   has_more: boolean;
   next_cursor: string | null;
 }
@@ -249,6 +259,14 @@ export async function getFundraisingAdminData(
 
   if (params.tier_id && params.tier_id !== "all") {
     searchParams.set("tier_id", params.tier_id);
+  }
+
+  if (params.page) {
+    searchParams.set("page", String(params.page));
+  }
+
+  if (params.per_page) {
+    searchParams.set("per_page", String(params.per_page));
   }
 
   const queryString = searchParams.toString();

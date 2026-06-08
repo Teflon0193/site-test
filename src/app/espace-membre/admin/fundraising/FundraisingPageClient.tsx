@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertCircle,
+  ArrowLeft,
+  ArrowRight,
   Banknote,
   Bell,
   CheckCircle2,
@@ -35,6 +37,8 @@ import type {
   FundraisingDonationStatus,
   FundraisingPaymentMethod,
 } from "@/services/adminService";
+
+const DONATIONS_PER_PAGE = 10;
 
 const statusLabels: Record<FundraisingDonationStatus, string> = {
   pending: "En attente",
@@ -88,6 +92,31 @@ function donationStatusIcon(status: FundraisingDonationStatus) {
   return XCircle;
 }
 
+function paginationItems(currentPage: number, totalPages: number) {
+  const pages = new Set([1, totalPages]);
+
+  for (let page = currentPage - 1; page <= currentPage + 1; page += 1) {
+    if (page >= 1 && page <= totalPages) {
+      pages.add(page);
+    }
+  }
+
+  const sortedPages = Array.from(pages).sort((a, b) => a - b);
+  const items: Array<number | "ellipsis"> = [];
+
+  sortedPages.forEach((page, index) => {
+    const previousPage = sortedPages[index - 1];
+
+    if (previousPage && page - previousPage > 1) {
+      items.push("ellipsis");
+    }
+
+    items.push(page);
+  });
+
+  return items;
+}
+
 function notificationClassName(
   status: AdminFundraisingDonation["notification_status"]
 ) {
@@ -102,16 +131,24 @@ export function FundraisingPageClient() {
     FundraisingPaymentMethod | "all"
   >("all");
   const [tierId, setTierId] = useState<string | "all" | "unassigned">("all");
+  const [page, setPage] = useState(1);
   const { data, isLoading, isError, error, refetch, isFetching } =
     useAdminFundraisingQuery({
       status,
       payment_method: paymentMethod,
       tier_id: tierId,
+      page,
+      per_page: DONATIONS_PER_PAGE,
     });
 
   const donations = data?.donations ?? [];
   const currency = data?.campaign.currency || "USD";
   const progress = Math.min(Math.max(data?.stats.progress_percent || 0, 0), 100);
+  const pagination = data?.pagination;
+
+  useEffect(() => {
+    setPage(1);
+  }, [status, paymentMethod, tierId]);
 
   return (
     <div className="space-y-8">
@@ -289,6 +326,70 @@ export function FundraisingPageClient() {
             </div>
           )}
         </CardContent>
+
+        {pagination && pagination.total_count > 0 && (
+          <div className="flex flex-col gap-4 border-t border-gray-100 bg-gray-50/60 px-6 py-4 text-sm xl:flex-row xl:items-center xl:justify-between">
+            <p className="font-medium text-muted-foreground">
+              Page {pagination.page} sur {pagination.total_pages} ·{" "}
+              {pagination.total_count} don
+              {pagination.total_count > 1 ? "s" : ""}
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {paginationItems(
+                  pagination.page,
+                  pagination.total_pages
+                ).map((item, index) =>
+                  item === "ellipsis" ? (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-2 text-xs font-bold text-muted-foreground"
+                    >
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={item}
+                      type="button"
+                      disabled={item === pagination.page || isFetching}
+                      onClick={() => setPage(item)}
+                      aria-current={
+                        item === pagination.page ? "page" : undefined
+                      }
+                      className={`grid h-9 min-w-9 place-items-center rounded-md border px-3 text-xs font-bold transition ${
+                        item === pagination.page
+                          ? "border-primary bg-primary text-white"
+                          : "border-border bg-white text-foreground hover:bg-muted"
+                      } disabled:cursor-not-allowed disabled:opacity-70`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:flex">
+              <button
+                type="button"
+                disabled={!pagination.has_previous_page || isFetching}
+                onClick={() => setPage((current) => Math.max(current - 1, 1))}
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Précédent
+              </button>
+              <button
+                type="button"
+                disabled={!pagination.has_next_page || isFetching}
+                onClick={() => setPage((current) => current + 1)}
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Suivant
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

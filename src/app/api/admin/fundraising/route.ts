@@ -17,6 +17,8 @@ const donationStatuses: AksessifyDonation["status"][] = [
   "cancelled",
   "refunded",
 ];
+const DEFAULT_PER_PAGE = 10;
+const MAX_PER_PAGE = 50;
 
 function isDonationStatus(
   value: string | null
@@ -61,6 +63,11 @@ export async function GET(req: NextRequest) {
   const paymentMethod = searchParams.get("payment_method");
   const tierId = searchParams.get("tier_id");
   const selectedStatus = isDonationStatus(status) ? status : undefined;
+  const page = Math.max(Number(searchParams.get("page")) || 1, 1);
+  const perPage = Math.min(
+    Math.max(Number(searchParams.get("per_page")) || DEFAULT_PER_PAGE, 1),
+    MAX_PER_PAGE
+  );
 
   try {
     const [campaignData, donationsList] = await Promise.all([
@@ -102,8 +109,16 @@ export async function GET(req: NextRequest) {
 
       return true;
     });
+    const totalCount = filteredDonations.length;
+    const totalPages = Math.max(Math.ceil(totalCount / perPage), 1);
+    const currentPage = Math.min(page, totalPages);
+    const pageStart = (currentPage - 1) * perPage;
+    const paginatedDonations = filteredDonations.slice(
+      pageStart,
+      pageStart + perPage
+    );
 
-    const donationIds = filteredDonations.map((donation) => donation.id);
+    const donationIds = paginatedDonations.map((donation) => donation.id);
     const notifications = donationIds.length
       ? await prisma.fundraisingDonationNotification.findMany({
           where: { donationId: { in: donationIds } },
@@ -152,7 +167,7 @@ export async function GET(req: NextRequest) {
           campaignData.campaign.currency
         ),
       })),
-      donations: filteredDonations.map((donation) => {
+      donations: paginatedDonations.map((donation) => {
         const notification = notificationByDonationId.get(donation.id);
         const tier = donation.tier_id
           ? tierById.get(donation.tier_id)
@@ -183,7 +198,15 @@ export async function GET(req: NextRequest) {
           donor_is_member: notification?.donorIsMember ?? null,
         };
       }),
-      has_more: donationsList.has_more || false,
+      pagination: {
+        page: currentPage,
+        per_page: perPage,
+        total_count: totalCount,
+        total_pages: totalPages,
+        has_next_page: currentPage < totalPages,
+        has_previous_page: currentPage > 1,
+      },
+      has_more: currentPage < totalPages,
       next_cursor: donationsList.next_cursor || null,
     });
   } catch (error) {
