@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FaTimes } from "react-icons/fa";
+// import { FaTimes } from "react-icons/fa";
 import MobileMenu from "../mobile-menu";
 import { SocialBar, Logo, DesktopNavigation, HeaderActions } from "./index";
 import { useScrollDetection } from "@/hooks/useScrollDetection";
@@ -15,7 +15,7 @@ interface MainHeaderProps {
 
 export default function Header({ user }: MainHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showAnnouncementBar, setShowAnnouncementBar] = useState(true);
+  // const [showAnnouncementBar, setShowAnnouncementBar] = useState(true);
   const isScrolled = useScrollDetection({ threshold: 10 });
   const { activeDropdown, openDropdown, closeDropdownDelayed } = useDropdown();
   const { isMenuItemActive, isSubmenuItemActive } = useActiveMenuItem();
@@ -35,7 +35,7 @@ export default function Header({ user }: MainHeaderProps) {
           isScrolled ? "shadow-lg" : ""
         }`}
       >
-        {showAnnouncementBar && (
+        {/* {showAnnouncementBar && (
           <div className="bg-accent text-black">
             <div className="mx-auto flex min-h-9 max-w-[1440px] items-center justify-center px-10 sm:px-12 lg:px-8 relative">
               <span className="text-xs sm:text-sm font-semibold text-center leading-snug">
@@ -59,7 +59,7 @@ export default function Header({ user }: MainHeaderProps) {
               </button>
             </div>
           </div>
-        )}
+        )} */}
 
         <SocialBar />
 
