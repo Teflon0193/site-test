@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import {
@@ -19,7 +19,7 @@ import {
   Phone,
   RefreshCw,
   ShieldCheck,
-  WalletCards,
+  // WalletCards,
   XCircle,
 } from "lucide-react";
 import {
@@ -110,12 +110,12 @@ const paymentMethods = [
     detail: "Paiement sécurisé par carte",
     icon: CreditCard,
   },
-  {
-    id: "paypal" as const,
-    title: "PayPal",
-    detail: "Paiement avec votre compte",
-    icon: WalletCards,
-  },
+  // {
+  //   id: "paypal" as const,
+  //   title: "PayPal",
+  //   detail: "Paiement avec votre compte",
+  //   icon: WalletCards,
+  // },
 ];
 
 const bankAccounts = [
@@ -190,6 +190,8 @@ export default function FundraisingSection() {
   const [stripeCheckout, setStripeCheckout] =
     useState<StripeEmbeddedCheckout | null>(null);
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
+  const amountActionRef = useRef<HTMLDivElement | null>(null);
+  const fullNameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -268,7 +270,33 @@ export default function FundraisingSection() {
     setErrors(nextErrors);
   };
 
+  const clearStepFeedback = () => {
+    setErrors({});
+    setCheckoutError("");
+  };
+
+  const scrollToAmountAction = () => {
+    window.requestAnimationFrame(() => {
+      amountActionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  };
+
+  const goBackToAmount = () => {
+    clearStepFeedback();
+    setStep("amount");
+  };
+
+  const goBackToIdentity = () => {
+    clearStepFeedback();
+    setStep("identity");
+  };
+
   const goToIdentity = () => {
+    setCheckoutError("");
+
     if (!campaignIsActive) {
       setErrors({
         amount: "Les contributions en ligne ne sont pas ouvertes pour le moment.",
@@ -290,8 +318,21 @@ export default function FundraisingSection() {
     setStep("identity");
   };
 
+  useEffect(() => {
+    if (step !== "identity") return;
+
+    window.requestAnimationFrame(() => {
+      fullNameInputRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      fullNameInputRef.current?.focus({ preventScroll: true });
+    });
+  }, [step]);
+
   const goToPayment = () => {
     const nextErrors: Record<string, string> = {};
+    setCheckoutError("");
 
     if (!fullName.trim()) {
       nextErrors.fullName = "Le nom du donateur ou de l'organisation est requis.";
@@ -643,7 +684,8 @@ export default function FundraisingSection() {
                             setSelectedTierId(tier.id);
                             setUseCustomAmount(false);
                             setCustomAmount("");
-                            setErrors({});
+                            clearStepFeedback();
+                            scrollToAmountAction();
                           }}
                           className={`group grid gap-3 rounded-md border p-4 text-left transition duration-200 sm:grid-cols-[1fr_auto] sm:items-center ${
                             isSelected
@@ -688,7 +730,8 @@ export default function FundraisingSection() {
                       type="button"
                       onClick={() => {
                         setUseCustomAmount(true);
-                        setErrors({});
+                        clearStepFeedback();
+                        scrollToAmountAction();
                       }}
                       className="mb-3 flex w-full items-center justify-between gap-3 text-left"
                     >
@@ -721,6 +764,7 @@ export default function FundraisingSection() {
                         onChange={(event) => {
                           setCustomAmount(event.target.value);
                           updateError("amount");
+                          setCheckoutError("");
                         }}
                         placeholder="Saisir un montant"
                         className="h-12 w-full rounded-md border border-[#eadcc7] bg-white pl-16 pr-4 text-sm font-bold text-primary outline-none transition focus:border-primary"
@@ -733,14 +777,16 @@ export default function FundraisingSection() {
                     )}
                   </div>
 
-                  <SummaryBar
-                    label={selectedLabel}
-                    amount={selectedAmount}
-                    currency={currency}
-                    actionLabel="Continuer"
-                    disabled={!campaignIsActive}
-                    onAction={goToIdentity}
-                  />
+                  <div ref={amountActionRef}>
+                    <SummaryBar
+                      label={selectedLabel}
+                      amount={selectedAmount}
+                      currency={currency}
+                      actionLabel="Continuer"
+                      disabled={!campaignIsActive}
+                      onAction={goToIdentity}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -749,10 +795,12 @@ export default function FundraisingSection() {
                   <div className="grid gap-4">
                     <Field
                       label="Nom complet ou organisation"
+                      inputRef={fullNameInputRef}
                       value={fullName}
                       onChange={(value) => {
                         setFullName(value);
                         updateError("fullName");
+                        setCheckoutError("");
                       }}
                       placeholder="Ex. Fondation CCAPAC"
                       error={errors.fullName}
@@ -764,6 +812,7 @@ export default function FundraisingSection() {
                       onChange={(value) => {
                         setEmail(value);
                         updateError("email");
+                        setCheckoutError("");
                       }}
                       placeholder="contact@organisation.org"
                       error={errors.email}
@@ -772,14 +821,17 @@ export default function FundraisingSection() {
                       label="Téléphone"
                       type="tel"
                       value={phone}
-                      onChange={setPhone}
+                      onChange={(value) => {
+                        setPhone(value);
+                        setCheckoutError("");
+                      }}
                       placeholder="+243 812 345 678"
                       optional
                     />
                   </div>
 
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <SecondaryButton onClick={() => setStep("amount")}>
+                    <SecondaryButton onClick={goBackToAmount}>
                       <ArrowLeft className="h-4 w-4" />
                       Retour
                     </SecondaryButton>
@@ -802,7 +854,10 @@ export default function FundraisingSection() {
                         <button
                           key={method.id}
                           type="button"
-                          onClick={() => setPaymentMethod(method.id)}
+                          onClick={() => {
+                            setPaymentMethod(method.id);
+                            setCheckoutError("");
+                          }}
                           className={`rounded-md border p-4 text-left transition ${
                             isSelected
                               ? "border-primary bg-primary text-white shadow-lg"
@@ -849,7 +904,7 @@ export default function FundraisingSection() {
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <SecondaryButton
                       disabled={isCreatingCheckout}
-                      onClick={() => setStep("identity")}
+                      onClick={goBackToIdentity}
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Retour
@@ -1196,6 +1251,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 function Field({
   label,
+  inputRef,
   value,
   onChange,
   placeholder,
@@ -1204,6 +1260,7 @@ function Field({
   type = "text",
 }: {
   label: string;
+  inputRef?: React.Ref<HTMLInputElement>;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
@@ -1219,6 +1276,7 @@ function Field({
       </span>
       <input
         type={type}
+        ref={inputRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
