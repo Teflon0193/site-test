@@ -452,6 +452,20 @@ export default function FundraisingSection() {
     return () => window.clearInterval(interval);
   }, [mobileDonation, verifyMobileDonation]);
 
+  useEffect(() => {
+    if (mobileDonation?.status !== "succeeded") return;
+
+    const timeout = window.setTimeout(() => {
+      window.location.assign(
+        `/don-merci?donation_id=${encodeURIComponent(
+          mobileDonation.donation_id
+        )}`
+      );
+    }, 900);
+
+    return () => window.clearTimeout(timeout);
+  }, [mobileDonation]);
+
   if (isLoadingCampaign) {
     return (
       <FundraisingShell>
@@ -942,28 +956,29 @@ function MobileMoneyStatusDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton
-        className="max-w-[560px] overflow-hidden p-0"
+        className="max-h-[calc(100svh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[560px] overflow-hidden p-0"
       >
-        <div className="bg-primary px-6 py-5 text-white">
+        <div className="bg-primary px-5 py-5 text-white sm:px-6">
           <DialogHeader className="text-left">
-            <DialogTitle className="text-xl font-bold uppercase">
-              {isConfirmed ? "Paiement confirme" : "Validez sur votre telephone"}
+            <DialogTitle className="text-lg font-bold uppercase leading-tight sm:text-xl">
+              {isConfirmed ? "Paiement confirmé" : "Validez sur votre téléphone"}
             </DialogTitle>
             <DialogDescription className="text-sm font-medium text-white/72">
               {isConfirmed
-                ? "Merci pour votre soutien. Votre contribution est confirmée."
+                ? "Merci pour votre soutien. Nous finalisons la confirmation."
                 : "Une demande de paiement a été envoyée sur votre téléphone."}
             </DialogDescription>
           </DialogHeader>
         </div>
 
-        <div className="space-y-5 p-6">
+        <div className="max-h-[calc(100svh-7rem)] space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-6">
           <div className="rounded-md border border-secondary/20 bg-[#f8f1e7] p-4">
             <p className="text-sm font-semibold leading-relaxed text-primary">
-              Entrez votre code secret sur votre téléphone pour valider la
-              transaction. La confirmation s&apos;affichera automatiquement ici.
+              {isConfirmed
+                ? "Votre validation a été reçue. Vous allez être redirigé vers la page de confirmation."
+                : "Entrez votre code secret sur votre téléphone pour valider la transaction. La confirmation s'affichera automatiquement ici."}
             </p>
-            {amount && (
+            {amount && !isConfirmed && (
               <p className="mt-3 text-sm font-bold text-primary">
                 Montant à valider: {amount}
               </p>
@@ -977,7 +992,7 @@ function MobileMoneyStatusDialog({
                 ? "En attente de votre validation."
                 : hasFailed
                 ? "Le paiement n'a pas abouti."
-                : "Confirmation recue."
+                : "Votre don est confirmé."
             }
           />
 
@@ -991,7 +1006,7 @@ function MobileMoneyStatusDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               type="button"
-              disabled={isVerifying || !donation || donation.status !== "pending"}
+              disabled={isVerifying || !donation || !isPending}
               onClick={onVerify}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -1013,10 +1028,11 @@ function MobileMoneyStatusDialog({
             ) : (
               <button
                 type="button"
+                disabled={isConfirmed}
                 onClick={() => onOpenChange(false)}
-                className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7]"
+                className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Fermer
+                {isConfirmed ? "Redirection..." : "Fermer"}
               </button>
             )}
           </div>
