@@ -41,7 +41,7 @@ export default function Header({ user }: MainHeaderProps) {
               <span className="text-xs sm:text-sm font-semibold text-center leading-snug">
                 La FanZone est là !&nbsp;
                 <a
-                  href="https://fanzone.centreculturel.cd"
+                  href=""
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline underline-offset-2 font-bold hover:opacity-75 transition-opacity"
