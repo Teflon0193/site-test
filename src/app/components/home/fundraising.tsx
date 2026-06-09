@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import {
@@ -30,7 +30,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { StripeEmbeddedCheckout } from "./StripeEmbeddedCheckoutDialog";
+import { bankAccounts, impactItems } from "./fundraising/constants";
+import {
+  formatDonationStatus,
+  formatMoney,
+  formatTierRange,
+} from "./fundraising/formatters";
+import { useFundraisingCampaign } from "./fundraising/useFundraisingCampaign";
+import { useFundraisingDonationFlow } from "./fundraising/useFundraisingDonationFlow";
+import type {
+  CreatedDonation,
+  DonationStatus,
+} from "./fundraising/types";
 
 const StripeEmbeddedCheckoutDialog = dynamic(
   () =>
@@ -39,63 +50,6 @@ const StripeEmbeddedCheckoutDialog = dynamic(
     ),
   { ssr: false }
 );
-
-type Step = "amount" | "identity" | "payment";
-type PaymentMethod = "card" | "paypal" | "mobile_money";
-
-type DonationStatus =
-  | "pending"
-  | "succeeded"
-  | "failed"
-  | "cancelled"
-  | "refunded";
-
-type CreatedDonation = {
-  donation_id: string;
-  status: DonationStatus;
-  provider_instructions: string | null;
-  pawapay: {
-    country?: string;
-    provider?: string;
-    provider_amount?: number;
-    provider_currency?: string;
-    last_provider_status?: string;
-  } | null;
-};
-
-type CampaignResponse = {
-  campaign: {
-    id: string;
-    title: string;
-    description: string | null;
-    goal_amount: number;
-    currency: string;
-    status: "draft" | "active" | "paused" | "completed" | "archived";
-    cover_image_url: string | null;
-  };
-  tiers: Array<{
-    id: string;
-    name: string;
-    description: string | null;
-    min_amount: number;
-    max_amount: number | null;
-    display_order: number;
-  }>;
-  stats: {
-    raised_amount: number;
-    progress_percent: number;
-    succeeded_donations_count: number;
-    unique_donors_count: number;
-    pending_donations_count: number;
-  };
-};
-
-const impactItems = [
-  "561 m2 entièrement aménagés pour la lecture et la médiation.",
-  "5 000 ouvrages initiaux, dont 3 000 pour la Bibliothèque.",
-  "Outils numériques de recherche et de formation.",
-  "Ateliers, clubs de lecture et rencontres littéraires.",
-];
 
 const paymentMethods = [
   {
@@ -118,437 +72,60 @@ const paymentMethods = [
   // },
 ];
 
-const bankAccounts = [
-  {
-    bank: "Rawbank",
-    number: "CD48 05100051010120306000152",
-  },
-  {
-    bank: "Equity BCDC",
-    number: "00011150511200194697606 USD",
-  },
-  {
-    bank: "Ecobank",
-    number: "0026000013508010061362 USD",
-  },
-];
-const MOBILE_MONEY_REVIEW_DELAY_MS = 45_000;
-
-const formatMoney = (value: number, currency = "USD") =>
-  `${new Intl.NumberFormat("fr-FR", {
-    maximumFractionDigits: 0,
-  }).format(value)} ${currency}`;
-
-const formatTierRange = (
-  minAmount: number,
-  maxAmount: number | null,
-  currency: string
-) => {
-  if (maxAmount === null) {
-    return `${formatMoney(minAmount, currency)} +`;
-  }
-
-  return `${formatMoney(minAmount, currency)} - ${formatMoney(
-    maxAmount,
-    currency
-  )}`;
-};
-
-const formatDonationStatus = (status: DonationStatus) => {
-  const labels: Record<DonationStatus, string> = {
-    pending: "en attente",
-    succeeded: "confirmé",
-    failed: "non abouti",
-    cancelled: "annulé",
-    refunded: "remboursé",
-  };
-
-  return labels[status];
-};
-
 export default function FundraisingSection() {
-  const [campaignData, setCampaignData] = useState<CampaignResponse | null>(
-    null
-  );
-  const [isLoadingCampaign, setIsLoadingCampaign] = useState(true);
-  const [campaignError, setCampaignError] = useState("");
-  const [step, setStep] = useState<Step>("amount");
-  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
-  const [customAmount, setCustomAmount] = useState("");
-  const [useCustomAmount, setUseCustomAmount] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [mobileMoneyPhone, setMobileMoneyPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
-  const [isVerifyingDonation, setIsVerifyingDonation] = useState(false);
-  const [checkoutError, setCheckoutError] = useState("");
-  const [mobileDonation, setMobileDonation] = useState<CreatedDonation | null>(
-    null
-  );
-  const [mobileWaitStartedAt, setMobileWaitStartedAt] = useState<number | null>(
-    null
-  );
-  const [mobileAttemptTimedOut, setMobileAttemptTimedOut] = useState(false);
-  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
-  const [stripeCheckout, setStripeCheckout] =
-    useState<StripeEmbeddedCheckout | null>(null);
-  const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
-  const amountActionRef = useRef<HTMLDivElement | null>(null);
-  const fullNameInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadCampaign() {
-      try {
-        const response = await fetch("/api/fundraising/campaign", {
-          cache: "no-store",
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data?.error?.message ||
-              "La collecte ne peut pas être affichée pour le moment."
-          );
-        }
-
-        if (ignore) return;
-
-        setCampaignData(data);
-        setSelectedTierId(data.tiers.at(-1)?.id || null);
-      } catch (error) {
-        if (!ignore) {
-          setCampaignError(
-            error instanceof Error
-              ? error.message
-              : "La collecte ne peut pas être affichée pour le moment."
-          );
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoadingCampaign(false);
-        }
-      }
-    }
-
-    loadCampaign();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const tiers = campaignData?.tiers || [];
-  const currency = campaignData?.campaign.currency || "USD";
-  const selectedTier = tiers.find((tier) => tier.id === selectedTierId);
-  const minimumAmount = Math.max(
-    tiers.length ? Math.min(...tiers.map((tier) => tier.min_amount)) : 0,
-  );
-  const campaignIsActive = campaignData?.campaign.status === "active";
-
-  const selectedAmount = useMemo(() => {
-    if (useCustomAmount) {
-      return Number(customAmount) || 0;
-    }
-
-    return selectedTier?.min_amount || minimumAmount;
-  }, [customAmount, minimumAmount, selectedTier?.min_amount, useCustomAmount]);
-
-  const selectedLabel = useCustomAmount
-    ? "Montant libre"
-    : selectedTier?.name || "Contribution";
-
-  const progressPercent = Math.min(
-    Math.max(campaignData?.stats.progress_percent || 0, 0),
-    100
-  );
-
-  const updateError = (field: string) => {
-    if (!errors[field]) return;
-
-    const nextErrors = { ...errors };
-    delete nextErrors[field];
-    setErrors(nextErrors);
-  };
-
-  const clearStepFeedback = () => {
-    setErrors({});
-    setCheckoutError("");
-  };
-
-  const resetMobileMoneyAttempt = () => {
-    setMobileDonation(null);
-    setMobileWaitStartedAt(null);
-    setMobileAttemptTimedOut(false);
-    setIsMobileModalOpen(false);
-  };
-
-  const scrollToAmountAction = () => {
-    window.requestAnimationFrame(() => {
-      amountActionRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    });
-  };
-
-  const goBackToAmount = () => {
-    clearStepFeedback();
-    setStep("amount");
-  };
-
-  const goBackToIdentity = () => {
-    clearStepFeedback();
-    setStep("identity");
-  };
-
-  const goToIdentity = () => {
-    setCheckoutError("");
-
-    if (!campaignIsActive) {
-      setErrors({
-        amount: "Les contributions en ligne ne sont pas ouvertes pour le moment.",
-      });
-      return;
-    }
-
-    if (selectedAmount < minimumAmount) {
-      setErrors({
-        amount: `Le montant minimum est de ${formatMoney(
-          minimumAmount,
-          currency
-        )}.`,
-      });
-      return;
-    }
-
-    setErrors({});
-    setStep("identity");
-  };
-
-  useEffect(() => {
-    if (step !== "identity") return;
-
-    window.requestAnimationFrame(() => {
-      fullNameInputRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-      fullNameInputRef.current?.focus({ preventScroll: true });
-    });
-  }, [step]);
-
-  const goToPayment = () => {
-    const nextErrors: Record<string, string> = {};
-    setCheckoutError("");
-
-    if (!fullName.trim()) {
-      nextErrors.fullName = "Le nom du donateur ou de l'organisation est requis.";
-    }
-
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-      nextErrors.email = "Veuillez renseigner une adresse e-mail valide.";
-    }
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
-
-    setErrors({});
-    setStep("payment");
-  };
-
-  const createCheckout = async () => {
-    setCheckoutError("");
-
-    if (paymentMethod === "mobile_money" && !mobileMoneyPhone.trim()) {
-      setCheckoutError(
-        "Indiquez le numéro Mobile Money qui recevra la demande de paiement."
-      );
-      return;
-    }
-
-    setIsCreatingCheckout(true);
-
-    try {
-      const response = await fetch("/api/fundraising/donations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: selectedAmount,
-          payment_method: paymentMethod,
-          client_request_id: crypto.randomUUID(),
-          donor: {
-            name: fullName,
-            email,
-            phone:
-              paymentMethod === "mobile_money"
-                ? mobileMoneyPhone
-                : phone || undefined,
-          },
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error?.message ||
-            "Le paiement ne peut pas être démarré pour le moment."
-        );
-      }
-
-      if (paymentMethod === "mobile_money") {
-        setMobileDonation({
-          donation_id: data.donation_id,
-          status: data.status,
-          provider_instructions: data.provider_instructions,
-          pawapay: data.pawapay,
-        });
-        setMobileWaitStartedAt(Date.now());
-        setMobileAttemptTimedOut(false);
-        setIsMobileModalOpen(true);
-        setIsCreatingCheckout(false);
-        return;
-      }
-
-      sessionStorage.setItem("ccapac.last_donation_id", data.donation_id);
-
-      if (paymentMethod === "card") {
-        setStripeCheckout({
-          donationId: data.donation_id,
-          publishableKey: data.stripe.publishable_key,
-          clientSecret: data.stripe.client_secret,
-        });
-        setIsStripeModalOpen(true);
-        setIsCreatingCheckout(false);
-        return;
-      }
-
-      window.location.assign(data.checkout_url);
-    } catch (error) {
-      setCheckoutError(
-        error instanceof Error
-          ? error.message
-          : "Le paiement ne peut pas être démarré pour le moment."
-      );
-      setIsCreatingCheckout(false);
-    }
-  };
-
-  const fetchDonationStatus = useCallback(async (donationId: string) => {
-    const response = await fetch(
-      `/api/fundraising/donations/${donationId}/verify`,
-      { method: "POST" }
-    );
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data?.error?.message ||
-          "Nous ne pouvons pas confirmer le paiement pour le moment."
-      );
-    }
-
-    return data as {
-      status: DonationStatus;
-      provider_instructions: string | null;
-      pawapay: CreatedDonation["pawapay"];
-    };
-  }, []);
-
-  const withDonationVerification = useCallback(async (
-    action: () => Promise<void>
-  ) => {
-    setIsVerifyingDonation(true);
-    setCheckoutError("");
-
-    try {
-      await action();
-    } catch (error) {
-      setCheckoutError(
-        error instanceof Error
-          ? error.message
-          : "Nous ne pouvons pas confirmer le paiement pour le moment."
-      );
-    } finally {
-      setIsVerifyingDonation(false);
-    }
-  }, []);
-
-  const verifyMobileDonation = useCallback((donationId: string) =>
-    withDonationVerification(async () => {
-      const data = await fetchDonationStatus(donationId);
-
-      setMobileDonation((current) =>
-        current
-          ? {
-              ...current,
-              status: data.status,
-              provider_instructions:
-                data.provider_instructions || current.provider_instructions,
-              pawapay: data.pawapay || current.pawapay,
-            }
-          : current
-      );
-    }), [fetchDonationStatus, withDonationVerification]);
-
-  useEffect(() => {
-    if (!mobileDonation || mobileDonation.status !== "pending") return;
-
-    const interval = window.setInterval(() => {
-      verifyMobileDonation(mobileDonation.donation_id);
-    }, 5000);
-
-    return () => window.clearInterval(interval);
-  }, [mobileDonation, verifyMobileDonation]);
-
-  useEffect(() => {
-    if (
-      !isMobileModalOpen ||
-      mobileDonation?.status !== "pending" ||
-      !mobileWaitStartedAt
-    ) {
-      setMobileAttemptTimedOut(false);
-      return;
-    }
-
-    const elapsed = Date.now() - mobileWaitStartedAt;
-    const remaining = MOBILE_MONEY_REVIEW_DELAY_MS - elapsed;
-
-    if (remaining <= 0) {
-      setMobileAttemptTimedOut(true);
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      setMobileAttemptTimedOut(true);
-    }, remaining);
-
-    return () => window.clearTimeout(timeout);
-  }, [isMobileModalOpen, mobileDonation?.status, mobileWaitStartedAt]);
-
-  useEffect(() => {
-    if (mobileDonation?.status !== "succeeded") return;
-
-    const timeout = window.setTimeout(() => {
-      window.location.assign(
-        `/don-merci?donation_id=${encodeURIComponent(
-          mobileDonation.donation_id
-        )}`
-      );
-    }, 900);
-
-    return () => window.clearTimeout(timeout);
-  }, [mobileDonation]);
-
+  const { campaignData, campaignError, isLoadingCampaign } =
+    useFundraisingCampaign();
+  const {
+    amountActionRef,
+    campaignIsActive,
+    checkoutError,
+    clearCheckoutError,
+    clearStepFeedback,
+    createCheckout,
+    currency,
+    customAmount,
+    email,
+    errors,
+    fullName,
+    fullNameInputRef,
+    goBackToAmount,
+    goBackToIdentity,
+    goToIdentity,
+    goToPayment,
+    isCreatingCheckout,
+    isMobileModalOpen,
+    isStripeModalOpen,
+    isVerifyingDonation,
+    minimumAmount,
+    mobileAttemptTimedOut,
+    mobileDonation,
+    mobileMoneyPhone,
+    paymentMethod,
+    phone,
+    progressPercent,
+    resetMobileMoneyAttempt,
+    retryMobileMoneyPayment,
+    scrollToAmountAction,
+    selectedAmount,
+    selectedLabel,
+    selectedTierId,
+    setCustomAmount,
+    setEmail,
+    setFullName,
+    setIsMobileModalOpen,
+    setIsStripeModalOpen,
+    setMobileMoneyPhone,
+    setPaymentMethod,
+    setPhone,
+    setSelectedTierId,
+    setUseCustomAmount,
+    step,
+    stripeCheckout,
+    tiers,
+    updateError,
+    useCustomAmount,
+    verifyMobileDonation,
+  } = useFundraisingDonationFlow(campaignData);
   if (isLoadingCampaign) {
     return (
       <FundraisingShell>
@@ -806,7 +383,7 @@ export default function FundraisingSection() {
                         onChange={(event) => {
                           setCustomAmount(event.target.value);
                           updateError("amount");
-                          setCheckoutError("");
+                          clearCheckoutError();
                         }}
                         placeholder="Saisir un montant"
                         className="h-12 w-full rounded-md border border-[#eadcc7] bg-white pl-16 pr-4 text-sm font-bold text-primary outline-none transition focus:border-primary"
@@ -842,7 +419,7 @@ export default function FundraisingSection() {
                       onChange={(value) => {
                         setFullName(value);
                         updateError("fullName");
-                        setCheckoutError("");
+                        clearCheckoutError();
                       }}
                       placeholder="Ex. Fondation CCAPAC"
                       error={errors.fullName}
@@ -854,7 +431,7 @@ export default function FundraisingSection() {
                       onChange={(value) => {
                         setEmail(value);
                         updateError("email");
-                        setCheckoutError("");
+                        clearCheckoutError();
                       }}
                       placeholder="contact@organisation.org"
                       error={errors.email}
@@ -865,7 +442,7 @@ export default function FundraisingSection() {
                       value={phone}
                       onChange={(value) => {
                         setPhone(value);
-                        setCheckoutError("");
+                        clearCheckoutError();
                       }}
                       placeholder="+243 812 345 678"
                       optional
@@ -898,7 +475,7 @@ export default function FundraisingSection() {
                           type="button"
                           onClick={() => {
                             setPaymentMethod(method.id);
-                            setCheckoutError("");
+                            clearCheckoutError();
                           }}
                           className={`rounded-md border p-4 text-left transition ${
                             isSelected
@@ -950,7 +527,7 @@ export default function FundraisingSection() {
                         value={mobileMoneyPhone}
                         onChange={(value) => {
                           setMobileMoneyPhone(value);
-                          setCheckoutError("");
+                          clearCheckoutError();
                         }}
                         placeholder="+243 812 345 678"
                         error={
@@ -1045,18 +622,7 @@ export default function FundraisingSection() {
           setIsMobileModalOpen(open);
         }}
         onCancel={resetMobileMoneyAttempt}
-        onRetry={() => {
-          resetMobileMoneyAttempt();
-          setPaymentMethod("mobile_money");
-          setStep("payment");
-          setCheckoutError("");
-          window.requestAnimationFrame(() => {
-            document
-              .getElementById("mobile-money-phone")
-              ?.scrollIntoView({ behavior: "smooth", block: "center" });
-            document.getElementById("mobile-money-phone")?.focus();
-          });
-        }}
+        onRetry={retryMobileMoneyPayment}
         onVerify={() => {
           if (mobileDonation) {
             verifyMobileDonation(mobileDonation.donation_id);
