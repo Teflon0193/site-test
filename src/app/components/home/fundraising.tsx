@@ -132,6 +132,7 @@ const bankAccounts = [
     number: "0026000013508010061362 USD",
   },
 ];
+const MOBILE_MONEY_REVIEW_DELAY_MS = 45_000;
 
 const formatMoney = (value: number, currency = "USD") =>
   `${new Intl.NumberFormat("fr-FR", {
@@ -187,6 +188,10 @@ export default function FundraisingSection() {
   const [mobileDonation, setMobileDonation] = useState<CreatedDonation | null>(
     null
   );
+  const [mobileWaitStartedAt, setMobileWaitStartedAt] = useState<number | null>(
+    null
+  );
+  const [mobileAttemptTimedOut, setMobileAttemptTimedOut] = useState(false);
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const [stripeCheckout, setStripeCheckout] =
     useState<StripeEmbeddedCheckout | null>(null);
@@ -273,6 +278,13 @@ export default function FundraisingSection() {
   const clearStepFeedback = () => {
     setErrors({});
     setCheckoutError("");
+  };
+
+  const resetMobileMoneyAttempt = () => {
+    setMobileDonation(null);
+    setMobileWaitStartedAt(null);
+    setMobileAttemptTimedOut(false);
+    setIsMobileModalOpen(false);
   };
 
   const scrollToAmountAction = () => {
@@ -400,6 +412,8 @@ export default function FundraisingSection() {
           provider_instructions: data.provider_instructions,
           pawapay: data.pawapay,
         });
+        setMobileWaitStartedAt(Date.now());
+        setMobileAttemptTimedOut(false);
         setIsMobileModalOpen(true);
         setIsCreatingCheckout(false);
         return;
@@ -495,6 +509,31 @@ export default function FundraisingSection() {
 
     return () => window.clearInterval(interval);
   }, [mobileDonation, verifyMobileDonation]);
+
+  useEffect(() => {
+    if (
+      !isMobileModalOpen ||
+      mobileDonation?.status !== "pending" ||
+      !mobileWaitStartedAt
+    ) {
+      setMobileAttemptTimedOut(false);
+      return;
+    }
+
+    const elapsed = Date.now() - mobileWaitStartedAt;
+    const remaining = MOBILE_MONEY_REVIEW_DELAY_MS - elapsed;
+
+    if (remaining <= 0) {
+      setMobileAttemptTimedOut(true);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setMobileAttemptTimedOut(true);
+    }, remaining);
+
+    return () => window.clearTimeout(timeout);
+  }, [isMobileModalOpen, mobileDonation?.status, mobileWaitStartedAt]);
 
   useEffect(() => {
     if (mobileDonation?.status !== "succeeded") return;
@@ -905,6 +944,7 @@ export default function FundraisingSection() {
                         </div>
                       </div>
                       <Field
+                        id="mobile-money-phone"
                         label="Numéro Mobile Money"
                         type="tel"
                         value={mobileMoneyPhone}
@@ -996,15 +1036,26 @@ export default function FundraisingSection() {
         donation={mobileDonation}
         open={isMobileModalOpen}
         isVerifying={isVerifyingDonation}
+        hasTimedOut={mobileAttemptTimedOut}
         onOpenChange={(open) => {
           if (!open && mobileDonation?.status === "pending") {
-            setMobileDonation(null);
+            resetMobileMoneyAttempt();
+            return;
           }
           setIsMobileModalOpen(open);
         }}
-        onCancel={() => {
-          setMobileDonation(null);
-          setIsMobileModalOpen(false);
+        onCancel={resetMobileMoneyAttempt}
+        onRetry={() => {
+          resetMobileMoneyAttempt();
+          setPaymentMethod("mobile_money");
+          setStep("payment");
+          setCheckoutError("");
+          window.requestAnimationFrame(() => {
+            document
+              .getElementById("mobile-money-phone")
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
+            document.getElementById("mobile-money-phone")?.focus();
+          });
         }}
         onVerify={() => {
           if (mobileDonation) {
@@ -1027,20 +1078,25 @@ function MobileMoneyStatusDialog({
   donation,
   open,
   isVerifying,
+  hasTimedOut,
   onOpenChange,
   onCancel,
+  onRetry,
   onVerify,
 }: {
   donation: CreatedDonation | null;
   open: boolean;
   isVerifying: boolean;
+  hasTimedOut: boolean;
   onOpenChange: (open: boolean) => void;
   onCancel: () => void;
+  onRetry: () => void;
   onVerify: () => void;
 }) {
-  const isPending = donation?.status === "pending";
+  const isPending = donation?.status === "pending" && !hasTimedOut;
   const isConfirmed = donation?.status === "succeeded";
   const hasFailed =
+    hasTimedOut ||
     donation?.status === "failed" ||
     donation?.status === "cancelled" ||
     donation?.status === "refunded";
@@ -1061,11 +1117,17 @@ function MobileMoneyStatusDialog({
         <div className="bg-primary px-5 py-5 text-white sm:px-6">
           <DialogHeader className="text-left">
             <DialogTitle className="text-lg font-bold uppercase leading-tight sm:text-xl">
-              {isConfirmed ? "Paiement confirmé" : "Validez sur votre téléphone"}
+              {isConfirmed
+                ? "Paiement confirmé"
+                : hasFailed
+                ? "Paiement non abouti"
+                : "Validez sur votre téléphone"}
             </DialogTitle>
             <DialogDescription className="text-sm font-medium text-white/72">
               {isConfirmed
                 ? "Merci pour votre soutien. Nous finalisons la confirmation."
+                : hasFailed
+                ? "La tentative n'a pas pu être confirmée."
                 : "Une demande de paiement a été envoyée sur votre téléphone."}
             </DialogDescription>
           </DialogHeader>
@@ -1076,9 +1138,11 @@ function MobileMoneyStatusDialog({
             <p className="text-sm font-semibold leading-relaxed text-primary">
               {isConfirmed
                 ? "Votre validation a été reçue. Vous allez être redirigé vers la page de confirmation."
+                : hasTimedOut
+                ? "Nous n'avons pas reçu de confirmation. Vérifiez le numéro Mobile Money puis réessayez avec une nouvelle tentative."
                 : "Entrez votre code secret sur votre téléphone pour valider la transaction. La confirmation s'affichera automatiquement ici."}
             </p>
-            {amount && !isConfirmed && (
+            {amount && !isConfirmed && !hasTimedOut && (
               <p className="mt-3 text-sm font-bold text-primary">
                 Montant à valider: {amount}
               </p>
@@ -1086,9 +1150,11 @@ function MobileMoneyStatusDialog({
           </div>
 
           <StatusPanel
-            status={donation?.status || "pending"}
+            status={hasTimedOut ? "failed" : donation?.status || "pending"}
             detail={
-              isPending
+              hasTimedOut
+                ? "Le paiement n'a pas abouti."
+                : isPending
                 ? "En attente de votre validation."
                 : hasFailed
                 ? "Le paiement n'a pas abouti."
@@ -1096,14 +1162,27 @@ function MobileMoneyStatusDialog({
             }
           />
 
-          {isPending && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-relaxed text-red-800">
-              Ne fermez pas cette page avant la confirmation. Validez la
-              transaction depuis votre téléphone avec votre code secret.
+          {(isPending || hasTimedOut) && (
+            <div
+              className={`rounded-md border p-4 text-sm font-semibold leading-relaxed ${
+                hasTimedOut
+                  ? "border-red-200 bg-red-50 text-red-800"
+                  : "border-amber-200 bg-amber-50 text-amber-900"
+              }`}
+            >
+              {hasTimedOut
+                ? "Cette tentative est arrivée à expiration. Vous pouvez réessayer avec le bon numéro Mobile Money."
+                : "Ne fermez pas cette page avant la confirmation. Validez la transaction depuis votre téléphone avec votre code secret."}
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div
+            className={`grid gap-3 ${
+              hasTimedOut
+                ? "sm:grid-cols-3"
+                : "sm:grid-cols-2"
+            }`}
+          >
             <button
               type="button"
               disabled={isVerifying || !donation || !isPending}
@@ -1117,14 +1196,25 @@ function MobileMoneyStatusDialog({
               )}
               {isVerifying ? "Confirmation..." : "Actualiser"}
             </button>
-            {isPending ? (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7]"
-              >
-                Annuler
-              </button>
+            {isPending || hasTimedOut ? (
+              <>
+                {hasTimedOut && (
+                  <button
+                    type="button"
+                    onClick={onRetry}
+                    className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-primary/90"
+                  >
+                    Réessayer
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7]"
+                >
+                  Annuler
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -1295,6 +1385,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 function Field({
+  id,
   label,
   inputRef,
   value,
@@ -1304,6 +1395,7 @@ function Field({
   optional = false,
   type = "text",
 }: {
+  id?: string;
   label: string;
   inputRef?: React.Ref<HTMLInputElement>;
   value: string;
@@ -1320,6 +1412,7 @@ function Field({
         {optional && <span className="font-semibold normal-case">Optionnel</span>}
       </span>
       <input
+        id={id}
         type={type}
         ref={inputRef}
         value={value}
