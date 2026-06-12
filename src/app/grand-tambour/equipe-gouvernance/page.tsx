@@ -2,12 +2,16 @@ import MainLayout from "@/app/components/layouts/MainLayout";
 import { FaArrowLeft } from "react-icons/fa6";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { departments } from "@/data/departments";
 import { missions } from "@/data/missions";
 import DepartmentAccordion from "@/app/components/grand-tambour/DepartmentAccordion";
 import MissionCard from "@/app/components/grand-tambour/MissionCard";
 
 export default function EquipeGouvernancePage() {
+  // Temporairement retire de l'espace public pendant la restructuration de l'organigramme.
+  notFound();
+
   return (
     <MainLayout>
       <main className="pb-12 sm:pb-16 md:pb-20 lg:pb-24">

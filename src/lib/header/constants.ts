@@ -15,10 +15,11 @@ export const menuItems: MenuItem[] = [
     submenu: [
       { name: "Présentation", href: "/grand-tambour/presentation" },
       { name: "Espaces", href: "/grand-tambour/espaces" },
-      {
-        name: "Équipe & Gouvernance",
-        href: "/grand-tambour/equipe-gouvernance",
-      },
+      // Temporairement masque pendant la restructuration de l'organigramme.
+      // {
+      //   name: "Équipe & Gouvernance",
+      //   href: "/grand-tambour/equipe-gouvernance",
+      // },
     ],
   },
   {
