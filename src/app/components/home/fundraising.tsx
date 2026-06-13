@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import {
@@ -19,7 +19,7 @@ import {
   Phone,
   RefreshCw,
   ShieldCheck,
-  WalletCards,
+  // WalletCards,
   XCircle,
 } from "lucide-react";
 import {
@@ -30,7 +30,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { StripeEmbeddedCheckout } from "./StripeEmbeddedCheckoutDialog";
+import { bankAccounts, impactItems } from "./fundraising/constants";
+import {
+  formatDonationStatus,
+  formatMoney,
+  formatTierRange,
+} from "./fundraising/formatters";
+import { useFundraisingCampaign } from "./fundraising/useFundraisingCampaign";
+import { useFundraisingDonationFlow } from "./fundraising/useFundraisingDonationFlow";
+import type {
+  CreatedDonation,
+  DonationStatus,
+} from "./fundraising/types";
 
 const StripeEmbeddedCheckoutDialog = dynamic(
   () =>
@@ -39,63 +50,6 @@ const StripeEmbeddedCheckoutDialog = dynamic(
     ),
   { ssr: false }
 );
-
-type Step = "amount" | "identity" | "payment";
-type PaymentMethod = "card" | "paypal" | "mobile_money";
-
-type DonationStatus =
-  | "pending"
-  | "succeeded"
-  | "failed"
-  | "cancelled"
-  | "refunded";
-
-type CreatedDonation = {
-  donation_id: string;
-  status: DonationStatus;
-  provider_instructions: string | null;
-  pawapay: {
-    country?: string;
-    provider?: string;
-    provider_amount?: number;
-    provider_currency?: string;
-    last_provider_status?: string;
-  } | null;
-};
-
-type CampaignResponse = {
-  campaign: {
-    id: string;
-    title: string;
-    description: string | null;
-    goal_amount: number;
-    currency: string;
-    status: "draft" | "active" | "paused" | "completed" | "archived";
-    cover_image_url: string | null;
-  };
-  tiers: Array<{
-    id: string;
-    name: string;
-    description: string | null;
-    min_amount: number;
-    max_amount: number | null;
-    display_order: number;
-  }>;
-  stats: {
-    raised_amount: number;
-    progress_percent: number;
-    succeeded_donations_count: number;
-    unique_donors_count: number;
-    pending_donations_count: number;
-  };
-};
-
-const impactItems = [
-  "561 m2 entièrement aménagés pour la lecture et la médiation.",
-  "5 000 ouvrages initiaux, dont 3 000 pour la Bibliothèque.",
-  "Outils numériques de recherche et de formation.",
-  "Ateliers, clubs de lecture et rencontres littéraires.",
-];
 
 const paymentMethods = [
   {
@@ -110,348 +64,68 @@ const paymentMethods = [
     detail: "Paiement sécurisé par carte",
     icon: CreditCard,
   },
-  {
-    id: "paypal" as const,
-    title: "PayPal",
-    detail: "Paiement avec votre compte",
-    icon: WalletCards,
-  },
+  // {
+  //   id: "paypal" as const,
+  //   title: "PayPal",
+  //   detail: "Paiement avec votre compte",
+  //   icon: WalletCards,
+  // },
 ];
-
-const bankAccounts = [
-  {
-    bank: "Rawbank",
-    number: "CD48 05100051010120306000152",
-  },
-  {
-    bank: "Equity BCDC",
-    number: "00011150511200194697606 USD",
-  },
-  {
-    bank: "Ecobank",
-    number: "0026000013508010061362 USD",
-  },
-];
-
-const formatMoney = (value: number, currency = "USD") =>
-  `${new Intl.NumberFormat("fr-FR", {
-    maximumFractionDigits: 0,
-  }).format(value)} ${currency}`;
-
-const formatTierRange = (
-  minAmount: number,
-  maxAmount: number | null,
-  currency: string
-) => {
-  if (maxAmount === null) {
-    return `${formatMoney(minAmount, currency)} +`;
-  }
-
-  return `${formatMoney(minAmount, currency)} - ${formatMoney(
-    maxAmount,
-    currency
-  )}`;
-};
-
-const formatDonationStatus = (status: DonationStatus) => {
-  const labels: Record<DonationStatus, string> = {
-    pending: "en attente",
-    succeeded: "confirmé",
-    failed: "non abouti",
-    cancelled: "annulé",
-    refunded: "remboursé",
-  };
-
-  return labels[status];
-};
 
 export default function FundraisingSection() {
-  const [campaignData, setCampaignData] = useState<CampaignResponse | null>(
-    null
-  );
-  const [isLoadingCampaign, setIsLoadingCampaign] = useState(true);
-  const [campaignError, setCampaignError] = useState("");
-  const [step, setStep] = useState<Step>("amount");
-  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
-  const [customAmount, setCustomAmount] = useState("");
-  const [useCustomAmount, setUseCustomAmount] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
-  const [isVerifyingDonation, setIsVerifyingDonation] = useState(false);
-  const [checkoutError, setCheckoutError] = useState("");
-  const [mobileDonation, setMobileDonation] = useState<CreatedDonation | null>(
-    null
-  );
-  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
-  const [stripeCheckout, setStripeCheckout] =
-    useState<StripeEmbeddedCheckout | null>(null);
-  const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadCampaign() {
-      try {
-        const response = await fetch("/api/fundraising/campaign", {
-          cache: "no-store",
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data?.error?.message ||
-              "La collecte ne peut pas être affichée pour le moment."
-          );
-        }
-
-        if (ignore) return;
-
-        setCampaignData(data);
-        setSelectedTierId(data.tiers.at(-1)?.id || null);
-      } catch (error) {
-        if (!ignore) {
-          setCampaignError(
-            error instanceof Error
-              ? error.message
-              : "La collecte ne peut pas être affichée pour le moment."
-          );
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoadingCampaign(false);
-        }
-      }
-    }
-
-    loadCampaign();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const tiers = campaignData?.tiers || [];
-  const currency = campaignData?.campaign.currency || "USD";
-  const selectedTier = tiers.find((tier) => tier.id === selectedTierId);
-  const minimumAmount = Math.max(
-    tiers.length ? Math.min(...tiers.map((tier) => tier.min_amount)) : 100,
-    100
-  );
-  const campaignIsActive = campaignData?.campaign.status === "active";
-
-  const selectedAmount = useMemo(() => {
-    if (useCustomAmount) {
-      return Number(customAmount) || 0;
-    }
-
-    return selectedTier?.min_amount || minimumAmount;
-  }, [customAmount, minimumAmount, selectedTier?.min_amount, useCustomAmount]);
-
-  const selectedLabel = useCustomAmount
-    ? "Montant libre"
-    : selectedTier?.name || "Contribution";
-
-  const progressPercent = Math.min(
-    Math.max(campaignData?.stats.progress_percent || 0, 0),
-    100
-  );
-
-  const updateError = (field: string) => {
-    if (!errors[field]) return;
-
-    const nextErrors = { ...errors };
-    delete nextErrors[field];
-    setErrors(nextErrors);
-  };
-
-  const goToIdentity = () => {
-    if (!campaignIsActive) {
-      setErrors({
-        amount: "Les contributions en ligne ne sont pas ouvertes pour le moment.",
-      });
-      return;
-    }
-
-    if (selectedAmount < minimumAmount) {
-      setErrors({
-        amount: `Le montant minimum est de ${formatMoney(
-          minimumAmount,
-          currency
-        )}.`,
-      });
-      return;
-    }
-
-    setErrors({});
-    setStep("identity");
-  };
-
-  const goToPayment = () => {
-    const nextErrors: Record<string, string> = {};
-
-    if (!fullName.trim()) {
-      nextErrors.fullName = "Le nom du donateur ou de l'organisation est requis.";
-    }
-
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-      nextErrors.email = "Veuillez renseigner une adresse e-mail valide.";
-    }
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
-
-    setErrors({});
-    setStep("payment");
-  };
-
-  const createCheckout = async () => {
-    setCheckoutError("");
-
-    if (paymentMethod === "mobile_money" && !phone.trim()) {
-      setCheckoutError(
-        "Indiquez votre numéro de téléphone pour recevoir la demande de paiement."
-      );
-      return;
-    }
-
-    setIsCreatingCheckout(true);
-
-    try {
-      const response = await fetch("/api/fundraising/donations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: selectedAmount,
-          payment_method: paymentMethod,
-          client_request_id: crypto.randomUUID(),
-          donor: {
-            name: fullName,
-            email,
-            phone: phone || undefined,
-          },
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error?.message ||
-            "Le paiement ne peut pas être démarré pour le moment."
-        );
-      }
-
-      if (paymentMethod === "mobile_money") {
-        setMobileDonation({
-          donation_id: data.donation_id,
-          status: data.status,
-          provider_instructions: data.provider_instructions,
-          pawapay: data.pawapay,
-        });
-        setIsMobileModalOpen(true);
-        setIsCreatingCheckout(false);
-        return;
-      }
-
-      sessionStorage.setItem("ccapac.last_donation_id", data.donation_id);
-
-      if (paymentMethod === "card") {
-        setStripeCheckout({
-          donationId: data.donation_id,
-          publishableKey: data.stripe.publishable_key,
-          clientSecret: data.stripe.client_secret,
-        });
-        setIsStripeModalOpen(true);
-        setIsCreatingCheckout(false);
-        return;
-      }
-
-      window.location.assign(data.checkout_url);
-    } catch (error) {
-      setCheckoutError(
-        error instanceof Error
-          ? error.message
-          : "Le paiement ne peut pas être démarré pour le moment."
-      );
-      setIsCreatingCheckout(false);
-    }
-  };
-
-  const fetchDonationStatus = useCallback(async (donationId: string) => {
-    const response = await fetch(
-      `/api/fundraising/donations/${donationId}/verify`,
-      { method: "POST" }
-    );
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data?.error?.message ||
-          "Nous ne pouvons pas confirmer le paiement pour le moment."
-      );
-    }
-
-    return data as {
-      status: DonationStatus;
-      provider_instructions: string | null;
-      pawapay: CreatedDonation["pawapay"];
-    };
-  }, []);
-
-  const withDonationVerification = useCallback(async (
-    action: () => Promise<void>
-  ) => {
-    setIsVerifyingDonation(true);
-    setCheckoutError("");
-
-    try {
-      await action();
-    } catch (error) {
-      setCheckoutError(
-        error instanceof Error
-          ? error.message
-          : "Nous ne pouvons pas confirmer le paiement pour le moment."
-      );
-    } finally {
-      setIsVerifyingDonation(false);
-    }
-  }, []);
-
-  const verifyMobileDonation = useCallback((donationId: string) =>
-    withDonationVerification(async () => {
-      const data = await fetchDonationStatus(donationId);
-
-      setMobileDonation((current) =>
-        current
-          ? {
-              ...current,
-              status: data.status,
-              provider_instructions:
-                data.provider_instructions || current.provider_instructions,
-              pawapay: data.pawapay || current.pawapay,
-            }
-          : current
-      );
-    }), [fetchDonationStatus, withDonationVerification]);
-
-  useEffect(() => {
-    if (!mobileDonation || mobileDonation.status !== "pending") return;
-
-    const interval = window.setInterval(() => {
-      verifyMobileDonation(mobileDonation.donation_id);
-    }, 5000);
-
-    return () => window.clearInterval(interval);
-  }, [mobileDonation, verifyMobileDonation]);
-
+  const { campaignData, campaignError, isLoadingCampaign } =
+    useFundraisingCampaign();
+  const {
+    amountActionRef,
+    campaignIsActive,
+    checkoutError,
+    clearCheckoutError,
+    clearStepFeedback,
+    createCheckout,
+    currency,
+    customAmount,
+    email,
+    errors,
+    fullName,
+    fullNameInputRef,
+    goBackToAmount,
+    goBackToIdentity,
+    goToAmount,
+    goToPayment,
+    isCreatingCheckout,
+    isMobileModalOpen,
+    isStripeModalOpen,
+    isVerifyingDonation,
+    minimumAmount,
+    mobileAttemptTimedOut,
+    mobileDonation,
+    mobileMoneyPhone,
+    paymentMethod,
+    phone,
+    progressPercent,
+    resetMobileMoneyAttempt,
+    retryMobileMoneyPayment,
+    scrollToAmountAction,
+    selectedAmount,
+    selectedLabel,
+    selectedTierId,
+    setCustomAmount,
+    setEmail,
+    setFullName,
+    setIsMobileModalOpen,
+    setIsStripeModalOpen,
+    setMobileMoneyPhone,
+    setPaymentMethod,
+    setPhone,
+    setSelectedTierId,
+    setUseCustomAmount,
+    step,
+    stripeCheckout,
+    tiers,
+    updateError,
+    useCustomAmount,
+    verifyMobileDonation,
+  } = useFundraisingDonationFlow(campaignData);
   if (isLoadingCampaign) {
     return (
       <FundraisingShell>
@@ -581,14 +255,15 @@ export default function FundraisingSection() {
 
                 <ol className="grid w-full grid-cols-3 gap-1 rounded-md border border-secondary/10 bg-secondary/5 p-1 text-[10px] font-bold uppercase tracking-wide sm:w-[360px]">
                   {[
-                    ["amount", "Montant"],
                     ["identity", "Profil"],
+                    ["amount", "Montant"],
                     ["payment", "Paiement"],
                   ].map(([id, label], index) => {
                     const active = step === id;
+                    const currentIndex =
+                      step === "identity" ? 0 : step === "amount" ? 1 : 2;
                     const done =
-                      (step === "identity" && index === 0) ||
-                      (step === "payment" && index < 2);
+                      index < currentIndex;
 
                     return (
                       <li
@@ -629,7 +304,8 @@ export default function FundraisingSection() {
                             setSelectedTierId(tier.id);
                             setUseCustomAmount(false);
                             setCustomAmount("");
-                            setErrors({});
+                            clearStepFeedback();
+                            scrollToAmountAction();
                           }}
                           className={`group grid gap-3 rounded-md border p-4 text-left transition duration-200 sm:grid-cols-[1fr_auto] sm:items-center ${
                             isSelected
@@ -674,7 +350,8 @@ export default function FundraisingSection() {
                       type="button"
                       onClick={() => {
                         setUseCustomAmount(true);
-                        setErrors({});
+                        clearStepFeedback();
+                        scrollToAmountAction();
                       }}
                       className="mb-3 flex w-full items-center justify-between gap-3 text-left"
                     >
@@ -707,6 +384,7 @@ export default function FundraisingSection() {
                         onChange={(event) => {
                           setCustomAmount(event.target.value);
                           updateError("amount");
+                          clearCheckoutError();
                         }}
                         placeholder="Saisir un montant"
                         className="h-12 w-full rounded-md border border-[#eadcc7] bg-white pl-16 pr-4 text-sm font-bold text-primary outline-none transition focus:border-primary"
@@ -719,14 +397,22 @@ export default function FundraisingSection() {
                     )}
                   </div>
 
-                  <SummaryBar
-                    label={selectedLabel}
-                    amount={selectedAmount}
-                    currency={currency}
-                    actionLabel="Continuer"
-                    disabled={!campaignIsActive}
-                    onAction={goToIdentity}
-                  />
+                  <div ref={amountActionRef}>
+                    <div className="mb-3">
+                      <SecondaryButton onClick={goBackToIdentity}>
+                        <ArrowLeft className="h-4 w-4" />
+                        Retour
+                      </SecondaryButton>
+                    </div>
+                    <SummaryBar
+                      label={selectedLabel}
+                      amount={selectedAmount}
+                      currency={currency}
+                      actionLabel="Continuer"
+                      disabled={!campaignIsActive}
+                      onAction={goToPayment}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -735,10 +421,12 @@ export default function FundraisingSection() {
                   <div className="grid gap-4">
                     <Field
                       label="Nom complet ou organisation"
+                      inputRef={fullNameInputRef}
                       value={fullName}
                       onChange={(value) => {
                         setFullName(value);
                         updateError("fullName");
+                        clearCheckoutError();
                       }}
                       placeholder="Ex. Fondation CCAPAC"
                       error={errors.fullName}
@@ -750,6 +438,7 @@ export default function FundraisingSection() {
                       onChange={(value) => {
                         setEmail(value);
                         updateError("email");
+                        clearCheckoutError();
                       }}
                       placeholder="contact@organisation.org"
                       error={errors.email}
@@ -758,18 +447,17 @@ export default function FundraisingSection() {
                       label="Téléphone"
                       type="tel"
                       value={phone}
-                      onChange={setPhone}
+                      onChange={(value) => {
+                        setPhone(value);
+                        clearCheckoutError();
+                      }}
                       placeholder="+243 812 345 678"
                       optional
                     />
                   </div>
 
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <SecondaryButton onClick={() => setStep("amount")}>
-                      <ArrowLeft className="h-4 w-4" />
-                      Retour
-                    </SecondaryButton>
-                    <PrimaryButton onClick={goToPayment}>
+                    <PrimaryButton onClick={goToAmount}>
                       Continuer
                       <ArrowRight className="h-4 w-4" />
                     </PrimaryButton>
@@ -788,7 +476,10 @@ export default function FundraisingSection() {
                         <button
                           key={method.id}
                           type="button"
-                          onClick={() => setPaymentMethod(method.id)}
+                          onClick={() => {
+                            setPaymentMethod(method.id);
+                            clearCheckoutError();
+                          }}
                           className={`rounded-md border p-4 text-left transition ${
                             isSelected
                               ? "border-primary bg-primary text-white shadow-lg"
@@ -815,6 +506,45 @@ export default function FundraisingSection() {
                     })}
                   </div>
 
+                  {paymentMethod === "mobile_money" && (
+                    <div className="rounded-md border border-secondary/25 bg-[#f8f1e7] p-4">
+                      <div className="mb-4 flex items-start gap-3">
+                        <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-secondary/12 text-secondary">
+                          <Phone className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-bold uppercase tracking-wide text-primary">
+                            Numéro de paiement Mobile Money
+                          </p>
+                          <p className="mt-1 text-sm font-medium leading-relaxed text-black/65">
+                            Saisissez le numéro qui recevra la demande de
+                            paiement. Il peut être différent du numéro de
+                            contact renseigné à l&apos;étape précédente.
+                          </p>
+                        </div>
+                      </div>
+                      <Field
+                        id="mobile-money-phone"
+                        label="Numéro Mobile Money"
+                        type="tel"
+                        value={mobileMoneyPhone}
+                        onChange={(value) => {
+                          setMobileMoneyPhone(value);
+                          clearCheckoutError();
+                        }}
+                        placeholder="+243 812 345 678"
+                        error={
+                          checkoutError && !mobileMoneyPhone.trim()
+                            ? checkoutError
+                            : undefined
+                        }
+                      />
+                      <p className="mt-3 text-xs font-semibold text-black/58">
+                        Utilisez le format international, par exemple +243 pour la RDC.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="rounded-md border border-[#eadcc7] bg-white p-4">
                     <div className="grid gap-3 text-sm sm:grid-cols-3">
                       <ReceiptLine label="Niveau" value={selectedLabel} />
@@ -826,7 +556,11 @@ export default function FundraisingSection() {
                     </div>
                   </div>
 
-                  {checkoutError && (
+                  {checkoutError &&
+                    !(
+                      paymentMethod === "mobile_money" &&
+                      !mobileMoneyPhone.trim()
+                    ) && (
                     <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
                       {checkoutError}
                     </p>
@@ -835,7 +569,7 @@ export default function FundraisingSection() {
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <SecondaryButton
                       disabled={isCreatingCheckout}
-                      onClick={() => setStep("identity")}
+                      onClick={goBackToAmount}
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Retour
@@ -882,16 +616,16 @@ export default function FundraisingSection() {
         donation={mobileDonation}
         open={isMobileModalOpen}
         isVerifying={isVerifyingDonation}
+        hasTimedOut={mobileAttemptTimedOut}
         onOpenChange={(open) => {
           if (!open && mobileDonation?.status === "pending") {
-            setMobileDonation(null);
+            resetMobileMoneyAttempt();
+            return;
           }
           setIsMobileModalOpen(open);
         }}
-        onCancel={() => {
-          setMobileDonation(null);
-          setIsMobileModalOpen(false);
-        }}
+        onCancel={resetMobileMoneyAttempt}
+        onRetry={retryMobileMoneyPayment}
         onVerify={() => {
           if (mobileDonation) {
             verifyMobileDonation(mobileDonation.donation_id);
@@ -913,20 +647,25 @@ function MobileMoneyStatusDialog({
   donation,
   open,
   isVerifying,
+  hasTimedOut,
   onOpenChange,
   onCancel,
+  onRetry,
   onVerify,
 }: {
   donation: CreatedDonation | null;
   open: boolean;
   isVerifying: boolean;
+  hasTimedOut: boolean;
   onOpenChange: (open: boolean) => void;
   onCancel: () => void;
+  onRetry: () => void;
   onVerify: () => void;
 }) {
-  const isPending = donation?.status === "pending";
+  const isPending = donation?.status === "pending" && !hasTimedOut;
   const isConfirmed = donation?.status === "succeeded";
   const hasFailed =
+    hasTimedOut ||
     donation?.status === "failed" ||
     donation?.status === "cancelled" ||
     donation?.status === "refunded";
@@ -942,28 +681,37 @@ function MobileMoneyStatusDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton
-        className="max-w-[560px] overflow-hidden p-0"
+        className="max-h-[calc(100svh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[560px] overflow-hidden p-0"
       >
-        <div className="bg-primary px-6 py-5 text-white">
+        <div className="bg-primary px-5 py-5 text-white sm:px-6">
           <DialogHeader className="text-left">
-            <DialogTitle className="text-xl font-bold uppercase">
-              {isConfirmed ? "Paiement confirme" : "Validez sur votre telephone"}
+            <DialogTitle className="text-lg font-bold uppercase leading-tight sm:text-xl">
+              {isConfirmed
+                ? "Paiement confirmé"
+                : hasFailed
+                ? "Paiement non abouti"
+                : "Validez sur votre téléphone"}
             </DialogTitle>
             <DialogDescription className="text-sm font-medium text-white/72">
               {isConfirmed
-                ? "Merci pour votre soutien. Votre contribution est confirmée."
+                ? "Merci pour votre soutien. Nous finalisons la confirmation."
+                : hasFailed
+                ? "La tentative n'a pas pu être confirmée."
                 : "Une demande de paiement a été envoyée sur votre téléphone."}
             </DialogDescription>
           </DialogHeader>
         </div>
 
-        <div className="space-y-5 p-6">
+        <div className="max-h-[calc(100svh-7rem)] space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-6">
           <div className="rounded-md border border-secondary/20 bg-[#f8f1e7] p-4">
             <p className="text-sm font-semibold leading-relaxed text-primary">
-              Entrez votre code secret sur votre téléphone pour valider la
-              transaction. La confirmation s&apos;affichera automatiquement ici.
+              {isConfirmed
+                ? "Votre validation a été reçue. Vous allez être redirigé vers la page de confirmation."
+                : hasTimedOut
+                ? "Nous n'avons pas reçu de confirmation. Vérifiez le numéro Mobile Money puis réessayez avec une nouvelle tentative."
+                : "Entrez votre code secret sur votre téléphone pour valider la transaction. La confirmation s'affichera automatiquement ici."}
             </p>
-            {amount && (
+            {amount && !isConfirmed && !hasTimedOut && (
               <p className="mt-3 text-sm font-bold text-primary">
                 Montant à valider: {amount}
               </p>
@@ -971,27 +719,42 @@ function MobileMoneyStatusDialog({
           </div>
 
           <StatusPanel
-            status={donation?.status || "pending"}
+            status={hasTimedOut ? "failed" : donation?.status || "pending"}
             detail={
-              isPending
+              hasTimedOut
+                ? "Le paiement n'a pas abouti."
+                : isPending
                 ? "En attente de votre validation."
                 : hasFailed
                 ? "Le paiement n'a pas abouti."
-                : "Confirmation recue."
+                : "Votre don est confirmé."
             }
           />
 
-          {isPending && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-relaxed text-red-800">
-              Ne fermez pas cette page avant la confirmation. Validez la
-              transaction depuis votre téléphone avec votre code secret.
+          {(isPending || hasTimedOut) && (
+            <div
+              className={`rounded-md border p-4 text-sm font-semibold leading-relaxed ${
+                hasTimedOut
+                  ? "border-red-200 bg-red-50 text-red-800"
+                  : "border-amber-200 bg-amber-50 text-amber-900"
+              }`}
+            >
+              {hasTimedOut
+                ? "Cette tentative est arrivée à expiration. Vous pouvez réessayer avec le bon numéro Mobile Money."
+                : "Ne fermez pas cette page avant la confirmation. Validez la transaction depuis votre téléphone avec votre code secret."}
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div
+            className={`grid gap-3 ${
+              hasTimedOut
+                ? "sm:grid-cols-3"
+                : "sm:grid-cols-2"
+            }`}
+          >
             <button
               type="button"
-              disabled={isVerifying || !donation || donation.status !== "pending"}
+              disabled={isVerifying || !donation || !isPending}
               onClick={onVerify}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -1002,21 +765,33 @@ function MobileMoneyStatusDialog({
               )}
               {isVerifying ? "Confirmation..." : "Actualiser"}
             </button>
-            {isPending ? (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7]"
-              >
-                Annuler
-              </button>
+            {isPending || hasTimedOut ? (
+              <>
+                {hasTimedOut && (
+                  <button
+                    type="button"
+                    onClick={onRetry}
+                    className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-primary/90"
+                  >
+                    Réessayer
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7]"
+                >
+                  Annuler
+                </button>
+              </>
             ) : (
               <button
                 type="button"
+                disabled={isConfirmed}
                 onClick={() => onOpenChange(false)}
-                className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7]"
+                className="inline-flex items-center justify-center rounded-md border border-secondary/35 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-[#f8f1e7] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Fermer
+                {isConfirmed ? "Redirection..." : "Fermer"}
               </button>
             )}
           </div>
@@ -1179,7 +954,9 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 function Field({
+  id,
   label,
+  inputRef,
   value,
   onChange,
   placeholder,
@@ -1187,7 +964,9 @@ function Field({
   optional = false,
   type = "text",
 }: {
+  id?: string;
   label: string;
+  inputRef?: React.Ref<HTMLInputElement>;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
@@ -1202,7 +981,9 @@ function Field({
         {optional && <span className="font-semibold normal-case">Optionnel</span>}
       </span>
       <input
+        id={id}
         type={type}
+        ref={inputRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}

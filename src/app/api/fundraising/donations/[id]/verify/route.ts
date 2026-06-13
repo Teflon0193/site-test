@@ -18,9 +18,6 @@ const paramsSchema = z.object({
   id: z.string().uuid(),
 });
 
-const ADMIN_EMAIL =
-  process.env.FUNDRAISING_ADMIN_EMAIL || process.env.ADMIN_EMAIL;
-
 function paymentMethodLabel(method: AksessifyDonation["payment_method"]) {
   const labels: Record<AksessifyDonation["payment_method"], string> = {
     stripe: "Carte bancaire",
@@ -29,6 +26,44 @@ function paymentMethodLabel(method: AksessifyDonation["payment_method"]) {
   };
 
   return labels[method];
+}
+
+function parseEmailList(value: string | undefined) {
+  if (!value) return [];
+
+  return value
+    .split(/[;,]/)
+    .map((email) => email.trim().toLowerCase())
+    .filter((email) => /\S+@\S+\.\S+/.test(email));
+}
+
+async function getFundraisingAdminRecipients() {
+  const admins = await prisma.user.findMany({
+    where: {
+      role: "ADMIN",
+      emailVerified: true,
+    },
+    select: {
+      email: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  const adminEmails = admins.map((admin) => admin.email.trim().toLowerCase());
+
+  if (adminEmails.length > 0) {
+    return Array.from(new Set(adminEmails));
+  }
+
+  return Array.from(
+    new Set([
+      ...parseEmailList(process.env.FUNDRAISING_ADMIN_EMAILS),
+      ...parseEmailList(process.env.FUNDRAISING_ADMIN_EMAIL),
+      ...parseEmailList(process.env.ADMIN_EMAIL),
+    ])
+  );
 }
 
 async function ensureNotificationRecord(donation: AksessifyDonation) {
@@ -74,7 +109,9 @@ async function lockNotification(
 }
 
 async function notifyAdminOnce(donation: AksessifyDonation) {
-  if (!ADMIN_EMAIL) {
+  const recipients = await getFundraisingAdminRecipients();
+
+  if (recipients.length === 0) {
     await prisma.fundraisingDonationNotification.updateMany({
       where: {
         donationId: donation.id,
@@ -90,16 +127,37 @@ async function notifyAdminOnce(donation: AksessifyDonation) {
   if (!(await lockNotification(donation.id, "notificationStatus"))) return;
 
   try {
-    await sendFundraisingDonationSucceededEmail(ADMIN_EMAIL, {
-      donationId: donation.id,
-      donorName: donation.donor.name,
-      donorEmail: donation.donor.email,
-      donorPhone: donation.donor.phone,
-      amount: donation.amount,
-      currency: donation.currency,
-      paymentMethod: paymentMethodLabel(donation.payment_method),
-      succeededAt: donation.succeeded_at,
+    const results = await Promise.allSettled(
+      recipients.map((recipient) =>
+        sendFundraisingDonationSucceededEmail(recipient, {
+          donationId: donation.id,
+          donorName: donation.donor.name,
+          donorEmail: donation.donor.email,
+          donorPhone: donation.donor.phone,
+          amount: donation.amount,
+          currency: donation.currency,
+          paymentMethod: paymentMethodLabel(donation.payment_method),
+          succeededAt: donation.succeeded_at,
+        })
+      )
+    );
+
+    const succeededCount = results.filter(
+      (result) => result.status === "fulfilled"
+    ).length;
+
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.error(
+          `[Fundraising] Echec notification admin ${recipients[index]}:`,
+          result.reason
+        );
+      }
     });
+
+    if (succeededCount === 0) {
+      throw new Error("Aucun administrateur n'a pu etre notifie.");
+    }
 
     await prisma.fundraisingDonationNotification.update({
       where: { donationId: donation.id },

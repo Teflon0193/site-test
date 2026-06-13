@@ -15,10 +15,11 @@ export const menuItems: MenuItem[] = [
     submenu: [
       { name: "Présentation", href: "/grand-tambour/presentation" },
       { name: "Espaces", href: "/grand-tambour/espaces" },
-      {
-        name: "Équipe & Gouvernance",
-        href: "/grand-tambour/equipe-gouvernance",
-      },
+      // Temporairement masque pendant la restructuration de l'organigramme.
+      // {
+      //   name: "Équipe & Gouvernance",
+      //   href: "/grand-tambour/equipe-gouvernance",
+      // },
     ],
   },
   {
@@ -60,7 +61,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
     label: "Twitter",
   },
   {
-    href: "https://www.instagram.com/grandtambour/",
+    href: "https://www.instagram.com/grandtambour?igsh=ZTNqcGQycnlwbGFw&utm_source=qr",
     icon: FaInstagram,
     label: "Instagram",
   },
@@ -70,7 +71,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
     label: "YouTube",
   },
   {
-    href: "https://www.tiktok.com/@centrecapac",
+    href: "https://www.tiktok.com/@grandtambour?_r=1&_t=ZS-974QRYwlVWn",
     icon: FaTiktok,
     label: "Tiktok",
   },
