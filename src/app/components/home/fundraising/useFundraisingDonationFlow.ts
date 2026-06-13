@@ -19,7 +19,7 @@ import type {
 export function useFundraisingDonationFlow(
   campaignData: CampaignResponse | null
 ) {
-  const [step, setStep] = useState<Step>("amount");
+  const [step, setStep] = useState<Step>("identity");
   const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [useCustomAmount, setUseCustomAmount] = useState(false);
@@ -134,7 +134,40 @@ export function useFundraisingDonationFlow(
     setStep("identity");
   };
 
-  const goToIdentity = () => {
+  useEffect(() => {
+    if (step !== "identity") return;
+
+    window.requestAnimationFrame(() => {
+      fullNameInputRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      fullNameInputRef.current?.focus({ preventScroll: true });
+    });
+  }, [step]);
+
+  const goToAmount = () => {
+    const nextErrors: FundraisingErrors = {};
+    setCheckoutError("");
+
+    if (!fullName.trim()) {
+      nextErrors.fullName = "Le nom du donateur ou de l'organisation est requis.";
+    }
+
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
+      nextErrors.email = "Veuillez renseigner une adresse e-mail valide.";
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
+    setStep("amount");
+  };
+
+  const goToPayment = () => {
     setCheckoutError("");
 
     if (!campaignIsActive) {
@@ -151,39 +184,6 @@ export function useFundraisingDonationFlow(
           currency
         )}.`,
       });
-      return;
-    }
-
-    setErrors({});
-    setStep("identity");
-  };
-
-  useEffect(() => {
-    if (step !== "identity") return;
-
-    window.requestAnimationFrame(() => {
-      fullNameInputRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-      fullNameInputRef.current?.focus({ preventScroll: true });
-    });
-  }, [step]);
-
-  const goToPayment = () => {
-    const nextErrors: FundraisingErrors = {};
-    setCheckoutError("");
-
-    if (!fullName.trim()) {
-      nextErrors.fullName = "Le nom du donateur ou de l'organisation est requis.";
-    }
-
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-      nextErrors.email = "Veuillez renseigner une adresse e-mail valide.";
-    }
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
       return;
     }
 
@@ -361,7 +361,7 @@ export function useFundraisingDonationFlow(
     fullNameInputRef,
     goBackToAmount,
     goBackToIdentity,
-    goToIdentity,
+    goToAmount,
     goToPayment,
     isCreatingCheckout,
     isMobileModalOpen,

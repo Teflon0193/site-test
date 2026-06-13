@@ -90,7 +90,7 @@ export default function FundraisingSection() {
     fullNameInputRef,
     goBackToAmount,
     goBackToIdentity,
-    goToIdentity,
+    goToAmount,
     goToPayment,
     isCreatingCheckout,
     isMobileModalOpen,
@@ -255,14 +255,15 @@ export default function FundraisingSection() {
 
                 <ol className="grid w-full grid-cols-3 gap-1 rounded-md border border-secondary/10 bg-secondary/5 p-1 text-[10px] font-bold uppercase tracking-wide sm:w-[360px]">
                   {[
-                    ["amount", "Montant"],
                     ["identity", "Profil"],
+                    ["amount", "Montant"],
                     ["payment", "Paiement"],
                   ].map(([id, label], index) => {
                     const active = step === id;
+                    const currentIndex =
+                      step === "identity" ? 0 : step === "amount" ? 1 : 2;
                     const done =
-                      (step === "identity" && index === 0) ||
-                      (step === "payment" && index < 2);
+                      index < currentIndex;
 
                     return (
                       <li
@@ -397,13 +398,19 @@ export default function FundraisingSection() {
                   </div>
 
                   <div ref={amountActionRef}>
+                    <div className="mb-3">
+                      <SecondaryButton onClick={goBackToIdentity}>
+                        <ArrowLeft className="h-4 w-4" />
+                        Retour
+                      </SecondaryButton>
+                    </div>
                     <SummaryBar
                       label={selectedLabel}
                       amount={selectedAmount}
                       currency={currency}
                       actionLabel="Continuer"
                       disabled={!campaignIsActive}
-                      onAction={goToIdentity}
+                      onAction={goToPayment}
                     />
                   </div>
                 </div>
@@ -450,11 +457,7 @@ export default function FundraisingSection() {
                   </div>
 
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <SecondaryButton onClick={goBackToAmount}>
-                      <ArrowLeft className="h-4 w-4" />
-                      Retour
-                    </SecondaryButton>
-                    <PrimaryButton onClick={goToPayment}>
+                    <PrimaryButton onClick={goToAmount}>
                       Continuer
                       <ArrowRight className="h-4 w-4" />
                     </PrimaryButton>
@@ -566,7 +569,7 @@ export default function FundraisingSection() {
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <SecondaryButton
                       disabled={isCreatingCheckout}
-                      onClick={goBackToIdentity}
+                      onClick={goBackToAmount}
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Retour
