@@ -120,3 +120,35 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Battement de cœur — utilisé par le bouton « Faire un don » pour attirer l'œil. */
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  18% {
+    transform: scale(1.32);
+  }
+  34% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.22);
+  }
+  66% {
+    transform: scale(1);
+  }
+}
+
+.animate-heartbeat {
+  animation: heartbeat 3s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-heartbeat {
+    animation: none;
+  }
+}

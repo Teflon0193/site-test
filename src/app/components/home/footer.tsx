@@ -152,12 +152,12 @@ export default function Footer() {
             <div className="flex items-center gap-1">
               <span className="text-white">Développé par</span>
               <a
-                href="https://gofreelancerdc.com"
+                href=""
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-bold text-white hover:text-white transition-colors"
               >
-                Go freelance
+                CCAPAC Dev Team
               </a>
             </div>
           </div>
