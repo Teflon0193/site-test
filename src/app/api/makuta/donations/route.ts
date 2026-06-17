@@ -31,7 +31,8 @@ const maxDonationAmount = 1000000;
 const createDonationSchema = z.object({
   amount: z.number().positive().max(maxDonationAmount),
   operator: z.enum(operatorCodes),
-  account_number: z.string().trim().min(4).max(40),
+  // Optionnel : non requis pour Visa CNP (saisie sur la page sécurisée Makuta).
+  account_number: z.string().trim().max(40).optional(),
   donor: z.object({
     name: z.string().trim().min(2).max(160).regex(donorNamePattern),
     email: z.string().trim().email().max(254),
@@ -57,7 +58,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { amount, operator, donor } = result.data;
-  const accountNumber = result.data.account_number.replace(/[\s-]/g, "");
+  const accountNumber = (result.data.account_number ?? "").replace(/[\s-]/g, "");
+  const isCard = operator === "DRC_VISA_CNP";
 
   // Les opérateurs Mobile Money attendent un numéro RDC au format international.
   if (mobileMoneyOperators.has(operator) && !phonePattern.test(accountNumber)) {
@@ -67,6 +69,20 @@ export async function POST(req: NextRequest) {
           code: "invalid_account_number",
           message:
             "Veuillez entrer un numéro valide au format +243 suivi de 9 chiffres.",
+          param: "account_number",
+        },
+      },
+      { status: 400 }
+    );
+  }
+
+  // Virement bancaire : un identifiant de compte est requis (hors carte).
+  if (!isCard && !mobileMoneyOperators.has(operator) && accountNumber.length < 4) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "invalid_account_number",
+          message: "Veuillez renseigner un numéro de compte valide.",
           param: "account_number",
         },
       },

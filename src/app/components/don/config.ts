@@ -51,6 +51,7 @@ export const campaignConfig: CampaignConfig = {
       description: "Chaque geste compte pour faire vivre la lecture.",
       minAmount: 1,
       maxAmount: 4999,
+      recommended: true,
     },
   ],
   // Statistiques optionnelles : laisser absent tant qu'aucune source réelle
@@ -71,17 +72,19 @@ export const impactItems = [
   "Ateliers, clubs de lecture et rencontres littéraires.",
 ];
 
-/** Coordonnées bancaires pour le virement manuel (alternative hors ligne). */
-export const bankAccounts = [
-  { bank: "Rawbank", number: "CD48 05100051010120306000152" },
-  { bank: "Equity BCDC", number: "00011150511200194697606 USD" },
-  { bank: "Ecobank", number: "0026000013508010061362 USD" },
-];
-
 export const contactInfo = {
   email: "info@centreculturel.cd",
   phone: "+243 890 809 745",
 };
+
+/**
+ * Active la soumission réelle du paiement.
+ * Tant que l'intégration Makuta n'est pas finalisée côté backend, laisser à
+ * `false` : le formulaire affiche un message « bientôt disponible » au lieu de
+ * lancer un paiement (et de prétendre, à tort, qu'il a abouti).
+ * Passer à `true` une fois `src/lib/makuta.ts` branché sur l'API réelle.
+ */
+export const PAYMENT_ENABLED = false;
 
 /** Intervalle de vérification du statut (mobile money / attente). */
 export const STATUS_POLL_INTERVAL_MS = 5000;

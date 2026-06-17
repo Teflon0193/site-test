@@ -7,113 +7,115 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
-  ChevronDown,
-  Copy,
+  Clock,
+  CreditCard,
   HandCoins,
-  Landmark,
+  HeartHandshake,
+  Lock,
   Mail,
   Phone,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { OtpDialog } from "./OtpDialog";
-import {
-  bankAccounts,
-  contactInfo,
-  impactItems,
-} from "./config";
+import { PAYMENT_ENABLED, contactInfo, impactItems } from "./config";
 import { formatMoney, formatTierRange } from "./formatters";
 import { paymentCategories } from "./operators";
 import { useDonationFlow } from "./useDonationFlow";
+import type { DonationTier } from "./types";
 import {
   Field,
   PrimaryButton,
   ReceiptLine,
   SecondaryButton,
-  StatCard,
   Stepper,
   SummaryBar,
 } from "./ui";
 
+const stepIntro = {
+  identity: {
+    eyebrow: "Étape 1 · Profil",
+    title: "Commençons par vous",
+    subtitle: "Vos coordonnées servent au reçu et au suivi de votre don.",
+  },
+  amount: {
+    eyebrow: "Étape 2 · Montant",
+    title: "Choisissez votre contribution",
+    subtitle: "Sélectionnez un niveau d'engagement ou saisissez un montant libre.",
+  },
+  payment: {
+    eyebrow: "Étape 3 · Paiement",
+    title: "Finalisez votre don",
+    subtitle: "Choisissez votre moyen de paiement sécurisé.",
+  },
+} as const;
+
 export default function DonationExperience() {
   const flow = useDonationFlow();
   const { campaign, currency } = flow;
+  const intro = stepIntro[flow.step];
 
   return (
     <section
       id="faire-un-don"
-      className="relative overflow-hidden bg-[#f4efe4] py-16 text-primary sm:py-20 lg:py-24"
+      className="bg-[#f4efe4] py-16 text-primary sm:py-20 lg:py-24"
     >
-      <div className="absolute inset-x-0 top-0 h-36 bg-primary" />
-      <div className="absolute inset-x-0 bottom-0 h-px bg-primary/10" />
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid overflow-hidden rounded-2xl border border-[#e3d2b8] bg-white shadow-2xl lg:grid-cols-[0.82fr_1.18fr]">
+          {/* Panneau de marque */}
+          <aside className="relative flex flex-col justify-between gap-10 overflow-hidden bg-primary p-7 text-white sm:p-9">
+            <Image
+              src={campaign.coverImage}
+              alt={campaign.coverImageAlt}
+              fill
+              priority
+              className="object-cover opacity-25"
+              sizes="(min-width: 1024px) 40vw, 100vw"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/92 via-primary/82 to-primary/95" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#ffcc02]/15 blur-3xl" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
-          {/* Colonne campagne */}
-          <aside className="overflow-hidden rounded-lg bg-primary text-white shadow-2xl">
-            <div className="relative min-h-[410px]">
-              <Image
-                src={campaign.coverImage}
-                alt={campaign.coverImageAlt}
-                fill
-                className="object-cover opacity-72"
-                sizes="(min-width: 1024px) 42vw, 100vw"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#25150e] via-[#25150e]/68 to-[#25150e]/8" />
+            <div className="relative">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/12 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] backdrop-blur-md">
+                <HandCoins className="h-4 w-4 text-[#ffcc02]" />
+                Collecte Grand Tambour
+              </div>
 
-              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/12 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] backdrop-blur-md">
-                  <HandCoins className="h-4 w-4 text-[#ffcc02]" />
-                  Collecte en cours
-                </div>
+              <h2 className="text-2xl font-bold uppercase leading-[1.1] tracking-tight sm:text-3xl">
+                {campaign.title}
+              </h2>
 
-                <h2 className="max-w-xl text-3xl font-bold uppercase leading-[1.05] tracking-tight sm:text-4xl">
-                  {campaign.title}
-                </h2>
+              {campaign.description && (
+                <p className="mt-4 max-w-md text-sm font-medium leading-relaxed text-white/80">
+                  {campaign.description}
+                </p>
+              )}
 
-                {campaign.description && (
-                  <p className="mt-5 max-w-lg text-sm font-medium leading-relaxed text-white/82 sm:text-base">
-                    {campaign.description}
-                  </p>
+              <div className="mt-6 rounded-xl border border-white/15 bg-white/8 p-4 backdrop-blur-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                  Objectif de la collecte
+                </p>
+                <p className="mt-1 text-2xl font-bold">
+                  {formatMoney(campaign.goalAmount, currency)}
+                </p>
+                {flow.progressPercent !== null && campaign.stats && (
+                  <>
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/14">
+                      <div
+                        className="h-full rounded-full bg-[#ffcc02]"
+                        style={{ width: `${Math.max(flow.progressPercent, 2)}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-white/60">
+                      {formatMoney(campaign.stats.raisedAmount, currency)} déjà
+                      réunis ({flow.progressPercent.toFixed(0)}%).
+                    </p>
+                  </>
                 )}
               </div>
             </div>
 
-            <div className="grid gap-5 border-t border-white/12 p-6 sm:p-8">
-              <div className="grid grid-cols-2 gap-3">
-                <StatCard
-                  label="Objectif"
-                  value={formatMoney(campaign.goalAmount, currency)}
-                />
-                <StatCard
-                  label="Collecte"
-                  value={
-                    campaign.stats
-                      ? formatMoney(campaign.stats.raisedAmount, currency)
-                      : "—"
-                  }
-                />
-              </div>
-
-              {flow.progressPercent !== null && campaign.stats && (
-                <div>
-                  <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-white/62">
-                    <span>Progression de la collecte</span>
-                    <span>{flow.progressPercent.toFixed(1)}%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/14">
-                    <div
-                      className="h-full rounded-full bg-[#ffcc02]"
-                      style={{ width: `${Math.max(flow.progressPercent, 2)}%` }}
-                    />
-                  </div>
-                  <p className="mt-3 text-xs font-medium text-white/62">
-                    {campaign.stats.succeededDonationsCount} dons confirmés par{" "}
-                    {campaign.stats.uniqueDonorsCount} donateurs.
-                  </p>
-                </div>
-              )}
-
+            <div className="relative space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide">
                   <BookOpen className="h-4 w-4 text-[#ffcc02]" />
@@ -131,32 +133,45 @@ export default function DonationExperience() {
                   ))}
                 </ul>
               </div>
+
+              <div className="grid grid-cols-1 gap-3 border-t border-white/12 pt-6 sm:grid-cols-2">
+                <ValueProp
+                  icon={ShieldCheck}
+                  title="Paiement sécurisé"
+                  detail="Transaction chiffrée et protégée."
+                />
+                <ValueProp
+                  icon={HeartHandshake}
+                  title="100% dédié"
+                  detail="Au projet de la Biblio-Librairie."
+                />
+              </div>
             </div>
           </aside>
 
-          {/* Carte formulaire */}
-          <div className="rounded-lg border border-[#d5b58d]/45 bg-white shadow-xl">
-            <div className="border-b border-[#eadcc7] px-5 py-5 sm:px-7">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-secondary">
-                    Faire un don
-                  </p>
-                  <h3 className="mt-2 text-2xl font-bold uppercase leading-tight text-primary sm:text-3xl">
-                    Choisissez votre contribution
-                  </h3>
-                </div>
-                <Stepper step={flow.step} />
-              </div>
+          {/* Panneau formulaire */}
+          <div className="flex flex-col bg-white p-6 sm:p-8 lg:p-10">
+            <Stepper step={flow.step} />
+
+            <div className="mt-8">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-secondary">
+                {intro.eyebrow}
+              </p>
+              <h3 className="mt-2 text-2xl font-bold uppercase leading-tight text-primary sm:text-3xl">
+                {intro.title}
+              </h3>
+              <p className="mt-2 text-sm font-medium leading-relaxed text-primary/60">
+                {intro.subtitle}
+              </p>
             </div>
 
-            <div className="p-5 sm:p-7">
+            <div className="mt-7 flex-1">
               {flow.step === "identity" && <IdentityStep flow={flow} />}
               {flow.step === "amount" && <AmountStep flow={flow} />}
               {flow.step === "payment" && <PaymentStep flow={flow} />}
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-[#eadcc7] bg-[#fdfbf6] px-5 py-4 text-xs font-semibold text-primary/65 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+            <div className="mt-8 flex flex-col gap-3 border-t border-[#eadcc7] pt-5 text-xs font-semibold text-primary/60 sm:flex-row sm:items-center sm:justify-between">
               <span className="inline-flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-secondary" />
                 Paiement sécurisé
@@ -186,6 +201,32 @@ export default function DonationExperience() {
 }
 
 type Flow = ReturnType<typeof useDonationFlow>;
+
+function ValueProp({
+  icon: Icon,
+  title,
+  detail,
+}: {
+  icon: typeof ShieldCheck;
+  title: string;
+  detail: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="grid h-9 w-9 flex-none place-items-center rounded-lg bg-white/12 text-[#ffcc02]">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-white">
+          {title}
+        </p>
+        <p className="mt-1 text-xs font-medium leading-relaxed text-white/60">
+          {detail}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function IdentityStep({ flow }: { flow: Flow }) {
   return (
@@ -242,63 +283,38 @@ function IdentityStep({ flow }: { flow: Flow }) {
 }
 
 function AmountStep({ flow }: { flow: Flow }) {
+  const recommended = flow.tiers.filter((tier) => tier.recommended);
+  const others = flow.tiers.filter((tier) => !tier.recommended);
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-3">
-        {flow.tiers.map((tier) => {
-          const isSelected =
-            flow.selectedTierId === tier.id && !flow.useCustomAmount;
+      {recommended.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary">
+            Recommandé
+          </p>
+          <div className="grid gap-3">
+            {recommended.map((tier) => (
+              <TierCard key={tier.id} tier={tier} flow={flow} />
+            ))}
+          </div>
+        </div>
+      )}
 
-          return (
-            <button
-              key={tier.id}
-              type="button"
-              onClick={() => {
-                flow.setSelectedTierId(tier.id);
-                flow.setUseCustomAmount(false);
-                flow.setCustomAmount("");
-                flow.clearStepFeedback();
-                flow.scrollToAmountAction();
-              }}
-              className={`group grid gap-3 rounded-md border p-4 text-left transition duration-200 sm:grid-cols-[1fr_auto] sm:items-center ${
-                isSelected
-                  ? "border-primary bg-primary text-white shadow-lg"
-                  : "border-[#eadcc7] bg-[#fdfbf6] text-primary hover:border-secondary hover:bg-white"
-              }`}
-            >
-              <span>
-                <span
-                  className={`block text-sm font-bold uppercase tracking-wide ${
-                    isSelected ? "text-white" : "text-black"
-                  }`}
-                >
-                  {tier.name}
-                </span>
-                {tier.description && (
-                  <span
-                    className={`mt-1 block text-xs font-medium ${
-                      isSelected ? "text-white/72" : "text-black/65"
-                    }`}
-                  >
-                    {tier.description}
-                  </span>
-                )}
-              </span>
-              <span
-                className={`rounded-md px-3 py-2 text-sm font-bold ${
-                  isSelected
-                    ? "bg-[#ffcc02] text-[#3a2014]"
-                    : "bg-white text-primary shadow-sm"
-                }`}
-              >
-                {formatTierRange(tier.minAmount, tier.maxAmount, flow.currency)}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {others.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary/70">
+            Autres niveaux d&apos;engagement
+          </p>
+          <div className="grid gap-3">
+            {others.map((tier) => (
+              <TierCard key={tier.id} tier={tier} flow={flow} />
+            ))}
+          </div>
+        </div>
+      )}
 
-      <div className="rounded-md border border-dashed border-secondary/55 bg-[#f8f1e7] p-4">
+      <div className="rounded-xl border border-dashed border-secondary/45 bg-[#fdfbf6] p-4">
         <button
           type="button"
           onClick={() => {
@@ -312,17 +328,21 @@ function AmountStep({ flow }: { flow: Flow }) {
             <span className="block text-sm font-bold uppercase tracking-wide">
               Montant libre
             </span>
-            <span className="text-xs font-medium text-primary/65">
+            <span className="text-xs font-medium text-primary/60">
               À partir de {formatMoney(flow.minimumAmount, flow.currency)}.
             </span>
           </span>
           <span
-            className={`h-4 w-4 rounded-full border ${
+            className={`grid h-5 w-5 place-items-center rounded-full border transition ${
               flow.useCustomAmount
                 ? "border-primary bg-primary"
                 : "border-primary/35 bg-white"
             }`}
-          />
+          >
+            {flow.useCustomAmount && (
+              <span className="h-2 w-2 rounded-full bg-white" />
+            )}
+          </span>
         </button>
 
         <label className="relative block">
@@ -340,7 +360,7 @@ function AmountStep({ flow }: { flow: Flow }) {
               flow.clearCheckoutError();
             }}
             placeholder="Saisir un montant"
-            className="h-12 w-full rounded-md border border-[#eadcc7] bg-white pl-16 pr-4 text-sm font-bold text-primary outline-none transition focus:border-primary"
+            className="h-12 w-full rounded-lg border border-[#eadcc7] bg-white pl-16 pr-4 text-sm font-bold text-primary outline-none transition focus:border-primary"
           />
         </label>
         {flow.errors.amount && (
@@ -350,13 +370,11 @@ function AmountStep({ flow }: { flow: Flow }) {
         )}
       </div>
 
-      <div ref={flow.amountActionRef}>
-        <div className="mb-3">
-          <SecondaryButton onClick={flow.goToIdentity}>
-            <ArrowLeft className="h-4 w-4" />
-            Retour
-          </SecondaryButton>
-        </div>
+      <div ref={flow.amountActionRef} className="space-y-3">
+        <SecondaryButton onClick={flow.goToIdentity}>
+          <ArrowLeft className="h-4 w-4" />
+          Retour
+        </SecondaryButton>
         <SummaryBar
           label={flow.selectedLabel}
           amount={flow.selectedAmount}
@@ -369,7 +387,70 @@ function AmountStep({ flow }: { flow: Flow }) {
   );
 }
 
+function TierCard({ tier, flow }: { tier: DonationTier; flow: Flow }) {
+  const isSelected = flow.selectedTierId === tier.id && !flow.useCustomAmount;
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        flow.setSelectedTierId(tier.id);
+        flow.setUseCustomAmount(false);
+        flow.setCustomAmount("");
+        flow.clearStepFeedback();
+        flow.scrollToAmountAction();
+      }}
+      className={`w-full rounded-xl border p-4 text-left transition duration-200 ${
+        isSelected
+          ? "border-primary bg-primary/[0.06] ring-1 ring-primary/20"
+          : "border-[#eadcc7] bg-white hover:border-secondary/50 hover:bg-[#fdfbf6]"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-bold uppercase tracking-wide text-primary">
+              {tier.name}
+            </span>
+            {tier.recommended && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#ffcc02]/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#7a5a12]">
+                <Sparkles className="h-3 w-3" />
+                Recommandé
+              </span>
+            )}
+          </div>
+          {tier.description && (
+            <p className="mt-1 text-xs font-medium leading-relaxed text-primary/60">
+              {tier.description}
+            </p>
+          )}
+        </div>
+        <span
+          className={`flex-none rounded-md px-3 py-2 text-sm font-bold ${
+            isSelected ? "bg-primary text-white" : "bg-secondary/8 text-primary"
+          }`}
+        >
+          {formatTierRange(tier.minAmount, tier.maxAmount, flow.currency)}
+        </span>
+      </div>
+    </button>
+  );
+}
+
 function PaymentStep({ flow }: { flow: Flow }) {
+  const isRedirect = Boolean(flow.activeOperator?.redirect);
+  const hasOperatorChoice = flow.activeCategory.operators.length > 1;
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
+  const handleFinalize = () => {
+    if (PAYMENT_ENABLED) {
+      flow.createCheckout();
+      return;
+    }
+    // Paiement en ligne pas encore disponible : on l'annonce honnêtement.
+    setShowComingSoon(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Catégories */}
@@ -383,25 +464,25 @@ function PaymentStep({ flow }: { flow: Flow }) {
               key={cat.id}
               type="button"
               onClick={() => flow.selectCategory(cat.id)}
-              className={`rounded-md border p-4 text-left transition ${
+              className={`rounded-xl border p-4 text-left transition ${
                 isSelected
-                  ? "border-primary bg-primary text-white shadow-lg"
-                  : "border-[#eadcc7] bg-[#fdfbf6] text-black hover:border-secondary"
+                  ? "border-primary bg-primary/[0.06] ring-1 ring-primary/20"
+                  : "border-[#eadcc7] bg-white hover:border-secondary/50"
               }`}
             >
-              <Icon
-                className={`mb-3 h-5 w-5 ${
-                  isSelected ? "text-[#ffcc02]" : "text-secondary"
-                }`}
-              />
-              <span className="block text-sm font-bold uppercase">
-                {cat.title}
-              </span>
               <span
-                className={`mt-1 block text-xs leading-relaxed ${
-                  isSelected ? "text-white/72" : "text-secondary/65"
+                className={`mb-3 grid h-9 w-9 place-items-center rounded-lg ${
+                  isSelected
+                    ? "bg-primary text-white"
+                    : "bg-secondary/10 text-secondary"
                 }`}
               >
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="block text-sm font-bold uppercase text-primary">
+                {cat.title}
+              </span>
+              <span className="mt-1 block text-xs leading-relaxed text-primary/55">
                 {cat.detail}
               </span>
             </button>
@@ -409,35 +490,53 @@ function PaymentStep({ flow }: { flow: Flow }) {
         })}
       </div>
 
-      {/* Choix de l'opérateur */}
-      <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-secondary">
-          {flow.category === "card" ? "Réseau" : "Opérateur"}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {flow.activeCategory.operators.map((operator) => {
-            const isSelected = flow.operatorCode === operator.code;
+      {/* Choix de l'opérateur (seulement si plusieurs) */}
+      {hasOperatorChoice && (
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-secondary">
+            Opérateur
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {flow.activeCategory.operators.map((operator) => {
+              const isSelected = flow.operatorCode === operator.code;
 
-            return (
-              <button
-                key={operator.code}
-                type="button"
-                onClick={() => flow.selectOperator(operator.code)}
-                className={`rounded-md border px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition ${
-                  isSelected
-                    ? "border-primary bg-primary text-white shadow-sm"
-                    : "border-[#eadcc7] bg-[#fdfbf6] text-primary hover:border-secondary"
-                }`}
-              >
-                {operator.label}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={operator.code}
+                  type="button"
+                  onClick={() => flow.selectOperator(operator.code)}
+                  className={`w-full rounded-lg border px-3 py-2.5 text-center text-xs font-bold uppercase tracking-wide transition ${
+                    isSelected
+                      ? "border-primary bg-primary text-white shadow-sm"
+                      : "border-[#eadcc7] bg-white text-primary hover:border-secondary/50"
+                  }`}
+                >
+                  {operator.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Champ compte payeur */}
-      <div className="rounded-md border border-secondary/25 bg-[#f8f1e7] p-4">
+      {/* Carte : message de redirection sécurisée — sinon, champ compte payeur */}
+      {isRedirect ? (
+        <div className="flex items-start gap-3 rounded-xl border border-secondary/25 bg-[#fdfbf6] p-4">
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-lg bg-secondary/10 text-secondary">
+            <CreditCard className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-sm font-bold uppercase tracking-wide text-primary">
+              Paiement par carte sécurisé
+            </p>
+            <p className="mt-1 text-sm font-medium leading-relaxed text-primary/65">
+              Vous serez redirigé vers la page de paiement sécurisée de Makuta
+              pour saisir les informations de votre carte. Aucune donnée
+              bancaire ne transite par ce site.
+            </p>
+          </div>
+        </div>
+      ) : (
         <Field
           id="don-account-number"
           label={flow.activeCategory.accountLabel}
@@ -453,133 +552,85 @@ function PaymentStep({ flow }: { flow: Flow }) {
           hint={flow.activeCategory.accountHint}
           error={flow.errors.accountNumber}
         />
-      </div>
+      )}
 
       {/* Récapitulatif */}
-      <div className="rounded-md border border-[#eadcc7] bg-white p-4">
-        <div className="grid gap-1 text-sm sm:grid-cols-3 sm:gap-3">
+      <div className="rounded-xl border border-[#eadcc7] bg-[#fdfbf6] p-5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary">
+          Récapitulatif
+        </p>
+        <div className="mt-1">
           <ReceiptLine label="Niveau" value={flow.selectedLabel} />
           <ReceiptLine
-            label="Montant"
-            value={formatMoney(flow.selectedAmount, flow.currency)}
+            label="Moyen de paiement"
+            value={flow.activeOperator?.label || flow.activeCategory.title}
           />
           <ReceiptLine
-            label="Moyen"
-            value={flow.activeOperator?.label || flow.activeCategory.title}
+            label="Montant du don"
+            value={formatMoney(flow.selectedAmount, flow.currency)}
+            strong
           />
         </div>
       </div>
 
       {flow.checkoutError && (
-        <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
+        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
           {flow.checkoutError}
         </p>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <SecondaryButton
-          disabled={flow.isCreatingCheckout}
-          onClick={flow.goBackToAmount}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour
-        </SecondaryButton>
-        <PrimaryButton
-          disabled={flow.isCreatingCheckout}
-          onClick={flow.createCheckout}
-        >
-          {flow.isCreatingCheckout
-            ? "Préparation du paiement..."
-            : "Finaliser le don"}
-          <ShieldCheck className="h-4 w-4" />
-        </PrimaryButton>
-      </div>
-
-      <BankTransferInfo />
-    </div>
-  );
-}
-
-function BankTransferInfo() {
-  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
-
-  const copyAccountNumber = async (accountNumber: string) => {
-    await navigator.clipboard.writeText(accountNumber);
-    setCopiedAccount(accountNumber);
-    window.setTimeout(() => {
-      setCopiedAccount((current) =>
-        current === accountNumber ? null : current
-      );
-    }, 2000);
-  };
-
-  return (
-    <div className="border-t border-[#eadcc7] pt-5">
-      <details className="group rounded-md border border-[#eadcc7] bg-[#fdfbf6]">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 text-left marker:hidden">
-          <span className="flex items-center gap-3">
-            <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-secondary/10 text-secondary">
-              <Landmark className="h-4 w-4" />
-            </span>
-            <span>
-              <span className="block text-xs font-bold uppercase tracking-wide text-primary">
-                Vous préférez un virement bancaire manuel ?
+      {showComingSoon ? (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-secondary/25 bg-[#fdfbf6] p-5">
+            <div className="flex items-start gap-3">
+              <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-secondary/12 text-secondary">
+                <Clock className="h-5 w-5" />
               </span>
-              <span className="mt-1 block text-xs font-medium leading-relaxed text-primary/60">
-                Consultez les coordonnées bancaires
-              </span>
-            </span>
-          </span>
-          <ChevronDown className="h-4 w-4 flex-none text-secondary transition-transform group-open:rotate-180" />
-        </summary>
-
-        <div className="border-t border-[#eadcc7] px-4 py-4">
-          <p className="mb-4 text-sm font-medium leading-relaxed text-primary/72">
-            Le virement manuel est une alternative aux paiements en ligne.
-            Choisissez un compte ci-dessous, puis contactez-nous après votre
-            transfert pour nous permettre de l&apos;identifier.
-          </p>
-
-          <div className="grid gap-2">
-            {bankAccounts.map((account) => {
-              const isCopied = copiedAccount === account.number;
-
-              return (
-                <div
-                  key={account.number}
-                  className="flex flex-col gap-3 rounded-md border border-[#eadcc7]/80 bg-white px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <span className="block font-bold text-primary">
-                      {account.bank}
-                    </span>
-                    <span className="mt-1 block break-all font-semibold text-primary/70">
-                      {account.number}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => copyAccountNumber(account.number)}
-                    className="inline-flex flex-none items-center justify-center gap-2 rounded-md border border-secondary/30 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-primary transition hover:bg-secondary/5"
-                    aria-label={`Copier le compte ${account.bank}`}
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-primary">
+                  Paiement en ligne bientôt disponible
+                </p>
+                <p className="mt-1.5 text-sm font-medium leading-relaxed text-primary/65">
+                  Le paiement en ligne est en cours de finalisation et sera
+                  ouvert très prochainement. Merci pour votre élan de
+                  générosité — revenez d&apos;ici peu pour confirmer votre don.
+                  Pour contribuer dès maintenant, écrivez-nous à{" "}
+                  <a
+                    href={`mailto:${contactInfo.email}`}
+                    className="font-bold text-secondary underline-offset-2 hover:underline"
                   >
-                    {isCopied ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-green-700" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5 text-secondary" />
-                    )}
-                    {isCopied ? "Copié" : "Copier"}
-                  </button>
-                </div>
-              );
-            })}
+                    {contactInfo.email}
+                  </a>
+                  .
+                </p>
+              </div>
+            </div>
           </div>
 
-          <p className="mt-4 text-xs font-semibold text-primary/60">
-            Besoin d&apos;aide ? {contactInfo.email}
-          </p>
+          <SecondaryButton onClick={() => setShowComingSoon(false)}>
+            <ArrowLeft className="h-4 w-4" />
+            Retour au formulaire
+          </SecondaryButton>
         </div>
-      </details>
+      ) : (
+        <>
+          <div className="flex items-center justify-center gap-2 rounded-lg border border-[#eadcc7] bg-[#fdfbf6] px-4 py-3 text-xs font-medium text-primary/70">
+            <Lock className="h-4 w-4 flex-none text-secondary" />
+            Vos informations sont protégées. Paiement traité de façon sécurisée.
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <SecondaryButton onClick={flow.goBackToAmount}>
+              <ArrowLeft className="h-4 w-4" />
+              Retour
+            </SecondaryButton>
+            <PrimaryButton onClick={handleFinalize}>
+              Finaliser le don
+              <ShieldCheck className="h-4 w-4" />
+            </PrimaryButton>
+          </div>
+        </>
+      )}
     </div>
   );
 }
