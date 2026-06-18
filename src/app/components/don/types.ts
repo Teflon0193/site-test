@@ -20,6 +20,8 @@ export type DonationTier = {
   description: string | null;
   minAmount: number;
   maxAmount: number | null;
+  /** Met en avant ce palier (badge « Recommandé », affiché en premier). */
+  recommended?: boolean;
 };
 
 export type CampaignStats = {

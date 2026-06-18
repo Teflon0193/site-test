@@ -178,6 +178,13 @@ export function useDonationFlow() {
       return false;
     }
 
+    // Carte (Visa CNP) : les coordonnées sont saisies sur la page sécurisée de
+    // Makuta après redirection — aucun numéro n'est collecté ici.
+    if (activeOperator?.redirect) {
+      setErrors({});
+      return true;
+    }
+
     const normalizedAccount = accountNumber.replace(/[\s-]/g, "");
 
     if (!normalizedAccount) {

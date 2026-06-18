@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode, Ref } from "react";
-import { ArrowRight, Banknote } from "lucide-react";
+import { ArrowRight, Banknote, Check } from "lucide-react";
 import { formatMoney } from "./formatters";
 
 export function Field({
@@ -129,14 +129,22 @@ export function StatCard({ label, value }: { label: string; value: string }) {
 export function ReceiptLine({
   label,
   value,
+  strong = false,
 }: {
   label: string;
   value: string;
+  strong?: boolean;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-[#eadcc7] py-2 text-sm last:border-b-0 sm:border-b-0">
+    <div className="flex items-center justify-between gap-4 border-b border-[#eadcc7]/70 py-2.5 text-sm last:border-b-0">
       <span className="font-semibold text-secondary">{label}</span>
-      <span className="text-right font-bold text-primary">{value}</span>
+      <span
+        className={`text-right font-bold text-primary ${
+          strong ? "text-base" : ""
+        }`}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -191,21 +199,48 @@ export function Stepper({ step }: { step: "identity" | "amount" | "payment" }) {
   const currentIndex = step === "identity" ? 0 : step === "amount" ? 1 : 2;
 
   return (
-    <ol className="grid w-full grid-cols-3 gap-1 rounded-md border border-secondary/10 bg-secondary/5 p-1 text-[10px] font-bold uppercase tracking-wide sm:w-[360px]">
+    <ol className="flex w-full items-start">
       {steps.map(([id, label], index) => {
-        const active = step === id;
         const done = index < currentIndex;
+        const active = index === currentIndex;
+        const isLast = index === steps.length - 1;
 
         return (
           <li
             key={id}
-            className={`min-w-0 rounded px-2 py-2.5 text-center transition ${
-              active || done
-                ? "bg-primary text-white shadow-sm"
-                : "text-secondary/75"
-            }`}
+            className={`flex items-start ${isLast ? "" : "flex-1"}`}
           >
-            {label}
+            <div className="flex flex-col items-center gap-2">
+              <span
+                className={`grid h-8 w-8 flex-none place-items-center rounded-full text-xs font-bold transition ${
+                  done
+                    ? "bg-primary text-white"
+                    : active
+                    ? "bg-primary text-white ring-4 ring-primary/15"
+                    : "border border-secondary/25 bg-secondary/5 text-secondary/45"
+                }`}
+              >
+                {done ? <Check className="h-4 w-4" /> : index + 1}
+              </span>
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wide ${
+                  active
+                    ? "text-primary"
+                    : done
+                    ? "text-primary/70"
+                    : "text-secondary/40"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+            {!isLast && (
+              <span
+                className={`mx-2 mt-4 h-0.5 flex-1 rounded-full transition ${
+                  index < currentIndex ? "bg-primary" : "bg-secondary/15"
+                }`}
+              />
+            )}
           </li>
         );
       })}
