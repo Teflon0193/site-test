@@ -12,7 +12,7 @@ export const campaignConfig: CampaignConfig = {
   title: "Soutenez la Biblio-Librairie du Grand Tambour",
   description:
     "Aidez à faire vivre un espace de lecture, de transmission et de rencontre au service de la jeunesse d'Afrique centrale.",
-  goalAmount: 50000,
+  goalAmount: 517251,
   currency: "USD",
   coverImage: "/images/espace4.jpg",
   coverImageAlt: "Espace de lecture du Grand Tambour",
