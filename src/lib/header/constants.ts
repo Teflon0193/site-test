@@ -23,7 +23,7 @@ export const menuItems: MenuItem[] = [
     ],
   },
   {
-    title: "Programmes",
+    title: "Action Culturelle",
     href: "/programmes",
   },
   {
@@ -35,7 +35,7 @@ export const menuItems: MenuItem[] = [
     href: "/actualites",
   },
   {
-    title: "Médias",
+    title: "Galleries",
     href: "/media",
   },
   {
