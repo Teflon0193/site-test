@@ -13,15 +13,15 @@ export default function Footer() {
 
   const programmes = [
     {
-      label: "Musique & Arts vivants",
+      label: "Arts",
       href: "/programmes/musique-arts-vivants",
     },
     {
-      label: "Théâtre & Arts de la scène",
+      label: "Dramathèque ",
       href: "/programmes/theatre-arts-scene",
     },
     { label: "Cinéma & Audiovisuel", href: "/programmes/cinema-audiovisuel" },
-    { label: "Littérature & Pensée", href: "/programmes/litterature-pensee" },
+    { label: "Biblio Librairie", href: "/programmes/litterature-pensee" },
   ];
 
   return (
