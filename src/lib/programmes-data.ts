@@ -167,10 +167,10 @@ export const programmes: Programme[] = [
   {
     id: "2",
     slug: "hommage-a-papa-wemba",
-    title: "Hommage à Papa Wemba ",
+    title: "Papa Wemba, artiste majeur",
     category: "Arts",
     categorySlug: "musique-arts-vivants",
-    slogan: "Hommage au roi de la rumba congolaise",
+    slogan: "Le maître de la rumba",
     description:
       "En avril, concerts, expositions et concours célèbrent l’œuvre et l’héritage du chanteur.",
     objectif:
