@@ -141,10 +141,16 @@ export default function Footer() {
             <p>© {new Date().getFullYear()} CCAPAC. Tous droits réservés.</p>
 
             <div className="flex items-center gap-6">
-              <Link href="#" className="hover:text-white transition-colors">
+              <Link
+                href="/politique-de-confidentialite"
+                className="hover:text-white transition-colors"
+              >
                 Politique de confidentialité
               </Link>
-              <Link href="#" className="hover:text-white transition-colors">
+              <Link
+                href="/mentions-legales"
+                className="hover:text-white transition-colors"
+              >
                 Mentions légales
               </Link>
             </div>
