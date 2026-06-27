@@ -15,6 +15,7 @@ export const menuItems: MenuItem[] = [
     submenu: [
       { name: "Présentation", href: "/grand-tambour/presentation" },
       { name: "Espaces", href: "/grand-tambour/espaces" },
+      { name: "La Cafétéria", href: "/grand-tambour/cafeteria" },
       // Temporairement masque pendant la restructuration de l'organigramme.
       // {
       //   name: "Équipe & Gouvernance",
