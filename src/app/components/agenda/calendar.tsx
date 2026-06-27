@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -87,9 +87,9 @@ export default function Calendar({ events, loading = false }: CalendarProps) {
   const hasMoreEvents = visibleEvents < sortedEvents.length;
 
   // Réinitialiser le nombre visible quand les filtres changent
-  useMemo(() => {
+  useEffect(() => {
     setVisibleEvents(6);
-  }, [filteredEvents]);
+}, [filteredEvents]);
 
   // Vérifier si des filtres sont actifs
   const hasActiveFilters = 
