@@ -125,7 +125,7 @@ export default function CafeteriaPage() {
               Gastronomie &amp; Culture
             </span>
             <h1 className="text-4xl font-bold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              La Cafétéria Mukishi du CCAPAC
+              La Cafétéria Mukishi wa mpow du Grand Tambour
             </h1>
             <p className="mt-5 text-lg font-semibold text-[#ffcc02]">
               Un espace convivial où la gastronomie rencontre la culture.
