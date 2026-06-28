@@ -20,7 +20,7 @@ export default function Footer() {
       label: "Dramathèque ",
       href: "/programmes/theatre-arts-scene",
     },
-    { label: "Cinéma & Audiovisuel", href: "/programmes/cinema-audiovisuel" },
+    { label: "Cinémathèque", href: "/programmes/cinema-audiovisuel" },
     { label: "Biblio Librairie", href: "/programmes/litterature-pensee" },
   ];
 
