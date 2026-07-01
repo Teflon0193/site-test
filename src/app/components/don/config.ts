@@ -79,12 +79,12 @@ export const contactInfo = {
 
 /**
  * Active la soumission réelle du paiement.
- * Tant que l'intégration Makuta n'est pas finalisée côté backend, laisser à
- * `false` : le formulaire affiche un message « bientôt disponible » au lieu de
- * lancer un paiement (et de prétendre, à tort, qu'il a abouti).
- * Passer à `true` une fois `src/lib/makuta.ts` branché sur l'API réelle.
+ * Activé par défaut ; interrupteur d'arrêt via `NEXT_PUBLIC_PAYMENT_ENABLED=false`
+ * (qui réaffiche le message « bientôt disponible »). Aucune variable à définir
+ * sur Vercel pour l'activer.
  */
-export const PAYMENT_ENABLED = false;
+export const PAYMENT_ENABLED =
+  process.env.NEXT_PUBLIC_PAYMENT_ENABLED !== "false";
 
 /** Intervalle de vérification du statut (mobile money / attente). */
 export const STATUS_POLL_INTERVAL_MS = 5000;
