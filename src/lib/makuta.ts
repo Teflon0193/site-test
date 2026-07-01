@@ -29,6 +29,10 @@ export type CreateMakutaTransactionInput = {
   reason: string;
   /** Requis uniquement pour DRC_VISA_CNP. */
   email?: string;
+  /** Identité du donateur — requise par notre backend (reçu + suivi). */
+  donorName?: string;
+  donorEmail?: string;
+  donorPhone?: string;
 };
 
 export type MakutaTransaction = {
@@ -66,9 +70,10 @@ export class MakutaApiError extends Error {
   }
 }
 
-/** Mode mock : actif par défaut tant que l'intégration réelle n'est pas câblée. */
+/** Mode mock : DÉSACTIVÉ par défaut (on utilise le backend réel). Pour simuler
+ *  le parcours en local sans backend : `MAKUTA_MOCK=true`. */
 export function isMakutaMockEnabled() {
-  return process.env.MAKUTA_MOCK !== "false";
+  return process.env.MAKUTA_MOCK === "true";
 }
 
 /** Mappe les codes de statut bruts Makuta (TS/TF/TP) vers notre statut interne. */
@@ -78,25 +83,117 @@ export function mapMakutaStatus(raw: MakutaRawStatus): MakutaDonationStatus {
   return "pending";
 }
 
+/* -------------------------------------------------------------------------- */
+/* Backend de production — le frontend ne parle QU'À notre backend, jamais     */
+/* directement à Makuta (l'OAuth2 et la signature RSA sont gérés côté serveur).*/
+/* -------------------------------------------------------------------------- */
+
+/** Base de l'API de dons (surchargeable via env). Sans slash final. */
+const BACKEND_BASE_URL = (
+  process.env.FUNDRAISING_API_BASE_URL ??
+  "https://api-fundraising.centreculturel.cd/api/fundraising"
+).replace(/\/+$/, "");
+
+const MOBILE_MONEY_OPERATORS = new Set<MakutaOperatorCode>([
+  "DRC_MPESA",
+  "DRC_AIRTEL_MONEY",
+  "DRC_ORANGE_MONEY",
+  "DRC_AFRIMONEY",
+  "DRC_RAKKACASH",
+]);
+
+/** Statut de notre backend (pending|paid|failed|expired) → statut interne UI. */
+function mapBackendStatus(status: string): MakutaDonationStatus {
+  if (status === "paid") return "succeeded";
+  if (status === "failed" || status === "expired") return "failed";
+  return "pending";
+}
+
+/** Palier de contribution dérivé du montant (bornes alignées sur le backend). */
+function deriveTier(amount: number): string {
+  if (amount >= 100000) return "partenaire_fondateur";
+  if (amount >= 50000) return "grand_mecene";
+  if (amount >= 25000) return "mecene";
+  if (amount >= 5000) return "parrain";
+  if (amount >= 1) return "ami_citoyen";
+  return "libre";
+}
+
+/** Forme du don renvoyé par le backend dans `{ data: ... }`. */
+type BackendDonation = {
+  reference: string;
+  status: string;
+  amount: string | number;
+  currency: string;
+  redirectUrl: string | null;
+  requiresOtp: boolean;
+  message: string | null;
+};
+
+/** Normalise un don backend vers la forme MakutaTransaction attendue par l'UI. */
+function toMakutaTransaction(d: BackendDonation): MakutaTransaction {
+  return {
+    id: d.reference,
+    thirdPartyReference: d.reference,
+    status: mapBackendStatus(d.status),
+    currency: d.currency ?? "USD",
+    amount: typeof d.amount === "string" ? Number(d.amount) : d.amount,
+    redirectUrl: d.redirectUrl ?? null,
+    requiresOtp: Boolean(d.requiresOtp),
+    message: d.message ?? null,
+  };
+}
+
+/** Appel HTTP vers notre backend, avec gestion d'erreur normalisée. */
+async function backendFetch(
+  path: string,
+  init?: RequestInit
+): Promise<BackendDonation> {
+  let res: Response;
+  try {
+    res = await fetch(`${BACKEND_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(init?.headers ?? {}),
+      },
+      cache: "no-store",
+    });
+  } catch {
+    throw new MakutaApiError({
+      status: 502,
+      code: "network_error",
+      message: "Le service de paiement est momentanément injoignable.",
+    });
+  }
+
+  const json = (await res.json().catch(() => null)) as {
+    data?: BackendDonation;
+    error?: string;
+    code?: string;
+  } | null;
+
+  if (!res.ok || !json?.data) {
+    throw new MakutaApiError({
+      status: res.status || 502,
+      code: json?.code ?? "payment_error",
+      message: json?.error ?? "Le paiement n'a pas pu être traité.",
+    });
+  }
+
+  return json.data;
+}
+
 /**
  * OAuth2 client_credentials → access_token (guide §3).
  * Le token expire après 300 s : prévoir un cache/renouvellement à l'intégration.
  */
 export async function getAccessToken(): Promise<string> {
-  if (isMakutaMockEnabled()) {
-    return "mock-access-token";
-  }
-
-  // TODO(makuta §3): POST {MAKUTA_AUTH_BASE_URL}/oauth2/token
-  //   Headers: Authorization: Basic base64(client_id:client_secret),
-  //            Content-Type: application/x-www-form-urlencoded
-  //   Body: grant_type=client_credentials&scope={MAKUTA_SCOPE}
-  //   → renvoyer data.access_token (penser à mettre en cache ~280 s).
-  throw new MakutaApiError({
-    status: 501,
-    code: "not_implemented",
-    message: "Intégration Makuta non disponible (authentification).",
-  });
+  // L'authentification OAuth2 Makuta est entièrement gérée par notre backend
+  // (les secrets ne vivent jamais côté frontend). Conservé pour compatibilité
+  // de signature ; non utilisé avec le backend de production.
+  return "backend-managed";
 }
 
 /**
@@ -105,19 +202,11 @@ export async function getAccessToken(): Promise<string> {
  * - GET  : signer le chemin de la requête.
  */
 export function signRequest(payload: string): string {
-  if (isMakutaMockEnabled()) {
-    // Signature factice mais déterministe (dépend du contenu) — non sécurisée.
-    return Buffer.from(payload).toString("base64").slice(0, 24);
-  }
-
-  // TODO(makuta §4): charger MAKUTA_PRIVATE_KEY (PEM) puis
-  //   crypto.createSign("RSA-SHA256").update(payload).sign(privateKey, "base64")
-  //   (padding PKCS#1 v1.5 — comportement par défaut de Node pour les clés RSA).
-  throw new MakutaApiError({
-    status: 501,
-    code: "not_implemented",
-    message: "Intégration Makuta non disponible (signature).",
-  });
+  // La signature RSA SHA-256 est entièrement gérée par notre backend (la clé
+  // privée ne vit jamais côté frontend). Conservé pour compatibilité de
+  // signature ; non utilisé avec le backend de production.
+  void payload;
+  return "";
 }
 
 /**
@@ -132,22 +221,34 @@ export async function createTransaction(
     return mockCreateTransaction(input);
   }
 
-  // TODO(makuta §5):
-  //   const token = await getAccessToken();
-  //   const body = JSON.stringify({ operator, accountNumber, currency, amount,
-  //     thirdPartyReference, reason, ...(operator === "DRC_VISA_CNP" ? { email } : {}) });
-  //   POST {MAKUTA_API_BASE_URL}/api/transactions/ctob
-  //   Headers: Authorization: Bearer {token}, Content-Type: application/json,
-  //            X-Signature: signRequest(body), X-Extension: {MAKUTA_EXTENSION}
-  //   → normaliser la réponse vers MakutaTransaction :
-  //       redirectUrl = data.url ?? null            (Visa CNP, guide §6)
-  //       requiresOtp = operator === "DRC_RAKKACASH" (guide §7)
-  //       status      = "pending" à la création (confirmé via getTransaction/callback)
-  throw new MakutaApiError({
-    status: 501,
-    code: "not_implemented",
-    message: "Intégration Makuta non disponible (création de transaction).",
+  if (!input.donorName || !input.donorEmail) {
+    throw new MakutaApiError({
+      status: 400,
+      code: "invalid_request",
+      message: "Le nom et l'e-mail du donateur sont requis.",
+    });
+  }
+
+  const isCard = input.operator === "DRC_VISA_CNP";
+  const isMobileMoney = MOBILE_MONEY_OPERATORS.has(input.operator);
+
+  // Notre backend crée le donateur + le don, s'authentifie auprès de Makuta et
+  // signe la requête. Il renvoie { data: { reference, status, redirectUrl, ... } }.
+  const data = await backendFetch("/donations", {
+    method: "POST",
+    body: JSON.stringify({
+      donorName: input.donorName,
+      donorEmail: input.donorEmail,
+      donorPhone: input.donorPhone || undefined,
+      amount: input.amount,
+      tier: deriveTier(input.amount),
+      operator: input.operator,
+      payNumber: isMobileMoney ? input.accountNumber : undefined,
+      email: isCard ? input.email ?? input.donorEmail : undefined,
+    }),
   });
+
+  return toMakutaTransaction(data);
 }
 
 /**
@@ -161,15 +262,13 @@ export async function confirmOtp(
     return mockConfirmOtp(transactionId, otpCode);
   }
 
-  // TODO(makuta §7): POST {MAKUTA_API_BASE_URL}/api/rakkacash-confirm-otp-txn
-  //   Headers: Bearer token + X-Signature(body) + X-Extension
-  //   Body: { transactionId, otpCode }
-  //   → 400 si OTP invalide/expiré ; sinon re-lire le statut via getTransaction().
-  throw new MakutaApiError({
-    status: 501,
-    code: "not_implemented",
-    message: "Intégration Makuta non disponible (confirmation OTP).",
-  });
+  // transactionId = notre référence (renvoyée par createTransaction).
+  const data = await backendFetch(
+    `/donations/${encodeURIComponent(transactionId)}/confirm-otp`,
+    { method: "POST", body: JSON.stringify({ otpCode }) }
+  );
+
+  return toMakutaTransaction(data);
 }
 
 /**
@@ -182,14 +281,13 @@ export async function getTransaction(
     return mockGetTransaction(transactionId);
   }
 
-  // TODO(makuta §8): GET {MAKUTA_API_BASE_URL}/api/transactions/{transactionId}
-  //   Headers: Bearer token (scope txn) + X-Signature(requestPath) + X-Extension
-  //   → status = mapMakutaStatus(data.status as MakutaRawStatus)
-  throw new MakutaApiError({
-    status: 501,
-    code: "not_implemented",
-    message: "Intégration Makuta non disponible (statut de transaction).",
-  });
+  // transactionId = notre référence (le backend re-vérifie le statut auprès de Makuta).
+  const data = await backendFetch(
+    `/donations/status/${encodeURIComponent(transactionId)}`,
+    { method: "GET" }
+  );
+
+  return toMakutaTransaction(data);
 }
 
 /**

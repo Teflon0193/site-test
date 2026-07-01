@@ -10,9 +10,6 @@ const operatorCodes = [
   "DRC_ORANGE_MONEY",
   "DRC_AFRIMONEY",
   "DRC_RAKKACASH",
-  "DRC_FIRSTBANK",
-  "DRC_ECOBANKPAY",
-  "DRC_FINCA",
   "DRC_VISA_CNP",
 ] as const;
 
@@ -59,7 +56,6 @@ export async function POST(req: NextRequest) {
 
   const { amount, operator, donor } = result.data;
   const accountNumber = (result.data.account_number ?? "").replace(/[\s-]/g, "");
-  const isCard = operator === "DRC_VISA_CNP";
 
   // Les opérateurs Mobile Money attendent un numéro RDC au format international.
   if (mobileMoneyOperators.has(operator) && !phonePattern.test(accountNumber)) {
@@ -69,20 +65,6 @@ export async function POST(req: NextRequest) {
           code: "invalid_account_number",
           message:
             "Veuillez entrer un numéro valide au format +243 suivi de 9 chiffres.",
-          param: "account_number",
-        },
-      },
-      { status: 400 }
-    );
-  }
-
-  // Virement bancaire : un identifiant de compte est requis (hors carte).
-  if (!isCard && !mobileMoneyOperators.has(operator) && accountNumber.length < 4) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "invalid_account_number",
-          message: "Veuillez renseigner un numéro de compte valide.",
           param: "account_number",
         },
       },
@@ -100,6 +82,10 @@ export async function POST(req: NextRequest) {
       thirdPartyReference: crypto.randomUUID(),
       reason: "Don — Centre Culturel et Artistique (CCAPAC)",
       email: operator === "DRC_VISA_CNP" ? donor.email.toLowerCase() : undefined,
+      // Identité du donateur — requise par notre backend (reçu + suivi).
+      donorName: donor.name,
+      donorEmail: donor.email.toLowerCase(),
+      donorPhone: donor.phone,
     });
 
     // NOTE(makuta §9): les notifications e-mail (admin + donateur) à la
