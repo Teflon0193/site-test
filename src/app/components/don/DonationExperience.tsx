@@ -11,6 +11,7 @@ import {
   CreditCard,
   HandCoins,
   HeartHandshake,
+  Loader2,
   Lock,
   Mail,
   Phone,
@@ -620,13 +621,28 @@ function PaymentStep({ flow }: { flow: Flow }) {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <SecondaryButton onClick={flow.goBackToAmount}>
+            <SecondaryButton
+              onClick={flow.goBackToAmount}
+              disabled={flow.isCreatingCheckout}
+            >
               <ArrowLeft className="h-4 w-4" />
               Retour
             </SecondaryButton>
-            <PrimaryButton onClick={handleFinalize}>
-              Finaliser le don
-              <ShieldCheck className="h-4 w-4" />
+            <PrimaryButton
+              onClick={handleFinalize}
+              disabled={flow.isCreatingCheckout}
+            >
+              {flow.isCreatingCheckout ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Traitement en cours…
+                </>
+              ) : (
+                <>
+                  Finaliser le don
+                  <ShieldCheck className="h-4 w-4" />
+                </>
+              )}
             </PrimaryButton>
           </div>
         </>
