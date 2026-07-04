@@ -6,7 +6,7 @@ import Link from "next/link";
 export default function Footer() {
   const navigation = [
     { label: "Accueil", href: "/" },
-    { label: "Programmes", href: "/programmes" },
+    { label: "Action culturelle", href: "/programmes" },
     { label: "Agenda", href: "/agenda" },
     { label: "Infos pratiques", href: "/infos" },
   ];
