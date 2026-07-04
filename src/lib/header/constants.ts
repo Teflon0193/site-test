@@ -36,6 +36,10 @@ export const menuItems: MenuItem[] = [
     href: "/actualites",
   },
   {
+    title: "Articles",
+    href: "/articles",
+  },
+  {
     title: "Galleries",
     href: "/media",
   },
