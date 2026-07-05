@@ -4,6 +4,7 @@ import Image from "next/image";
 
 export default function AgendaPage() {
   return (
+
     <MainLayout>
       {/* Page Header */}
       <section className="relative h-[35vh] min-h-[280px] sm:h-[40vh] sm:min-h-[350px] lg:h-[45vh] lg:min-h-[400px] mt-16 sm:mt-20 lg:mt-24 flex items-center justify-center overflow-hidden">
@@ -31,5 +32,6 @@ export default function AgendaPage() {
       {/* Agenda avec filtres intégrés */}
       <AgendaContainer />
     </MainLayout>
+    
   );
 }
