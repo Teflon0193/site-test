@@ -1,68 +1,49 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight,
-  Award,
-  CalendarCheck,
+  Building2,
+  ChefHat,
   Clock,
+  Coffee,
   CookingPot,
-  Download,
-  Globe,
-  Images,
   Leaf,
+  LogIn,
   MapPin,
-  PhoneCall,
   Smartphone,
   Truck,
   Users,
-  Utensils,
-  UtensilsCrossed,
   Wifi,
 } from "lucide-react";
 import MainLayout from "@/app/components/layouts/MainLayout";
-import CafeteriaMenu from "./CafeteriaMenu";
-import CafeteriaGallery from "./CafeteriaGallery";
+import CafeteriaMap from "./CafeteriaMap";
 
 export const metadata: Metadata = {
-  title: "La Cafétéria — Grand Tambour | CCAPAC",
+  title: "La Cafétéria du Grand Tambour | CCAPAC",
   description:
-    "La Cafétéria du CCAPAC : un espace convivial où la gastronomie d'Afrique centrale rencontre la culture. Cuisine locale, produits frais, cadre inspirant.",
+    "Un espace chaleureux au cœur du Centre Culturel, pour se retrouver, se détendre et partager un moment agréable.",
 };
 
-const aboutFeatures = [
-  { icon: Leaf, title: "Produits frais", detail: "Sourcing local quotidien" },
-  { icon: Utensils, title: "Cuisine locale", detail: "Recettes ancestrales" },
-  { icon: Globe, title: "International", detail: "Fusion de saveurs" },
-  { icon: CalendarCheck, title: "7j / 7", detail: "8h00 - 22h00" },
-];
-
-const specialities = [
+const features = [
   {
-    title: "Cuisine Congolaise",
-    description:
-      "Le goût authentique du pays. Poulet Moambe servi avec fufu et pondu frais.",
-    price: "À partir de 15 000 FC",
-    image: "/images/plats/1.jpg",
-    badge: "Populaire",
+    icon: Leaf,
+    title: "Ambiance chaleureuse",
+    detail: "Un cadre agréable et accueillant pour tous.",
   },
   {
-    title: "Grillades & Liboke",
-    description:
-      "Saveurs fumées et épices locales. Poisson capitaine en papillote traditionnelle.",
-    price: "À partir de 20 000 FC",
-    image: "/images/plats/3.webp",
+    icon: Users,
+    title: "Lieu de rencontre",
+    detail: "Échangez, partagez et créez des liens.",
   },
   {
-    title: "Boissons & Cafés",
-    description:
-      "Jus tropicaux frais et café artisan. Sélection de thés et infusions locales.",
-    price: "À partir de 5 000 FC",
-    image: "/images/plats/3.jpg",
+    icon: Coffee,
+    title: "Pause détente",
+    detail: "Faites une pause et profitez du moment.",
   },
 ];
 
-const whyChooseUs = [
+const reasons = [
   {
     icon: CookingPot,
     title: "Cuisine fraîche",
@@ -76,16 +57,14 @@ const whyChooseUs = [
       "Nous soutenons les agriculteurs et producteurs artisanaux de la région.",
   },
   {
-    icon: Award,
+    icon: ChefHat,
     title: "Chef expérimenté",
-    detail:
-      "Notre équipe culinaire possède une expertise internationale et locale.",
+    detail: "Notre équipe culinaire possède une expertise internationale et locale.",
   },
   {
-    icon: Images,
+    icon: Building2,
     title: "Cadre agréable",
-    detail:
-      "Une architecture moderne intégrant des éléments culturels vibrants.",
+    detail: "Une architecture moderne intégrant des éléments culturels vibrants.",
   },
   {
     icon: Wifi,
@@ -101,343 +80,395 @@ const whyChooseUs = [
   },
 ];
 
-export default function CafeteriaPage() {
+export default function CafeteriaNewPage() {
   return (
     <MainLayout>
-      {/* Hero */}
-      <section className="relative flex min-h-[80vh] items-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
+      <div className="bg-[#faf9f6] text-[#804423]">
+        <Hero />
+        <Presentation />
+        <WhyChooseUs />
+        <NousTrouver />
+        <QuoteBanner />
+      </div>
+    </MainLayout>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. Hero scindé                                                      */
+/* ------------------------------------------------------------------ */
+function Hero() {
+  return (
+    <section className="relative w-full overflow-hidden bg-[#f4efe4]">
+      {/* Décor desktop : image pleine largeur à droite + courbe crème + palmier */}
+      <div className="pointer-events-none absolute inset-0 hidden lg:block">
+        {/* Image (moitié droite, pleine hauteur) */}
+        <div className="absolute inset-y-0 left-[42%] right-0">
           <Image
             src="/images/cafeteria/cafe_hero.jpeg"
-            alt="La Cafétéria du CCAPAC"
+            alt="La Cafétéria du Grand Tambour — intérieur chaleureux et moderne"
             fill
             priority
             quality={90}
             className="object-cover object-center"
-            sizes="100vw"
+            sizes="58vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#25150e]/90 via-[#25150e]/65 to-[#25150e]/20" />
+        </div>
+        {/* Courbe crème qui déborde sur l'image */}
+        <div className="absolute inset-y-0 left-[42%] w-28 fill-current text-[#f4efe4]">
+          <svg
+            viewBox="0 0 100 1000"
+            preserveAspectRatio="none"
+            className="h-full w-full"
+          >
+            <path d="M0,0 L2,0 C40,140 20,340 50,540 C74,740 30,880 2,1000 L0,1000 Z" />
+          </svg>
+        </div>
+        {/* Feuille de palmier (haut gauche) */}
+        <div className="absolute left-0 top-0 h-80 w-80 select-none opacity-[0.05] mix-blend-multiply">
+          <svg
+            viewBox="0 0 100 100"
+            fill="currentColor"
+            className="h-full w-full -translate-x-[20%] -translate-y-[20%] rotate-[35deg] text-[#804423]"
+          >
+            <path d="M50,10 C45,25 30,35 15,40 C30,45 40,60 45,75 C50,60 60,45 75,40 C60,35 55,25 50,10 Z" />
+            <path d="M10,20 C15,35 25,40 35,42 C25,45 20,55 18,65 C15,50 10,40 5,35 C10,32 10,25 10,20 Z" />
+            <path d="M85,30 C80,45 70,50 60,52 C70,55 75,65 77,75 C80,60 85,50 90,45 C85,42 85,35 85,30 Z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Contenu — aligné au même conteneur que les autres sections */}
+      <div className="relative z-10 mx-auto max-w-7xl px-6 pt-36 pb-0 sm:px-12 sm:pt-40 md:px-16 lg:px-24 lg:pb-28 lg:pt-52">
+        <div className="flex max-w-sm flex-col items-start gap-6 lg:min-h-[420px] lg:justify-center lg:gap-8">
+          <h1 className="text-4xl font-bold leading-[1.12] tracking-tight text-[#804423] sm:text-5xl lg:text-[54px]">
+            La Cafétéria
+            <br />
+            <span className="font-semibold">du Grand Tambour</span>
+          </h1>
+
+          <div className="h-[2.5px] w-20 rounded-full bg-[#ffcc02]" />
+
+          <p className="text-base leading-relaxed text-[#6b5b4f] sm:text-lg">
+            Un espace chaleureux au cœur du Centre Culturel, pour se retrouver,
+            se détendre et partager un moment agréable.
+          </p>
+
+          <Link
+            href="/grand-tambour/espaces"
+            className="mt-2 flex items-center gap-3 rounded-full bg-[#804423] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#6a3a1e] hover:shadow-xl active:scale-[0.98]"
+          >
+            <MapPin size={16} className="text-[#ffcc02]" />
+            <span>Découvrir nos espaces</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Image mobile (sous le contenu) */}
+      <div className="relative h-[340px] w-full sm:h-[420px] lg:hidden">
+        <Image
+          src="/images/cafeteria/cafe_hero.jpeg"
+          alt="La Cafétéria du Grand Tambour — intérieur chaleureux et moderne"
+          fill
+          priority
+          quality={90}
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Présentation                                                     */
+/* ------------------------------------------------------------------ */
+function Presentation() {
+  return (
+    <section
+      id="presentation"
+      className="w-full px-6 py-20 sm:px-12 md:px-16 lg:px-24 lg:py-28"
+    >
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-12 lg:flex-row lg:gap-16 xl:gap-20">
+        {/* Image portrait */}
+        <div className="flex w-full justify-center lg:w-[42%]">
+          <div className="group relative aspect-[3/4] w-full max-w-[440px] overflow-hidden rounded-[32px] border border-[#e7dcc8] shadow-xl">
+            <Image
+              src="/images/cafeteria/ER8A0783.jpg"
+              alt="Intérieur chaleureux de la cafétéria"
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(min-width: 1024px) 42vw, 100vw"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
+          </div>
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-40 pb-16 text-white sm:px-6 sm:pt-48 lg:px-8">
-          <div className="max-w-2xl">
-            <span className="mb-6 inline-block rounded-full bg-[#ffcc02] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#3a2014]">
-              Gastronomie &amp; Culture
+        {/* Texte + grille de valeurs */}
+        <div className="flex w-full flex-col items-start lg:w-[58%]">
+          <div className="flex flex-col items-start gap-2.5">
+            <span className="text-xs font-bold uppercase tracking-[0.15em] text-primary">
+              Notre Cafétéria
             </span>
-            <h1 className="text-4xl font-bold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              La Cafétéria Mukishi wa mpow du Grand Tambour
-            </h1>
-            <p className="mt-5 text-lg font-semibold text-[#ffcc02]">
-              Un espace convivial où la gastronomie rencontre la culture.
-            </p>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
-              Découvrez un espace chaleureux où visiteurs, artistes, familles et
-              professionnels partagent un repas dans une ambiance conviviale
-              inspirée par l&apos;héritage d&apos;Afrique centrale.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-4">
-              <Link
-                href="#menu"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-7 py-4 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-primary/90 active:scale-[0.98]"
-              >
-                Voir le menu
-                <UtensilsCrossed className="h-4 w-4" />
-              </Link>
-              <Link
-                href="#contact"
-                className="inline-flex items-center gap-2 rounded-lg border-2 border-white px-7 py-4 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-white/10 active:scale-[0.98]"
-              >
-                Réserver une table
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* À propos */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-20">
-            <div className="relative">
-              <div className="absolute -left-6 -top-6 -z-10 h-40 w-40 rounded-full bg-[#f4efe4]" />
-              <Image
-                src="/images/cafeteria/cafetaria_espce.jpg"
-                alt="L'espace de la Cafétéria"
-                width={720}
-                height={720}
-                className="aspect-square w-full rounded-2xl border border-[#eadcc7] object-cover shadow-xl"
-              />
-              <div className="absolute -bottom-6 -right-2 max-w-xs rounded-xl border border-[#eadcc7] bg-white/90 p-6 shadow-xl backdrop-blur sm:-right-6">
-                <p className="text-sm font-semibold italic text-primary">
-                  &laquo; Nous fusionnons les traditions locales avec le
-                  raffinement international pour créer une expérience unique.
-                  &raquo;
-                </p>
-                <p className="mt-2 text-xs font-bold uppercase tracking-wide text-secondary">
-                  — Chef de cuisine
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-secondary">
-                La Cafétéria
-              </p>
-              <h2 className="mt-2 text-3xl font-bold uppercase leading-tight text-primary sm:text-4xl">
-                Une expérience culinaire unique
-              </h2>
-              <div className="mt-6 space-y-4 text-sm leading-relaxed text-primary/70 sm:text-base">
-                <p>
-                  Au cœur du Centre Culturel, notre cafétéria n&apos;est pas
-                  seulement un lieu de restauration : c&apos;est une extension de
-                  l&apos;expérience artistique. Nous privilégions les circuits
-                  courts et les saveurs authentiques du Bassin du Congo.
-                </p>
-                <p>
-                  Chaque plat est une célébration de notre patrimoine, préparé
-                  avec une attention méticuleuse et une passion pour
-                  l&apos;excellence gastronomique.
-                </p>
-              </div>
-
-              <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {aboutFeatures.map((feature) => {
-                  const Icon = feature.icon;
-                  return (
-                    <div
-                      key={feature.title}
-                      className="flex items-center gap-4 rounded-xl bg-[#f4efe4] p-4"
-                    >
-                      <Icon className="h-9 w-9 flex-none text-secondary" />
-                      <div>
-                        <p className="font-bold text-primary">
-                          {feature.title}
-                        </p>
-                        <p className="text-sm italic text-primary/60">
-                          {feature.detail}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Spécialités */}
-      <section className="bg-[#f4efe4] py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold uppercase text-primary sm:text-4xl">
-              Nos spécialités
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-primary/70 sm:text-base">
-              Une sélection des incontournables de notre carte, mettant à
-              l&apos;honneur les trésors du terroir congolais.
-            </p>
+            <div className="h-[2px] w-12 bg-[#804423]" />
           </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-            {specialities.map((item) => (
-              <div
-                key={item.title}
-                className="group overflow-hidden rounded-2xl border border-[#eadcc7] bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
-              >
-                <div className="relative h-60 overflow-hidden">
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                  />
-                  {item.badge && (
-                    <span className="absolute right-4 top-4 rounded-lg bg-[#ffcc02] px-3 py-1 text-sm font-bold text-[#3a2014]">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-                <div className="p-8">
-                  <h3 className="text-xl font-bold uppercase text-primary">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-primary/65">
-                    {item.description}
-                  </p>
-                  <div className="mt-6 flex items-center justify-between border-t border-[#eadcc7] pt-6">
-                    <span className="text-lg font-bold text-secondary">
-                      {item.price}
-                    </span>
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-[#f4efe4] text-primary transition-colors group-hover:bg-primary group-hover:text-white">
-                      <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+          <h2 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-[#804423] sm:text-4xl lg:text-[42px]">
+            Plus qu&apos;un repas,
+            <br />
+            une expérience.
+          </h2>
 
-      {/* Carte du jour */}
-      <section id="menu" className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold uppercase text-primary sm:text-4xl">
-              La carte du jour
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-primary/70 sm:text-base">
-              Une carte qui évolue au fil des saisons et des arrivages du marché.
-            </p>
-          </div>
+          <p className="mt-6 max-w-xl text-sm leading-relaxed text-[#6b5b4f] sm:text-base">
+            Ouverte à tous, notre cafétéria est un espace où confort, culture et
+            convivialité se rencontrent. Que ce soit pour une pause, un repas
+            léger ou un moment entre amis, vous êtes les bienvenus.
+          </p>
 
-          <CafeteriaMenu />
-
-          <div className="mt-16 text-center">
-            <a
-              href="#contact"
-              className="inline-flex items-center gap-2 border-b-2 border-primary pb-1 font-bold uppercase tracking-wide text-primary transition-all hover:border-secondary hover:text-secondary"
-            >
-              Télécharger le menu complet (PDF)
-              <Download className="h-4 w-4" />
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* Galerie */}
-      <section className="overflow-hidden bg-[#f4efe4] py-16 sm:py-24">
-        <CafeteriaGallery />
-      </section>
-
-      {/* Pourquoi nous choisir */}
-      <section className="bg-primary py-16 text-white sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold uppercase sm:text-4xl">
-              Pourquoi nous choisir ?
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base">
-              Plus qu&apos;un restaurant, une destination culturelle
-              incontournable à Kinshasa.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
-            {whyChooseUs.map((feature) => {
+          <div className="mt-12 grid w-full grid-cols-1 gap-8 border-t border-[#e7dcc8] pt-8 md:grid-cols-3 md:gap-0">
+            {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={feature.title} className="group flex items-start gap-5">
-                  <span className="grid h-14 w-14 flex-none place-items-center rounded-xl bg-white/10 text-[#ffcc02] transition-all duration-300 group-hover:bg-[#ffcc02] group-hover:text-[#3a2014]">
-                    <Icon className="h-6 w-6" />
-                  </span>
-                  <div>
-                    <h4 className="text-lg font-bold">{feature.title}</h4>
-                    <p className="mt-1 text-sm leading-relaxed text-white/70">
-                      {feature.detail}
-                    </p>
-                  </div>
+                <div
+                  key={feature.title}
+                  className={`flex h-full flex-col items-start ${
+                    index === 0
+                      ? "md:border-r md:pr-6"
+                      : index === features.length - 1
+                      ? "md:pl-6"
+                      : "md:border-r md:px-6"
+                  } border-[#e7dcc8]`}
+                >
+                  <Icon size={32} strokeWidth={1.5} className="text-primary" />
+                  <h3 className="mt-4 text-base font-bold text-[#804423]">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-relaxed text-[#6b5b4f] sm:text-sm">
+                    {feature.detail}
+                  </p>
                 </div>
               );
             })}
           </div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* Informations pratiques */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
-          <div className="flex flex-col items-center rounded-2xl border border-[#eadcc7] bg-[#fdfbf6] p-10 text-center">
-            <Clock className="mb-5 h-9 w-9 text-secondary" />
-            <h4 className="mb-4 text-lg font-bold uppercase text-primary">
-              Horaires d&apos;ouverture
-            </h4>
-            <div className="w-full space-y-2 text-sm text-primary/70">
-              <p className="flex justify-between gap-8">
-                <span>Lundi - Samedi</span>
-                <span className="font-semibold text-primary">08:00 - 22:00</span>
-              </p>
-              <p className="flex justify-between gap-8">
-                <span>Dimanche</span>
-                <span className="font-semibold text-primary">10:00 - 20:00</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center rounded-2xl border border-[#eadcc7] bg-[#fdfbf6] p-10 text-center">
-            <MapPin className="mb-5 h-9 w-9 text-secondary" />
-            <h4 className="mb-4 text-lg font-bold uppercase text-primary">
-              Nous trouver
-            </h4>
-            <p className="mb-4 text-sm leading-relaxed text-primary/70">
-              Boulevard Triomphal, Kinshasa
-              <br />
-              En face du Palais du Peuple
-            </p>
-            <Link
-              href="/infos"
-              className="text-sm font-bold text-secondary hover:underline"
-            >
-              Voir sur la carte
-            </Link>
-          </div>
-
-          <div className="flex flex-col items-center rounded-2xl border border-[#eadcc7] bg-[#fdfbf6] p-10 text-center">
-            <Users className="mb-5 h-9 w-9 text-secondary" />
-            <h4 className="mb-4 text-lg font-bold uppercase text-primary">
-              Événements privés
-            </h4>
-            <p className="mb-4 text-sm leading-relaxed text-primary/70">
-              Capacité : jusqu&apos;à 150 personnes.
-              <br />
-              Parking sécurisé et gratuit.
-            </p>
-            <a
-              href="mailto:info@centreculturel.cd?subject=Demande%20de%20devis%20-%20Cafétéria"
-              className="text-sm font-bold text-secondary hover:underline"
-            >
-              Demander un devis
-            </a>
-          </div>
+/* ------------------------------------------------------------------ */
+/* 3. Pourquoi nous choisir                                            */
+/* ------------------------------------------------------------------ */
+function WhyChooseUs() {
+  return (
+    <section className="w-full px-6 py-20 sm:px-12 md:px-16 lg:px-24 lg:py-28">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-bold uppercase tracking-[0.15em] text-primary">
+            Notre différence
+          </span>
+          <h2 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-[#804423] sm:text-4xl">
+            Pourquoi nous choisir ?
+          </h2>
+          <div className="mx-auto mt-4 h-[2px] w-16 rounded-full bg-[#ffcc02]" />
+          <p className="mt-6 text-base leading-relaxed text-[#6b5b4f]">
+            Plus qu&apos;un restaurant, une destination culturelle incontournable
+            à Kinshasa.
+          </p>
         </div>
-      </section>
 
-      {/* Réservation CTA */}
-      <section id="contact" className="bg-white pb-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-primary p-10 text-center sm:p-16 md:p-24">
-            <div className="relative z-10">
-              <h2 className="text-3xl font-bold uppercase text-white sm:text-4xl">
-                Réservez votre table dès aujourd&apos;hui
-              </h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base">
-                Partagez un moment d&apos;exception en famille, entre amis ou pour
-                vos affaires. Nous vous garantissons une expérience mémorable.
-              </p>
-              <div className="mt-10 flex flex-wrap justify-center gap-5">
-                <a
-                  href="mailto:info@centreculturel.cd?subject=Réservation%20Cafétéria"
-                  className="rounded-lg bg-[#ffcc02] px-10 py-4 text-sm font-bold uppercase tracking-wide text-[#3a2014] shadow-xl transition hover:bg-white active:scale-[0.98]"
-                >
-                  Réserver
-                </a>
-                <a
-                  href="mailto:info@centreculturel.cd"
-                  className="rounded-lg border-2 border-white px-10 py-4 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-white/10 active:scale-[0.98]"
-                >
-                  Nous contacter
-                </a>
+        <div className="mt-14 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {reasons.map((reason) => {
+            const Icon = reason.icon;
+            return (
+              <div key={reason.title} className="flex items-start gap-5">
+                <span className="grid h-14 w-14 flex-none place-items-center rounded-2xl bg-[#f4efe4] text-primary">
+                  <Icon size={24} strokeWidth={1.75} />
+                </span>
+                <div>
+                  <h3 className="text-lg font-bold text-[#804423]">
+                    {reason.title}
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#6b5b4f]">
+                    {reason.detail}
+                  </p>
+                </div>
               </div>
-              <p className="mt-9 inline-flex items-center justify-center gap-2 text-sm text-white/70">
-                <PhoneCall className="h-4 w-4" />
-                +243 890 809 746
-              </p>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Nous trouver                                                     */
+/* ------------------------------------------------------------------ */
+function NousTrouver() {
+  return (
+    <section className="relative w-full overflow-hidden px-6 py-16 sm:px-12 md:px-16 lg:px-24 lg:py-24">
+      <div className="relative mx-auto max-w-7xl rounded-[32px] border border-[#e7dcc8] bg-[#f4efe4] p-8 shadow-md sm:p-12 lg:p-16">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          {/* Détails */}
+          <div className="flex flex-col items-start lg:col-span-5">
+            <span className="text-xs font-bold uppercase tracking-[0.15em] text-primary">
+              Nous trouver
+            </span>
+            <h2 className="mt-3 text-2xl font-bold leading-tight tracking-tight text-[#804423] sm:text-3xl lg:text-[34px]">
+              Au cœur du Centre Culturel et Artistique
+            </h2>
+            <div className="mb-10 mt-4 h-[2px] w-16 rounded-full bg-[#ffcc02]" />
+
+            <div className="flex w-full flex-col gap-8">
+              <InfoRow icon={MapPin} title="Adresse">
+                Boulevard Triomphal, Kinshasa
+                <br />
+                En face du Palais du Peuple
+              </InfoRow>
+              <InfoRow icon={Clock} title="Horaires d'ouverture">
+                Du lundi au samedi
+                <br />
+                08h00 – 22h00
+              </InfoRow>
+              <InfoRow icon={LogIn} title="Accès">
+                Entrée principale du Centre Culturel
+                <br />
+                Accès facile et parking disponible
+              </InfoRow>
+            </div>
+          </div>
+
+          {/* Carte + branche botanique */}
+          <div className="relative h-[320px] w-full sm:h-[400px] lg:col-span-7 lg:h-[440px]">
+            <div className="relative isolate z-0 h-full w-full overflow-hidden rounded-2xl border border-[#e7dcc8] shadow-lg">
+              <CafeteriaMap />
+            </div>
+
+            {/* Branche botanique décorative (coin bas-droit) */}
+            <div className="pointer-events-none absolute -bottom-8 -right-8 z-30 h-44 w-44 select-none sm:h-56 sm:w-56">
+              <svg
+                viewBox="0 0 100 100"
+                className="h-full w-full opacity-95 drop-shadow-[0_8px_16px_rgba(60,30,10,0.25)]"
+              >
+                <path
+                  d="M100,100 C80,80 50,55 35,40 C33,38 31,35 30,30"
+                  stroke="#3a2014"
+                  strokeWidth="2.5"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                <path d="M35,40 C20,35 12,20 15,10 C25,12 35,22 40,35 Z" fill="#804423" />
+                <path d="M50,55 C35,50 25,35 28,25 C38,27 48,38 52,50 Z" fill="#6a3a1e" />
+                <path d="M68,70 C55,65 45,50 48,40 C58,42 68,53 72,65 Z" fill="#804423" />
+                <path d="M35,40 C45,30 55,20 62,25 C60,35 50,45 40,50 Z" fill="#a0562a" />
+                <path d="M52,55 C65,45 75,35 80,42 C78,52 68,62 58,68 Z" fill="#804423" />
+                <path d="M72,75 C85,68 95,58 98,65 C95,75 85,82 76,85 Z" fill="#5a3418" />
+              </svg>
             </div>
           </div>
         </div>
-      </section>
-    </MainLayout>
+      </div>
+    </section>
+  );
+}
+
+function InfoRow({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: typeof MapPin;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-4">
+      <span className="grid h-10 w-10 flex-none place-items-center rounded-full border border-[#e7dcc8] bg-white text-primary shadow-sm">
+        <Icon size={18} />
+      </span>
+      <div className="flex flex-col">
+        <h4 className="text-sm font-bold uppercase tracking-wider text-[#804423]">
+          {title}
+        </h4>
+        <p className="mt-1 text-sm leading-relaxed text-[#6b5b4f]">{children}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Bandeau citation                                                 */
+/* ------------------------------------------------------------------ */
+function QuoteBanner() {
+  return (
+    <section className="w-full px-6 pb-16 sm:px-12 md:px-16 lg:px-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="relative flex flex-col items-center justify-between gap-8 overflow-hidden rounded-[28px] border border-[#5a3418] bg-[#3a2014] px-8 py-12 shadow-xl sm:px-12 md:flex-row lg:px-20">
+          {/* Cercle décoratif */}
+          <div className="pointer-events-none absolute left-1/4 top-1/2 h-[350px] w-[350px] -translate-y-1/2 rounded-full bg-white/[0.02]" />
+
+          {/* Mug + citation */}
+          <div className="z-10 flex max-w-2xl flex-col items-center gap-6 text-center md:flex-row md:items-start md:text-left lg:gap-10">
+            <div className="flex-shrink-0 text-[#ffcc02]/60 md:mt-2">
+              <svg
+                viewBox="0 0 100 100"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-16 w-16 opacity-80 sm:h-20 sm:w-20"
+              >
+                <path d="M35,15 C37,10 33,5 35,2" />
+                <path d="M50,15 C52,9 48,4 50,2" />
+                <path d="M65,15 C67,10 63,5 65,2" />
+                <path d="M22,25 L78,25 L72,82 C71,88 64,93 50,93 C36,93 29,88 28,82 Z" />
+                <path d="M78,35 C88,35 94,42 94,50 C94,58 88,65 76,65" />
+                <path d="M15,93 L85,93" strokeWidth="3" />
+              </svg>
+            </div>
+
+            <div className="flex flex-col items-center md:items-start">
+              <span className="h-6 select-none font-serif text-5xl font-bold leading-none text-[#ffcc02] md:h-8 lg:text-6xl">
+                &ldquo;
+              </span>
+              <h3 className="mt-2 max-w-md text-xl font-semibold leading-normal tracking-wide text-white sm:max-w-xl sm:text-2xl lg:text-[27px]">
+                Ici, chaque pause prend un autre goût.
+              </h3>
+            </div>
+          </div>
+
+          {/* Table & chaises bistro (desktop) */}
+          <div className="z-10 hidden flex-shrink-0 opacity-25 lg:block">
+            <svg
+              viewBox="0 0 240 120"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-auto w-48 text-[#e6c9a0]"
+            >
+              <line x1="85" y1="65" x2="155" y2="65" strokeWidth="2.5" />
+              <line x1="120" y1="65" x2="120" y2="108" />
+              <path d="M100,108 L140,108" />
+              <path d="M110,108 L120,98 L130,108" />
+              <path d="M40,35 C55,35 55,68 55,68" />
+              <path d="M28,68 L58,68" />
+              <path d="M52,68 L56,108" />
+              <path d="M34,68 L30,108" />
+              <path d="M32,88 L54,88" />
+              <path d="M200,35 C185,35 185,68 185,68" />
+              <path d="M182,68 L212,68" strokeWidth="2" />
+              <path d="M188,68 L184,108" />
+              <path d="M206,68 L210,108" />
+              <path d="M186,88 L208,88" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
