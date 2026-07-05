@@ -22,7 +22,7 @@ export interface Programme {
 export const categories = [
   {
     id: "musique-arts-vivants",
-    title: "Musique & Arts vivants",
+    title: "Arts",
     description:
       "Célébration de la richesse musicale et des performances scéniques congolaises",
     image: "/images/events/event1.jpg",
@@ -30,7 +30,7 @@ export const categories = [
   },
   {
     id: "theatre-arts-scene",
-    title: "Théâtre & Arts de la scène",
+    title: "Dramathèque",
     description:
       "En novembre, dix jours de célébration réunissant troupes locales et internationales.",
     image: "/images/events/event2.jpg",
@@ -38,7 +38,7 @@ export const categories = [
   },
   {
     id: "cinema-audiovisuel",
-    title: "Cinéma & Audiovisuel",
+    title: "cinémathèque",
     description:
       "Valorisation du cinéma et de la création audiovisuelle congolaise",
     image: "/images/media/cinema.jpg",
@@ -46,7 +46,7 @@ export const categories = [
   },
   {
     id: "litterature-pensee",
-    title: "Littérature & Pensée",
+    title: "Biblio librairies",
     description:
       "Préservation et transmission du patrimoine culturel et littéraire",
     image: "/images/media/media7.jpg",
@@ -167,10 +167,10 @@ export const programmes: Programme[] = [
   {
     id: "2",
     slug: "hommage-a-papa-wemba",
-    title: "Hommage à Papa Wemba ",
-    category: "Musique & Arts vivants",
+    title: "Papa Wemba, artiste majeur",
+    category: "Arts",
     categorySlug: "musique-arts-vivants",
-    slogan: "Hommage au roi de la rumba congolaise",
+    slogan: "Le maître de la rumba",
     description:
       "En avril, concerts, expositions et concours célèbrent l’œuvre et l’héritage du chanteur.",
     objectif:
@@ -254,7 +254,7 @@ export const programmes: Programme[] = [
     id: "6",
     slug: "dramatheque-congolaise",
     title: "Dramathèque congolaise",
-    category: "Théâtre & Arts de la scène",
+    category: "Dramathèque",
     categorySlug: "theatre-arts-scene",
     slogan: "Dépôt de la culture théâtrale congolaise et africaine",
     description:
@@ -317,7 +317,7 @@ export const programmes: Programme[] = [
     id: "9",
     slug: "rencontres-africaines-theatre",
     title: "Rencontres africaines du théâtre",
-    category: "Théâtre & Arts de la scène",
+    category: "Arts",
     categorySlug: "theatre-arts-scene",
     slogan: "Le théâtre africain en dialogue",
     description:
@@ -380,7 +380,7 @@ export const programmes: Programme[] = [
     id: "16",
     slug: "rencontres-litteraires",
     title: "Rencontres littéraires",
-    category: "Littérature & Pensée",
+    category: "Biblio Librairies",
     categorySlug: "litterature-pensee",
     slogan: "Dialogue autour du livre",
     description:
@@ -440,8 +440,8 @@ export const programmes: Programme[] = [
   {
     id: "19",
     slug: "territoires",
-    title: "Territoires – Traditions de la RDC",
-    category: "Littérature & Pensée",
+    title: "Territoires",
+    category: "Biblio Librairies",
     categorySlug: "litterature-pensee",
     slogan: "Exploration des identités culturelles",
     description:

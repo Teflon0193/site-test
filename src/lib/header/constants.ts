@@ -15,6 +15,8 @@ export const menuItems: MenuItem[] = [
     submenu: [
       { name: "Présentation", href: "/grand-tambour/presentation" },
       { name: "Espaces", href: "/grand-tambour/espaces" },
+      { name: "La Cafétéria", href: "/grand-tambour/cafeteria" },
+      { name: "Articles", href: "/articles" },
       // Temporairement masque pendant la restructuration de l'organigramme.
       // {
       //   name: "Équipe & Gouvernance",
@@ -23,7 +25,7 @@ export const menuItems: MenuItem[] = [
     ],
   },
   {
-    title: "Programmes",
+    title: "Action Culturelle",
     href: "/programmes",
   },
   {
@@ -35,7 +37,7 @@ export const menuItems: MenuItem[] = [
     href: "/actualites",
   },
   {
-    title: "Médias",
+    title: "Galleries",
     href: "/media",
   },
   {

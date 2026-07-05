@@ -1,9 +1,12 @@
 import type { MakutaOperatorCode } from "@/lib/makuta";
 
-export type Step = "identity" | "amount" | "payment";
+export type Step = "profile" | "identity" | "amount" | "payment";
+
+/** Pour qui le don est effectué — sert à personnaliser le parcours et le reçu. */
+export type DonorType = "self" | "relative" | "organization";
 
 /** Catégorie de moyen de paiement (regroupe les opérateurs Makuta). */
-export type PaymentCategory = "mobile_money" | "card" | "bank_transfer";
+export type PaymentCategory = "mobile_money" | "card";
 
 /** Statut interne du don (aligné sur le mapping serveur TS/TF/TP). */
 export type DonationStatus = "pending" | "succeeded" | "failed";

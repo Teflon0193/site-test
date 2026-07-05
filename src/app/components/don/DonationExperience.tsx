@@ -6,23 +6,27 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Building2,
   CheckCircle2,
   Clock,
   CreditCard,
   HandCoins,
   HeartHandshake,
+  Loader2,
   Lock,
   Mail,
   Phone,
   ShieldCheck,
   Sparkles,
+  User,
+  Users,
 } from "lucide-react";
 import { OtpDialog } from "./OtpDialog";
 import { PAYMENT_ENABLED, contactInfo, impactItems } from "./config";
 import { formatMoney, formatTierRange } from "./formatters";
 import { paymentCategories } from "./operators";
 import { useDonationFlow } from "./useDonationFlow";
-import type { DonationTier } from "./types";
+import type { DonationTier, DonorType, Step } from "./types";
 import {
   Field,
   PrimaryButton,
@@ -32,28 +36,107 @@ import {
   SummaryBar,
 } from "./ui";
 
-const stepIntro = {
-  identity: {
+/** Choix « pour qui » proposés à l'entrée du parcours. */
+const donorTypeOptions: Array<{
+  id: DonorType;
+  icon: typeof User;
+  label: string;
+  detail: string;
+}> = [
+  {
+    id: "self",
+    icon: User,
+    label: "Pour moi-même",
+    detail: "Je fais ce don en mon nom.",
+  },
+  {
+    id: "relative",
+    icon: Users,
+    label: "Pour un proche",
+    detail: "J'offre ce don au nom d'un proche.",
+  },
+  {
+    id: "organization",
+    icon: Building2,
+    label: "Pour une organisation",
+    detail: "Je donne au nom d'une structure.",
+  },
+];
+
+/** Personnalisation du formulaire de profil selon le type de donateur. */
+const donorTypeConfig: Record<
+  DonorType,
+  {
+    identityTitle: string;
+    identitySubtitle: string;
+    nameLabel: string;
+    namePlaceholder: string;
+    emailLabel: string;
+  }
+> = {
+  self: {
+    identityTitle: "Commençons par vous",
+    identitySubtitle: "Vos coordonnées servent au reçu et au suivi de votre don.",
+    nameLabel: "Votre nom complet",
+    namePlaceholder: "Ex. Jean Mukendi",
+    emailLabel: "Votre adresse e-mail",
+  },
+  relative: {
+    identityTitle: "Vos coordonnées",
+    identitySubtitle:
+      "Le reçu et le suivi vous sont adressés ; vous offrez ce don au nom d'un proche.",
+    nameLabel: "Votre nom complet",
+    namePlaceholder: "Ex. Jean Mukendi",
+    emailLabel: "Votre adresse e-mail",
+  },
+  organization: {
+    identityTitle: "Votre organisation",
+    identitySubtitle:
+      "Les coordonnées de la structure servent au reçu et au suivi du don.",
+    nameLabel: "Nom de l'organisation",
+    namePlaceholder: "Ex. Fondation CCAPAC",
+    emailLabel: "E-mail de l'organisation",
+  },
+};
+
+const profileIntro = {
+  eyebrow: "Étape 1 · Profil",
+  title: "Pour qui faites-vous ce don ?",
+  subtitle:
+    "Cela nous permet de personnaliser votre reçu et notre suivi. Choisissez pour continuer.",
+};
+
+const amountIntro = {
+  eyebrow: "Étape 2 · Montant",
+  title: "Choisissez votre contribution",
+  subtitle: "Sélectionnez un niveau d'engagement ou saisissez un montant libre.",
+};
+
+const paymentIntro = {
+  eyebrow: "Étape 3 · Paiement",
+  title: "Finalisez votre don",
+  subtitle: "Choisissez votre moyen de paiement sécurisé.",
+};
+
+function getStepIntro(step: Step, donorType: DonorType | null) {
+  if (step === "amount") return amountIntro;
+  if (step === "payment") return paymentIntro;
+  if (step === "profile") return profileIntro;
+
+  const config = donorType ? donorTypeConfig[donorType] : null;
+  return {
     eyebrow: "Étape 1 · Profil",
-    title: "Commençons par vous",
-    subtitle: "Vos coordonnées servent au reçu et au suivi de votre don.",
-  },
-  amount: {
-    eyebrow: "Étape 2 · Montant",
-    title: "Choisissez votre contribution",
-    subtitle: "Sélectionnez un niveau d'engagement ou saisissez un montant libre.",
-  },
-  payment: {
-    eyebrow: "Étape 3 · Paiement",
-    title: "Finalisez votre don",
-    subtitle: "Choisissez votre moyen de paiement sécurisé.",
-  },
-} as const;
+    title: config?.identityTitle ?? "Commençons par vous",
+    subtitle:
+      config?.identitySubtitle ??
+      "Vos coordonnées servent au reçu et au suivi de votre don.",
+  };
+}
 
 export default function DonationExperience() {
   const flow = useDonationFlow();
   const { campaign, currency } = flow;
-  const intro = stepIntro[flow.step];
+  const intro = getStepIntro(flow.step, flow.donorType);
 
   return (
     <section
@@ -166,6 +249,7 @@ export default function DonationExperience() {
             </div>
 
             <div className="mt-7 flex-1">
+              {flow.step === "profile" && <ProfileStep flow={flow} />}
               {flow.step === "identity" && <IdentityStep flow={flow} />}
               {flow.step === "amount" && <AmountStep flow={flow} />}
               {flow.step === "payment" && <PaymentStep flow={flow} />}
@@ -228,12 +312,59 @@ function ValueProp({
   );
 }
 
+function ProfileStep({ flow }: { flow: Flow }) {
+  return (
+    <div className="grid gap-3">
+      {donorTypeOptions.map((option) => {
+        const Icon = option.icon;
+        const isSelected = flow.donorType === option.id;
+
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => flow.selectDonorType(option.id)}
+            className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition duration-200 ${
+              isSelected
+                ? "border-primary bg-primary/[0.06] ring-1 ring-primary/20"
+                : "border-[#eadcc7] bg-white hover:border-secondary/50 hover:bg-[#fdfbf6]"
+            }`}
+          >
+            <span
+              className={`grid h-11 w-11 flex-none place-items-center rounded-lg ${
+                isSelected
+                  ? "bg-primary text-white"
+                  : "bg-secondary/10 text-secondary"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold uppercase tracking-wide text-primary">
+                {option.label}
+              </span>
+              <span className="mt-0.5 block text-xs font-medium leading-relaxed text-primary/60">
+                {option.detail}
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 flex-none text-secondary" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function IdentityStep({ flow }: { flow: Flow }) {
+  const config = flow.donorType
+    ? donorTypeConfig[flow.donorType]
+    : donorTypeConfig.self;
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4">
         <Field
-          label="Nom complet ou organisation"
+          label={config.nameLabel}
           inputRef={flow.fullNameInputRef}
           value={flow.fullName}
           onChange={(value) => {
@@ -241,12 +372,12 @@ function IdentityStep({ flow }: { flow: Flow }) {
             flow.updateError("fullName");
             flow.clearCheckoutError();
           }}
-          placeholder="Ex. Fondation CCAPAC"
+          placeholder={config.namePlaceholder}
           error={flow.errors.fullName}
-          autoComplete="name"
+          autoComplete={flow.donorType === "organization" ? "organization" : "name"}
         />
         <Field
-          label="Adresse e-mail"
+          label={config.emailLabel}
           type="email"
           inputMode="email"
           value={flow.email}
@@ -274,10 +405,16 @@ function IdentityStep({ flow }: { flow: Flow }) {
         />
       </div>
 
-      <PrimaryButton onClick={flow.goToAmount}>
-        Continuer
-        <ArrowRight className="h-4 w-4" />
-      </PrimaryButton>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <SecondaryButton onClick={flow.goToProfile}>
+          <ArrowLeft className="h-4 w-4" />
+          Retour
+        </SecondaryButton>
+        <PrimaryButton onClick={flow.goToAmount}>
+          Continuer
+          <ArrowRight className="h-4 w-4" />
+        </PrimaryButton>
+      </div>
     </div>
   );
 }
@@ -620,13 +757,28 @@ function PaymentStep({ flow }: { flow: Flow }) {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <SecondaryButton onClick={flow.goBackToAmount}>
+            <SecondaryButton
+              onClick={flow.goBackToAmount}
+              disabled={flow.isCreatingCheckout}
+            >
               <ArrowLeft className="h-4 w-4" />
               Retour
             </SecondaryButton>
-            <PrimaryButton onClick={handleFinalize}>
-              Finaliser le don
-              <ShieldCheck className="h-4 w-4" />
+            <PrimaryButton
+              onClick={handleFinalize}
+              disabled={flow.isCreatingCheckout}
+            >
+              {flow.isCreatingCheckout ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Traitement en cours…
+                </>
+              ) : (
+                <>
+                  Finaliser le don
+                  <ShieldCheck className="h-4 w-4" />
+                </>
+              )}
             </PrimaryButton>
           </div>
         </>

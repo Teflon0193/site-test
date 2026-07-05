@@ -11,15 +11,28 @@ type StrapiImage = {
 } | null;
 
 const getOptimizedImageUrl = (image: StrapiImage): string => {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_STRAPI_URL ||
+    (process.env.NODE_ENV === "production"
+      ? "https://lively-horse-7cb2f4c550.strapiapp.com"
+      : "http://localhost:1337");
+
   const formats = image?.formats;
 
-  return (
+  const url =
     (formats?.large as { url?: string } | undefined)?.url ||
     (formats?.medium as { url?: string } | undefined)?.url ||
     (formats?.small as { url?: string } | undefined)?.url ||
     image?.url ||
-    ""
-  );
+    "";
+
+  if (!url) return "";
+
+  if (url.startsWith("/")) {
+    return `${baseUrl}${url}`;
+  }
+
+  return url;
 };
 
 export const buildStrapiQuery = (filters: EventFilters): URLSearchParams => {

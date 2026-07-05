@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { CreditCard, Landmark, Smartphone } from "lucide-react";
+import { CreditCard, Smartphone } from "lucide-react";
 import type { MakutaOperatorCode } from "@/lib/makuta";
 import type { PaymentCategory } from "./types";
 
@@ -85,30 +85,6 @@ export const paymentCategories: PaymentCategoryDef[] = [
         requiresOtp: false,
         redirect: true,
       },
-    ],
-  },
-  {
-    id: "bank_transfer",
-    title: "Virement bancaire",
-    detail: "First Bank, Ecobank Pay, FINCA",
-    icon: Landmark,
-    accountLabel: "Numéro de compte ou téléphone",
-    accountPlaceholder: "Compte bancaire ou téléphone",
-    accountHint: "Renseignez le compte ou le numéro associé à votre banque.",
-    operators: [
-      {
-        code: "DRC_FIRSTBANK",
-        label: "First Bank",
-        requiresOtp: false,
-        redirect: false,
-      },
-      {
-        code: "DRC_ECOBANKPAY",
-        label: "Ecobank Pay",
-        requiresOtp: false,
-        redirect: false,
-      },
-      { code: "DRC_FINCA", label: "FINCA", requiresOtp: false, redirect: false },
     ],
   },
 ];

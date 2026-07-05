@@ -3,6 +3,7 @@
 import type { ReactNode, Ref } from "react";
 import { ArrowRight, Banknote, Check } from "lucide-react";
 import { formatMoney } from "./formatters";
+import type { Step } from "./types";
 
 export function Field({
   id,
@@ -190,13 +191,14 @@ export function SummaryBar({
   );
 }
 
-export function Stepper({ step }: { step: "identity" | "amount" | "payment" }) {
-  const steps: Array<["identity" | "amount" | "payment", string]> = [
+export function Stepper({ step }: { step: Step }) {
+  const steps: Array<[string, string]> = [
     ["identity", "Profil"],
     ["amount", "Montant"],
     ["payment", "Paiement"],
   ];
-  const currentIndex = step === "identity" ? 0 : step === "amount" ? 1 : 2;
+  // Le choix « pour qui » (profile) fait partie de l'étape Profil.
+  const currentIndex = step === "amount" ? 1 : step === "payment" ? 2 : 0;
 
   return (
     <ol className="flex w-full items-start">

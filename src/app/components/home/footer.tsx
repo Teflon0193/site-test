@@ -6,22 +6,22 @@ import Link from "next/link";
 export default function Footer() {
   const navigation = [
     { label: "Accueil", href: "/" },
-    { label: "Programmes", href: "/programmes" },
+    { label: "Action culturelle", href: "/programmes" },
     { label: "Agenda", href: "/agenda" },
     { label: "Infos pratiques", href: "/infos" },
   ];
 
   const programmes = [
     {
-      label: "Musique & Arts vivants",
+      label: "Arts",
       href: "/programmes/musique-arts-vivants",
     },
     {
-      label: "Théâtre & Arts de la scène",
+      label: "Dramathèque ",
       href: "/programmes/theatre-arts-scene",
     },
-    { label: "Cinéma & Audiovisuel", href: "/programmes/cinema-audiovisuel" },
-    { label: "Littérature & Pensée", href: "/programmes/litterature-pensee" },
+    { label: "Cinémathèque", href: "/programmes/cinema-audiovisuel" },
+    { label: "Biblio Librairie", href: "/programmes/litterature-pensee" },
   ];
 
   return (
