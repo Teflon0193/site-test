@@ -104,13 +104,13 @@ export default async function ArticleDetailPage({
         {/* Image de couverture */}
         <div className="container mx-auto mt-8 px-4 sm:mt-10 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-5xl">
-            <div className="relative aspect-[21/9] overflow-hidden rounded-2xl bg-muted/10 shadow-sm ring-1 ring-muted/10">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted/10 shadow-sm ring-1 ring-muted/10 sm:aspect-[16/10]">
               <div className="absolute inset-0 z-10 bg-[url('/motif-lub.png')] bg-cover bg-center opacity-[0.04]" />
               <Image
                 src={article.coverImage ?? article.image}
                 alt={article.title}
                 fill
-                className="object-cover"
+                className="object-contain"
                 priority
                 sizes="(max-width: 1024px) 100vw, 1024px"
                 quality={90}
