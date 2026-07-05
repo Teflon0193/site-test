@@ -9,7 +9,25 @@ import {
 
 const prisma = new PrismaClient();
 
+// Origines autorisées pour la vérification CSRF de Better Auth.
+// On accepte les variantes www / non-www afin que la connexion fonctionne
+// quel que soit le domaine par lequel l'utilisateur arrive, plus toute
+// origine supplémentaire fournie via l'environnement (séparées par des virgules).
+const trustedOrigins = [
+  "https://www.centreculturel.cd",
+  "https://centreculturel.cd",
+  "http://localhost:3000",
+  ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
+  ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
+  ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS
+    ? process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",").map((origin) =>
+        origin.trim()
+      )
+    : []),
+].filter(Boolean);
+
 export const auth = betterAuth({
+  trustedOrigins,
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
