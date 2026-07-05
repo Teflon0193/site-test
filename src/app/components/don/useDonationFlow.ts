@@ -8,6 +8,7 @@ import { formatMoney } from "./formatters";
 import { findOperator, getCategory } from "./operators";
 import type {
   CreatedDonation,
+  DonorType,
   FundraisingErrors,
   PaymentCategory,
   Step,
@@ -23,7 +24,8 @@ export function useDonationFlow() {
   const tiers = campaign.tiers;
   const currency = campaign.currency;
 
-  const [step, setStep] = useState<Step>("identity");
+  const [step, setStep] = useState<Step>("profile");
+  const [donorType, setDonorType] = useState<DonorType | null>(null);
   const [selectedTierId, setSelectedTierId] = useState<string | null>(
     tiers.at(-1)?.id ?? null
   );
@@ -103,6 +105,19 @@ export function useDonationFlow() {
     });
   };
 
+  const goToProfile = () => {
+    clearStepFeedback();
+    setStep("profile");
+  };
+
+  /** Choix « pour qui » : mémorise le type et enchaîne sur le profil. */
+  const selectDonorType = (type: DonorType) => {
+    setDonorType(type);
+    clearStepFeedback();
+    setStep("identity");
+    focusFullName();
+  };
+
   const goToIdentity = () => {
     clearStepFeedback();
     setStep("identity");
@@ -115,7 +130,9 @@ export function useDonationFlow() {
 
     if (!fullName.trim()) {
       nextErrors.fullName =
-        "Le nom du donateur ou de l'organisation est requis.";
+        donorType === "organization"
+          ? "Le nom de l'organisation est requis."
+          : "Votre nom complet est requis.";
     }
 
     if (!email.trim() || !emailPattern.test(email)) {
@@ -293,6 +310,10 @@ export function useDonationFlow() {
     progressPercent,
     // étape
     step,
+    // profil « pour qui »
+    donorType,
+    selectDonorType,
+    goToProfile,
     // montant
     selectedTierId,
     setSelectedTierId,
