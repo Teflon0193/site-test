@@ -142,13 +142,13 @@ export default function Footer() {
 
             <div className="flex items-center gap-6">
               <Link
-                href="/politique-de-confidentialite"
+                href="#"
                 className="hover:text-white transition-colors"
               >
                 Politique de confidentialité
               </Link>
               <Link
-                href="/mentions-legales"
+                href="#"
                 className="hover:text-white transition-colors"
               >
                 Mentions légales
