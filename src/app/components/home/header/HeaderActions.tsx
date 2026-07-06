@@ -16,7 +16,7 @@ export function HeaderActions({
   return (
     <div className="flex items-center justify-end gap-2 sm:gap-2.5 xl:w-full xl:pl-5 2xl:pl-6">
       <Link
-        href="#"
+        href="/faire-un-don"
         aria-label="Faire un don"
         className="group flex h-10 items-center gap-1.5 rounded-xl border border-white/30 bg-white/5 px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:border-accent hover:bg-accent hover:text-black sm:px-3.5 sm:text-sm"
      > 
