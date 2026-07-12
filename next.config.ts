@@ -1,6 +1,4 @@
-import type {
-  NextConfig,
-} from "next";
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -21,28 +19,23 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname:
-          "new-site-backend.onrender.com",
+        hostname: "new-site-backend.onrender.com",
       },
       {
         protocol: "https",
-        hostname:
-          "lively-horse-7cb2f4c550.strapiapp.com",
+        hostname: "lively-horse-7cb2f4c550.strapiapp.com",
       },
       {
         protocol: "https",
-        hostname:
-          "lively-horse-7cb2f4c550.media.strapiapp.com",
+        hostname: "lively-horse-7cb2f4c550.media.strapiapp.com",
       },
       {
         protocol: "https",
-        hostname:
-          "informed-activity-db79c3338c.media.strapiapp.com",
+        hostname: "informed-activity-db79c3338c.media.strapiapp.com",
       },
       {
         protocol: "https",
-        hostname:
-          "informed-activity-db79c3338c.strapiapp.com",
+        hostname: "informed-activity-db79c3338c.strapiapp.com",
       },
     ],
 
