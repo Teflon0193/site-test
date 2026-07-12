@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+
 const forgotPasswordSchema = z.object({
   email: z.string().email("Email invalide"),
 });

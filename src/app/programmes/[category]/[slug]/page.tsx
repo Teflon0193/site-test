@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -6,12 +8,6 @@ import { getProgrammeBySlug, programmes } from "@/lib/programmes-data";
 import { FaArrowLeft, FaCheckCircle } from "react-icons/fa";
 import { MdBookmark, MdGroup, MdTrendingUp } from "react-icons/md";
 
-export async function generateStaticParams() {
-  return programmes.map((programme) => ({
-    category: programme.categorySlug,
-    slug: programme.slug,
-  }));
-}
 
 export default async function ProgrammePage({
   params,

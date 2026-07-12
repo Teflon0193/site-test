@@ -1,30 +1,22 @@
-/*import { createAuthClient } from "better-auth/client";
-import { inferAdditionalFields } from "better-auth/client/plugins";
+import {
+  login,
+  register,
+  type RegisterData,
+} from "@/services/auth";
 
-export const authClient = createAuthClient({
-  // Dans le navigateur, on cible toujours l'origine de la page en cours
-  // (ex. https://www.centreculturel.cd) pour éviter tout appel cross-origin
-  // entre les variantes www / non-www. Côté serveur (SSR), on retombe sur
-  // la variable d'environnement.
-  baseURL:
-    typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  plugins: [inferAdditionalFields({
-    user: {
-      phone: {
-        type: "string",
-      }
-    }
-  })],
-});
+export async function signUp(data: RegisterData) {
+  return register(data);
+}
 
-export const {
-  signIn,
-  signUp,
-  signOut,
-  useSession,
-  requestPasswordReset,
-  resetPassword,
-} = authClient;
-*/
+export async function signIn(email: string, password: string) {
+  return login(email, password);
+}
+
+export function signOut() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+  }
+
+  return { success: true };
+}

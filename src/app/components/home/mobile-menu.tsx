@@ -7,7 +7,7 @@ import { ChevronDown, X } from "lucide-react";
 import { MemberButton } from "./header/MemberButton";
 import { SOCIAL_LINKS } from "@/lib/header/constants";
 import { menuItems } from "@/lib/header";
-import type { User } from "@prisma/client";
+import type { User } from "@/services/auth";
 
 interface MobileMenuProps {
   isOpen: boolean;

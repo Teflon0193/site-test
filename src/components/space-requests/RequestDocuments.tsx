@@ -105,6 +105,17 @@ const documentConfiguration: Record<
     badgeColor:
       "bg-amber-50 text-amber-700",
   },
+
+  PAYMENT_PROOF: {
+    label: "Preuve de paiement",
+    description:
+      "Document de paiement transmis par le demandeur",
+    icon: FileCheck2,
+    iconColor: "text-green-700",
+    iconBackground: "bg-green-50",
+    badgeColor:
+      "bg-green-50 text-green-700",
+  },
 };
 
 const fallbackConfiguration: DocumentConfiguration =

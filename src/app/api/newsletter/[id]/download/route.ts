@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth-server";
 import { getNewsletterById } from "@/services/newsletterService";

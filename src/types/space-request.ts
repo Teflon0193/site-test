@@ -51,25 +51,7 @@ export interface ValidationHistory {
   performedAt: string;
 }
 
-export interface SpaceRequest {
-  id: number;
-  reference: string;
-  eventName: string;
-  space: Space;
-  date: string;
-  startTime: string;
-  endTime: string;
-  participants: number;
-  description: string;
-  status: SpaceRequestStatus;
-  currentDepartment: UserRole;
-  paymentStatus: string;
-  paymentAmount?: number | null;
-  rejectionComment?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  user?: RequestUser | null;
-}
+export type SpaceRequest = import("@/services/spaceRequestService").SpaceRequest;
 
 export interface CreateSpaceRequestData {
   eventName: string;

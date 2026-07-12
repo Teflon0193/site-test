@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getUser } from "@/lib/auth-server";
 import { getActualites } from "@/services/actualiteService";
 import ActualitesPageClient from "./ActualitesPageClient";

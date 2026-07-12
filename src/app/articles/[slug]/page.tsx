@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,9 +13,6 @@ interface ArticleDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return articles.map((article) => ({ slug: article.slug }));
-}
 
 export async function generateMetadata({
   params,

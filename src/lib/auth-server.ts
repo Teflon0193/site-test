@@ -1,38 +1,66 @@
-import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
+import { cookies } from "next/headers";
+import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "your-secret-key"
+);
 
-export async function getUser() {
+export interface AuthServerUser {
+  id: number;
+  email: string;
+  role: string;
+  first_name: string;
+  last_name: string;
+  name: string;
+  phone: string | null;
+  image: string | null;
+  email_verified: boolean;
+  emailVerified: boolean;
+}
+
+export async function getUser(): Promise<AuthServerUser | null> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('accessToken')?.value;
+    const token = cookieStore.get("accessToken")?.value;
 
     if (!token) {
       return null;
     }
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
+
+    const firstName =
+      typeof payload.first_name === "string" ? payload.first_name : "";
+    const lastName =
+      typeof payload.last_name === "string" ? payload.last_name : "";
+    const email = typeof payload.email === "string" ? payload.email : "";
+    const verifiedValue = payload.email_verified ?? payload.emailVerified ?? true;
+    const emailVerified =
+      verifiedValue === true || verifiedValue === 1 || verifiedValue === "1";
+
     return {
-      id: payload.id as number,
-      email: payload.email as string,
-      role: payload.role as string,
-      first_name: payload.first_name as string,
-      last_name: payload.last_name as string,
+      id: Number(payload.id),
+      email,
+      role: typeof payload.role === "string" ? payload.role : "MEMBER",
+      first_name: firstName,
+      last_name: lastName,
+      name: `${firstName} ${lastName}`.trim() || email,
+      phone: typeof payload.phone === "string" ? payload.phone : null,
+      image: typeof payload.image === "string" ? payload.image : null,
+      email_verified: emailVerified,
+      emailVerified,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
-export async function isAdmin() {
+export async function isAdmin(): Promise<boolean> {
   const user = await getUser();
-  return user?.role === 'ADMIN';
+  return user?.role === "ADMIN";
 }
 
-// If you need a session-like object for compatibility
 export async function getSession() {
   const user = await getUser();
-  if (!user) return null;
-  return { user };
+  return user ? { user } : null;
 }

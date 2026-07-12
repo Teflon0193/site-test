@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 

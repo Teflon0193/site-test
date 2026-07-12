@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";

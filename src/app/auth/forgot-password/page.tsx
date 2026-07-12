@@ -11,6 +11,7 @@ import { forgotPassword } from "@/services/auth";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 
+
 export default function ForgotPasswordPage() {
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");

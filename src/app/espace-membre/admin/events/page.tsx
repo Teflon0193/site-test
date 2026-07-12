@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { EventsPageClient } from "./EventsPageClient";

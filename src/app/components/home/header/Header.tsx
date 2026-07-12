@@ -7,7 +7,7 @@ import { SocialBar, Logo, DesktopNavigation, HeaderActions } from "./index";
 import { useScrollDetection } from "@/hooks/useScrollDetection";
 import { useDropdown } from "@/hooks/useDropdown";
 import { useActiveMenuItem } from "@/hooks/useActiveMenuItem";
-import type { User } from "@prisma/client";
+import type { User } from "@/services/auth";
 
 interface MainHeaderProps {
   user: User | null;

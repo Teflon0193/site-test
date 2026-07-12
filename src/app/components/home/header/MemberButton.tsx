@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LogIn, UserRound } from "lucide-react";
-import type { User } from "@prisma/client";
+import type { User } from "@/services/auth";
 
 interface MemberButtonProps {
   user: User | null;

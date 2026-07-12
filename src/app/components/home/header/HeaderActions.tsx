@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MemberButton } from "./MemberButton";
 import { MobileMenuToggle } from "./MobileMenuToggle";
 import { Heart } from "lucide-react";
-import type { User } from "@prisma/client";
+import type { User } from "@/services/auth";
 
 interface HeaderActionsProps {
   user: User | null;

@@ -10,6 +10,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { QueryProvider } from "./query-provider";
 
+export const dynamic = "force-dynamic";
+
 const GTM_ID = "GTM-TM76Z944";
 
 const poppins = localFont({

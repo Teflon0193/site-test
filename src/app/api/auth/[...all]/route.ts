@@ -1,4 +1,16 @@
-/*import { auth } from "@/lib/auth";
-import { toNextJsHandler } from "better-auth/next-js";
+import { NextResponse } from "next/server";
 
-export const { POST, GET } = toNextJsHandler(auth); */
+const removed = () =>
+  NextResponse.json(
+    {
+      success: false,
+      message:
+        "Cette ancienne route Better Auth est désactivée. Utilisez le backend Node /api/auth.",
+    },
+    { status: 410 }
+  );
+
+export const GET = removed;
+export const POST = removed;
+export const PUT = removed;
+export const DELETE = removed;

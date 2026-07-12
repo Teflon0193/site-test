@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import MainLayout from "./components/layouts/MainLayout";
 import HeroSlider from "./components/home/hero";
 import DirectorMessage from "./components/home/director-message";
