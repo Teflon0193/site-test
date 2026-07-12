@@ -1,22 +1,34 @@
+
 "use client";
 
+import {
+  Suspense,
+  useState,
+} from "react";
+
 import Link from "next/link";
+
 import {
   useRouter,
   useSearchParams,
 } from "next/navigation";
-import { useState } from "react";
+
 import {
   isAxiosError,
 } from "axios";
+
 import { toast } from "sonner";
 
 import { AuthLayout } from "@/app/components/auth/AuthLayout";
+
 import LoginForm, {
   type LoginFormValues,
 } from "@/app/components/auth/LoginForm";
+
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
+
 import { useAuth } from "@/context/AuthContext";
+
 import api from "@/lib/api";
 
 type ApiErrorResponse = {
@@ -50,30 +62,43 @@ const roleDestinations: Record<
     "/espace-membre/finance",
 
   ADMIN:
-    "/espace-membre/demandes-espaces",
+    "/espace-membre/admin",
 };
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+
+  const searchParams =
+    useSearchParams();
 
   const requestedRedirect =
-    searchParams.get("redirectUrl");
+    searchParams.get(
+      "redirectUrl"
+    );
 
   const safeRequestedRedirect =
-    requestedRedirect?.startsWith("/") &&
-    !requestedRedirect.startsWith("//")
+    requestedRedirect?.startsWith(
+      "/"
+    ) &&
+    !requestedRedirect.startsWith(
+      "//"
+    )
       ? requestedRedirect
       : null;
 
   const { login } = useAuth();
 
-  const [isLoading, setIsLoading] =
-    useState(false);
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(false);
 
-  const [error, setError] = useState<
-    string | null
-  >(null);
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(
+    null
+  );
 
   const handleSubmit = async (
     values: LoginFormValues
@@ -91,47 +116,67 @@ export default function LoginPage() {
         values.password
       );
 
+      const normalizedRole =
+        user.role
+          ?.trim()
+          .toUpperCase();
+
       const defaultDestination =
-        roleDestinations[user.role] ||
+        roleDestinations[
+          normalizedRole
+        ] ||
         "/espace-membre";
 
       /*
-       * Utiliser redirectUrl uniquement lorsqu'il
-       * correspond à l'espace autorisé du rôle.
+       * redirectUrl est utilisé uniquement
+       * s'il appartient à l'espace du rôle.
        */
       const roleBasePath =
-        roleDestinations[user.role];
+        roleDestinations[
+          normalizedRole
+        ];
 
       const requestedRouteIsAllowed =
-        safeRequestedRedirect &&
-        roleBasePath &&
-        (
-          safeRequestedRedirect ===
-            roleBasePath ||
-          safeRequestedRedirect.startsWith(
-            `${roleBasePath}/`
-          ) ||
-          safeRequestedRedirect ===
-            "/espace-membre/profile"
+        Boolean(
+          safeRequestedRedirect &&
+            roleBasePath &&
+            (
+              safeRequestedRedirect ===
+                roleBasePath ||
+              safeRequestedRedirect.startsWith(
+                `${roleBasePath}/`
+              ) ||
+              safeRequestedRedirect ===
+                "/espace-membre/profile"
+            )
         );
 
       const destination =
-        requestedRouteIsAllowed
+        requestedRouteIsAllowed &&
+        safeRequestedRedirect
           ? safeRequestedRedirect
           : defaultDestination;
 
-      toast.success("Connexion réussie", {
-        description:
-          `Bienvenue ${
-            user.first_name || user.email
-          }`,
-      });
+      toast.success(
+        "Connexion réussie",
+        {
+          description:
+            `Bienvenue ${
+              user.first_name ||
+              user.email
+            }`,
+        }
+      );
 
+      /*
+       * Ne pas utiliser router.refresh()
+       * ici : AuthContext met déjà l'utilisateur
+       * à jour avant la redirection.
+       */
       router.replace(destination);
-      router.refresh();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(
-        "Login error:",
+        "Erreur de connexion :",
         err
       );
 
@@ -147,7 +192,8 @@ export default function LoginPage() {
           err.response?.status;
 
         const backendMessage =
-          err.response?.data?.message;
+          err.response?.data
+            ?.message;
 
         if (status === 403) {
           message =
@@ -158,41 +204,58 @@ export default function LoginPage() {
             await api.post(
               "/auth/resend-verification",
               {
-                email: values.email
-                  .trim()
-                  .toLowerCase(),
+                email:
+                  values.email
+                    .trim()
+                    .toLowerCase(),
               }
             );
 
             toast.info(
               "Un nouveau lien de vérification vous a été envoyé."
             );
-          } catch (resendError) {
+          } catch (
+            resendError: unknown
+          ) {
             console.error(
               "Erreur de renvoi de vérification :",
               resendError
             );
           }
-        } else if (status === 401) {
+        } else if (
+          status === 401
+        ) {
           message =
             backendMessage ||
             "Email ou mot de passe incorrect.";
-        } else if (status === 400) {
+        } else if (
+          status === 400
+        ) {
           message =
             backendMessage ||
             "Veuillez vérifier les informations saisies.";
-        } else if (backendMessage) {
-          message = backendMessage;
         } else if (
-          err.code === "ERR_NETWORK"
+          backendMessage
+        ) {
+          message =
+            backendMessage;
+        } else if (
+          err.code ===
+          "ERR_NETWORK"
         ) {
           message =
             "Impossible de contacter le serveur.";
+        } else if (
+          err.message
+        ) {
+          message =
+            err.message;
         }
       } else if (
         err instanceof Error
       ) {
-        message = err.message;
+        message =
+          err.message;
       }
 
       setError(message);
@@ -215,8 +278,8 @@ export default function LoginPage() {
           </h1>
 
           <p className="text-sm text-muted-foreground">
-            Entrez vos identifiants pour accéder à
-            votre espace
+            Entrez vos identifiants
+            pour accéder à votre espace
           </p>
         </div>
 
@@ -231,7 +294,9 @@ export default function LoginPage() {
 
         <div className="space-y-4">
           <GoogleAuthButton
-            callbackURL={googleCallback}
+            callbackURL={
+              googleCallback
+            }
           />
 
           <div className="relative">
@@ -247,14 +312,19 @@ export default function LoginPage() {
           </div>
 
           <LoginForm
-            onSubmit={handleSubmit}
-            loading={isLoading}
+            onSubmit={
+              handleSubmit
+            }
+            loading={
+              isLoading
+            }
           />
         </div>
 
         <div className="text-center text-sm">
           <p>
-            Vous n&apos;avez pas de compte ?{" "}
+            Vous n&apos;avez pas
+            de compte ?{" "}
             <Link
               href="/auth/signup"
               className="text-primary hover:underline"
@@ -274,5 +344,31 @@ export default function LoginPage() {
         </div>
       </div>
     </AuthLayout>
+  );
+}
+
+function LoginLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="space-y-4 text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+
+        <p className="text-sm text-muted-foreground">
+          Chargement de la connexion...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <LoginLoading />
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
