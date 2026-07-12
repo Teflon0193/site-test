@@ -1,3 +1,17 @@
+// src/services/actualiteService.ts
+import api from "@/lib/api";
+import {
+  Actualite,
+  ActualiteBlock,
+  ActualiteForDownload,
+  ActualiteMois,
+  ActualiteType,
+} from "@/types/actualite";
+
+// =============================================================================
+// TYPES (Admin)
+// =============================================================================
+
 export interface AdminRecentMember {
   id: string;
   name: string | null;
@@ -159,6 +173,10 @@ export interface AdminFundraisingResponse {
   next_cursor: string | null;
 }
 
+// =============================================================================
+// ADMIN FUNCTIONS (unchanged – they call Next.js API routes)
+// =============================================================================
+
 async function handleJsonResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -281,3 +299,63 @@ export async function getFundraisingAdminData(
 
   return handleJsonResponse<AdminFundraisingResponse>(res);
 }
+
+// =============================================================================
+// ACTUALITÉ FUNCTIONS (rewritten to use Express)
+// =============================================================================
+
+interface ActualiteFilters {
+  type?: ActualiteType;
+  annee?: number;
+  mois?: ActualiteMois;
+  search?: string;
+}
+
+/**
+ * Récupère la liste des actualités depuis le backend Express
+ */
+export const getActualites = async (
+  filters: ActualiteFilters = {}
+): Promise<Actualite[]> => {
+  const params = new URLSearchParams();
+  if (filters.type) params.append("type", filters.type);
+  if (filters.annee) params.append("annee", String(filters.annee));
+  if (filters.mois) params.append("mois", filters.mois);
+  if (filters.search) params.append("search", filters.search);
+
+  const url = `/actualites?${params.toString()}`;
+  const res = await api.get(url);
+  return res.data;
+};
+
+/**
+ * Récupère une actualité par son slug
+ */
+export const getActualiteBySlug = async (
+  slug: string
+): Promise<Actualite | null> => {
+  try {
+    const res = await api.get(`/actualites/${slug}`);
+    return res.data;
+  } catch (error) {
+    console.error("[Actualite Service] Error fetching actualite by slug:", error);
+    return null;
+  }
+};
+
+/**
+ * Récupère une actualité avec les informations nécessaires pour le téléchargement
+ * Assurez-vous que votre backend Express expose /actualites/:id/download
+ * ou bien retourne le PDF dans /actualites/:id avec les infos du fichier.
+ */
+export const getActualiteForDownload = async (
+  id: number
+): Promise<ActualiteForDownload | null> => {
+  try {
+    const res = await api.get(`/actualites/${id}/download`);
+    return res.data;
+  } catch (error) {
+    console.error("[Actualite Service] Error fetching actualite for download:", error);
+    return null;
+  }
+};

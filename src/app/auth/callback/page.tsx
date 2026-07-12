@@ -1,6 +1,26 @@
 import { redirect } from "next/navigation";
-import { getUser } from "@/lib/auth-server";
+import { cookies } from "next/headers";
+import { jwtVerify } from "jose";
 import { createEventRegistrationAfterGoogleAuth } from "@/app/evenement/[slug]/actions";
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
+
+async function getServerUser() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
+    if (!token) return null;
+
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return {
+      id: payload.id,
+      email: payload.email,
+      role: payload.role,
+    };
+  } catch {
+    return null;
+  }
+}
 
 interface CallbackPageProps {
   searchParams: Promise<{
@@ -17,10 +37,9 @@ export default async function AuthCallbackPage({
   const { eventId, eventSlug, redirectUrl } = params;
 
   // Vérifier que l'utilisateur est authentifié
-  const user = await getUser();
+  const user = await getServerUser();
 
   if (!user) {
-    // Si l'utilisateur n'est pas authentifié, rediriger vers la page de login
     redirect("/auth/login");
   }
 
@@ -29,18 +48,14 @@ export default async function AuthCallbackPage({
     const result = await createEventRegistrationAfterGoogleAuth(eventId);
 
     if (result.success) {
-      // Rediriger vers la page de l'événement avec un message de succès
       if (eventSlug) {
         redirect(`/evenement/${eventSlug}?registered=true`);
+      } else if (redirectUrl) {
+        redirect(redirectUrl);
       } else {
-        if (redirectUrl) {
-          redirect(redirectUrl);
-        } else {
         redirect("/espace-membre?registered=true");
       }
-      }
     } else {
-      // En cas d'erreur, rediriger quand même vers l'événement avec un message d'erreur
       if (eventSlug) {
         redirect(
           `/evenement/${eventSlug}?error=${encodeURIComponent(

@@ -313,7 +313,7 @@ export default function Calendar({ events, loading = false }: CalendarProps) {
                       Calendrier des événements
                     </h2>
                     <p className="text-white/80 text-sm mt-1">
-                      Sélectionnez une date pour voir les programmes
+                      Sélectionnez une date pour voir les programmes et espaces disponibles
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center">

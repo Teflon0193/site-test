@@ -7,28 +7,31 @@ import { AuthLayout } from "@/app/components/auth/AuthLayout";
 import ForgotPasswordForm, {
   type ForgotPasswordFormValues,
 } from "@/app/components/auth/ForgotPasswordForm";
-import { requestPasswordReset } from "@/lib/auth-client";
+import { forgotPassword } from "@/services/auth";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (values: ForgotPasswordFormValues) => {
-    const { error } = await requestPasswordReset({
-      email: values.email,
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
-
-    if (error) {
-      toast.error(error.message || "Une erreur est survenue");
-      return;
+    setLoading(true);
+    try {
+      const response = await forgotPassword(values.email);
+      if (response.success) {
+        setSentEmail(values.email);
+        setEmailSent(true);
+        toast.success("Email de réinitialisation envoyé !");
+      } else {
+        toast.error(response.message || "Une erreur est survenue");
+      }
+    } catch (error) {
+      toast.error("Erreur lors de l'envoi de l'email");
+    } finally {
+      setLoading(false);
     }
-
-    setSentEmail(values.email);
-    setEmailSent(true);
-    toast.success("Email de réinitialisation envoyé !");
   };
 
   return (
@@ -47,7 +50,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             <div className="space-y-4">
-              <ForgotPasswordForm onSubmit={handleSubmit} />
+              <ForgotPasswordForm onSubmit={handleSubmit} loading={loading} />
             </div>
 
             <div className="text-center">

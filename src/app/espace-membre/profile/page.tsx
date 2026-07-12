@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -9,54 +11,87 @@ import {
   Globe,
   Shield,
 } from "lucide-react";
-import { getUser } from "@/lib/auth-server";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ProfilePhotoUploader } from "./ProfilePhotoUploader";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
 
-export default async function ProfilePage() {
-  const user = await getUser();
-  const userIsMember = user?.role === "MEMBER" ? "MEMBRE" : "ADMIN";
+// Extend the User type to include all properties used in the component
+interface ExtendedUser {
+  id: string;
+  email: string;
+  name?: string;
+  role?: "MEMBER" | "ADMIN";
+  createdAt?: string;
+  image?: string;
+  emailVerified?: boolean;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  newsletterOptIn?: boolean;
+}
 
-  if (!user) {
-    redirect("/auth/login");
+export default function ProfilePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  const userData = user as ExtendedUser | null;
+
+  useEffect(() => {
+    if (!loading && !userData) {
+      router.push("/auth/login");
+    }
+  }, [loading, userData, router]);
+
+  if (loading) {
+    return <div>Chargement...</div>;
   }
 
-  if (user.role === "ADMIN") {
-    redirect("/espace-membre/admin");
+  if (!userData) {
+    return null;
   }
 
-  const memberSince = new Date(user.createdAt).toLocaleDateString("fr-FR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const userIsMember = userData.role === "MEMBER" ? "MEMBRE" : "ADMIN";
+  const memberSince = userData.createdAt
+    ? new Date(userData.createdAt).toLocaleDateString("fr-FR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "Date inconnue";
+
+  if (userData.role === "ADMIN") {
+    router.push("/espace-membre/admin");
+    return null;
+  }
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 pb-6 border-b">
         <ProfilePhotoUploader
-          initialImageUrl={user.image}
-          userName={user.name}
+          initialImageUrl={userData.image ?? null} // ✅ fixed
+          userName={userData.name || "Utilisateur"}
         />
 
         <div className="flex-1 space-y-2">
           <div className="flex flex-col md:flex-row md:items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
-              {user.name}
+              {userData.name || "Utilisateur"}
             </h1>
             <div className="flex gap-2">
               <Badge
-                variant={user.emailVerified ? "default" : "secondary"}
+                variant={userData.emailVerified ? "default" : "secondary"}
                 className={cn(
                   "px-2 py-0.5 text-xs font-medium",
-                  user.emailVerified
+                  userData.emailVerified
                     ? "bg-green-100 text-green-700 hover:bg-green-100"
                     : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
                 )}
               >
-                {user.emailVerified ? (
+                {userData.emailVerified ? (
                   <span className="flex items-center gap-1">
                     <CheckCircle2 size={12} />
                     Membre Actif
@@ -78,10 +113,10 @@ export default async function ProfilePage() {
               <Calendar size={14} />
               <span>Membre depuis le {memberSince}</span>
             </div>
-            {user.email && (
+            {userData.email && (
               <div className="flex items-center gap-1.5">
                 <Mail size={14} />
-                <span>{user.email}</span>
+                <span>{userData.email}</span>
               </div>
             )}
           </div>
@@ -105,7 +140,7 @@ export default async function ProfilePage() {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Nom complet
                   </p>
-                  <p className="text-sm font-medium">{user.name}</p>
+                  <p className="text-sm font-medium">{userData.name || "Non renseigné"}</p>
                 </div>
 
                 <div className="space-y-1">
@@ -113,36 +148,35 @@ export default async function ProfilePage() {
                     Email
                   </p>
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{user.email}</p>
-                    {user.emailVerified && (
+                    <p className="text-sm font-medium">{userData.email}</p>
+                    {userData.emailVerified && (
                       <CheckCircle2 className="h-3 w-3 text-green-500" />
                     )}
                   </div>
                 </div>
 
-                {user.phone && (
+                {userData.phone && (
                   <div className="space-y-1">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Téléphone
                     </p>
-                    <p className="text-sm font-medium">{user.phone}</p>
+                    <p className="text-sm font-medium">{userData.phone}</p>
                   </div>
                 )}
 
-                {user.address && (
+                {userData.address && (
                   <div className="space-y-1">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Adresse
                     </p>
-                    <p className="text-sm font-medium">{user.address}</p>
+                    <p className="text-sm font-medium">{userData.address}</p>
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Location Info */}
-          {(user.city || user.country) && (
+          {(userData.city || userData.country) && (
             <Card className="border-none shadow-sm bg-white py-4">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold">
@@ -152,20 +186,20 @@ export default async function ProfilePage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {user.city && (
+                  {userData.city && (
                     <div className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Ville
                       </p>
-                      <p className="text-sm font-medium">{user.city}</p>
+                      <p className="text-sm font-medium">{userData.city}</p>
                     </div>
                   )}
-                  {user.country && (
+                  {userData.country && (
                     <div className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Pays
                       </p>
-                      <p className="text-sm font-medium">{user.country}</p>
+                      <p className="text-sm font-medium">{userData.country}</p>
                     </div>
                   )}
                 </div>
@@ -176,7 +210,6 @@ export default async function ProfilePage() {
 
         {/* Sidebar Column */}
         <div className="space-y-6">
-          {/* Account Status */}
           <Card className="border-none shadow-sm bg-muted/30 py-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
@@ -188,15 +221,15 @@ export default async function ProfilePage() {
               <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-muted/50">
                 <span className="text-sm text-muted-foreground">Statut</span>
                 <Badge
-                  variant={user.emailVerified ? "default" : "secondary"}
+                  variant={userData.emailVerified ? "default" : "secondary"}
                   className={cn(
                     "text-xs",
-                    user.emailVerified
+                    userData.emailVerified
                       ? "bg-green-100 text-green-700"
                       : "bg-yellow-100 text-yellow-700"
                   )}
                 >
-                  {user.emailVerified ? "Email vérifié" : "Email non vérifié"}
+                  {userData.emailVerified ? "Email vérifié" : "Email non vérifié"}
                 </Badge>
               </div>
 
@@ -212,12 +245,12 @@ export default async function ProfilePage() {
                 <span
                   className={cn(
                     "text-sm font-medium",
-                    user.newsletterOptIn
+                    userData.newsletterOptIn
                       ? "text-green-600"
                       : "text-muted-foreground"
                   )}
                 >
-                  {user.newsletterOptIn ? "Abonné" : "Non abonné"}
+                  {userData.newsletterOptIn ? "Abonné" : "Non abonné"}
                 </span>
               </div>
             </CardContent>

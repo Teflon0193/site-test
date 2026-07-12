@@ -29,6 +29,7 @@ export default function EspacesPageClient() {
             <h1 className="uppercase text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight drop-shadow-sm">
               Les Espaces du Grand Tambour
             </h1>
+
             <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground leading-relaxed">
               Le Grand Tambour est un espace pluridisciplinaire, innovant et
               inclusif, articulé autour de plusieurs pôles.
@@ -37,6 +38,7 @@ export default function EspacesPageClient() {
         </div>
       </section>
 
+      {/* Slider */}
       <section className="py-12 sm:py-16 lg:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <EspaceSlider
@@ -45,7 +47,6 @@ export default function EspacesPageClient() {
             onSlideChange={setCurrentSlide}
           />
 
-          {/* Content Section */}
           <div className="max-w-5xl mx-auto">
             <EspaceCaracteristiques
               caracteristiques={currentEspace.caracteristiques}
@@ -54,7 +55,7 @@ export default function EspacesPageClient() {
         </div>
       </section>
 
-      {/* Section Informations supplémentaires */}
+      {/* Tous les espaces */}
       <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-muted/5 via-background to-muted/10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
@@ -62,9 +63,10 @@ export default function EspacesPageClient() {
               <h2 className="uppercase text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6">
                 Découvrez nos espaces
               </h2>
+
               <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
                 Chaque espace du Grand Tambour a été conçu pour répondre aux
-                besoins spécifiques de la création artistique et culturelle
+                besoins spécifiques de la création artistique et culturelle.
               </p>
             </div>
 
@@ -78,6 +80,97 @@ export default function EspacesPageClient() {
                 />
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===========================
+          DEMANDE D'ESPACE
+      ============================ */}
+      <section className="py-20 bg-gradient-to-br from-[#F8F5EF] via-white to-[#F3EEE5]">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-[#E7DDCF]">
+
+            <div className="grid lg:grid-cols-2">
+
+              {/* LEFT */}
+              <div className="bg-[#D1965B] text-white p-10 lg:p-14 flex flex-col justify-center">
+
+                <span className="uppercase tracking-[5px] text-sm font-semibold opacity-80">
+                  Réservation d&apos;espace
+                </span>
+
+                <h2 className="text-3xl lg:text-4xl font-bold mt-5 mb-6 leading-tight">
+                  Organisez votre prochain événement au Grand Tambour
+                </h2>
+
+                <p className="text-lg leading-8 text-white/90">
+                  Après avoir découvert nos espaces, vous pouvez effectuer une
+                  demande de réservation directement depuis votre espace membre.
+                  Votre dossier sera ensuite traité par les différents services
+                  du Centre Culturel et Artistique.
+                </p>
+
+              </div>
+
+              {/* RIGHT */}
+              <div className="bg-white p-10 lg:p-14 flex flex-col justify-center">
+
+                <h3 className="text-2xl font-bold text-[#5C4033] mb-8">
+                  Depuis votre espace membre vous pourrez :
+                </h3>
+
+                <div className="space-y-5 mb-10">
+
+                  <div className="flex gap-4">
+                    <div className="w-3 h-3 rounded-full bg-[#D1965B] mt-2"></div>
+                    <p className="text-gray-700">
+                      Déposer une demande de réservation d&apos;un espace.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-3 h-3 rounded-full bg-[#D1965B] mt-2"></div>
+                    <p className="text-gray-700">
+                      Suivre l&apos;évolution de votre dossier étape par étape.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-3 h-3 rounded-full bg-[#D1965B] mt-2"></div>
+                    <p className="text-gray-700">
+                      Recevoir les notifications des services Programmes,
+                      Juridique et Finance.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-3 h-3 rounded-full bg-[#D1965B] mt-2"></div>
+                    <p className="text-gray-700">
+                      Consulter l&apos;historique complet de toutes vos demandes.
+                    </p>
+                  </div>
+
+                </div>
+
+                <Link
+                  href="/auth/login"
+                  className="w-full sm:w-fit bg-[#D1965B] hover:bg-[#B8834A] text-white px-10 py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg text-center"
+                >
+                  Faire une demande d&apos;espace
+                </Link>
+
+                <p className="text-sm text-gray-500 mt-6">
+                  Vous n&apos;avez pas encore de compte ?
+                  <br />
+                  Vous pourrez créer votre espace membre avant d&apos;effectuer votre
+                  première demande.
+                </p>
+
+              </div>
+
+            </div>
+
           </div>
         </div>
       </section>

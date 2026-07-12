@@ -1,84 +1,57 @@
 "use client";
 
-import type React from "react";
-import { useCallback } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, Mail } from "lucide-react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
-const schema = z.object({
-  email: z.string().min(1, "L'email est requis").email("Email invalide"),
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Email invalide"),
 });
 
-export type ForgotPasswordFormValues = z.infer<typeof schema>;
+export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 interface ForgotPasswordFormProps {
-  onSubmit?: (values: ForgotPasswordFormValues) => Promise<void> | void;
+  onSubmit: (values: ForgotPasswordFormValues) => Promise<void>;
+  loading?: boolean;
 }
 
-export function ForgotPasswordForm({ onSubmit }: ForgotPasswordFormProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ForgotPasswordFormValues>({
-    resolver: zodResolver(schema),
+export default function ForgotPasswordForm({ onSubmit, loading = false }: ForgotPasswordFormProps) {
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: "" },
-    mode: "onTouched",
   });
 
-  const defaultSubmit = useCallback((values: ForgotPasswordFormValues) => {
-    console.log("Forgot password submit:", values);
-  }, []);
-
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit ?? defaultSubmit)}
-      className="space-y-5"
-      noValidate
-    >
-      <div className="space-y-2">
-        <Label htmlFor="email">Adresse email</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="email"
-            type="email"
-            placeholder="nom@exemple.com"
-            autoComplete="email"
-            className="h-11 pl-10"
-            aria-invalid={!!errors.email}
-            aria-describedby={errors.email ? "email-error" : undefined}
-            {...register("email")}
-          />
-        </div>
-        {errors.email && (
-          <p id="email-error" className="text-sm text-destructive font-medium">
-            {errors.email.message}
-          </p>
-        )}
-      </div>
-
-      <Button
-        type="submit"
-        className="w-full h-11 cursor-pointer text-base font-semibold shadow-md active:scale-[0.98] transition-all"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Envoi en cours...
-          </>
-        ) : (
-          "Envoyer le lien de réinitialisation"
-        )}
-      </Button>
-    </form>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="nom@exemple.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Envoi..." : "Envoyer le lien"}
+        </Button>
+      </form>
+    </Form>
   );
 }
-
-export default ForgotPasswordForm;

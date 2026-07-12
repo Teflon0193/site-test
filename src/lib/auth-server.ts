@@ -1,38 +1,38 @@
-import { auth } from "./auth";
-import { headers } from "next/headers";
-import prisma from "@/lib/prisma";
+import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
 
-export const getSession = async () => {
-  return await auth.api.getSession({ headers: await headers() });
-};
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 
-export const getUser = async () => {
-  const session = await getSession();
-  const userId = session?.user?.id;
-  if (!userId) return null;
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      createdAt: true,
-      updatedAt: true,
-      email: true,
-      emailVerified: true,
-      name: true,
-      image: true,
-      role: true,
-      isApproved: true,
-      newsletterOptIn: true,
-      phone: true,
-      address: true,
-      city: true,
-      country: true,
-    },
-  });
-  return user;
-};
+export async function getUser() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
 
-export const isAdmin = async () => {
+    if (!token) {
+      return null;
+    }
+
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return {
+      id: payload.id as number,
+      email: payload.email as string,
+      role: payload.role as string,
+      first_name: payload.first_name as string,
+      last_name: payload.last_name as string,
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function isAdmin() {
   const user = await getUser();
-  return user?.role === "ADMIN";
-};
+  return user?.role === 'ADMIN';
+}
+
+// If you need a session-like object for compatibility
+export async function getSession() {
+  const user = await getUser();
+  if (!user) return null;
+  return { user };
+}

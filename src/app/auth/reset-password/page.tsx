@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { useState } from "react"; // ✅ added missing import
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -8,15 +9,17 @@ import { AuthLayout } from "@/app/components/auth/AuthLayout";
 import ResetPasswordForm, {
   type ResetPasswordFormValues,
 } from "@/app/components/auth/ResetPasswordForm";
-import { resetPassword } from "@/lib/auth-client";
+import { resetPassword } from "@/services/auth";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { isAxiosError } from "axios";
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
   const error = searchParams.get("error");
+  const [loading, setLoading] = useState(false);
 
   if (error === "INVALID_TOKEN" || !token) {
     return (
@@ -56,18 +59,26 @@ function ResetPasswordContent() {
   }
 
   const handleSubmit = async (values: ResetPasswordFormValues) => {
-    const { error } = await resetPassword({
-      newPassword: values.newPassword,
-      token: token,
-    });
-
-    if (error) {
-      toast.error(error.message || "Une erreur est survenue");
-      return;
+    setLoading(true);
+    try {
+      const response = await resetPassword(token, values.newPassword);
+      if (response.success) {
+        toast.success("Mot de passe réinitialisé avec succès !");
+        router.push("/auth/login");
+      } else {
+        toast.error(response.message || "Une erreur est survenue");
+      }
+    } catch (error: unknown) {
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : error instanceof Error
+          ? error.message
+          : "Erreur lors de la réinitialisation";
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("Mot de passe réinitialisé avec succès !");
-    router.push("/auth/login");
   };
 
   return (
@@ -82,7 +93,7 @@ function ResetPasswordContent() {
       </div>
 
       <div className="space-y-4">
-        <ResetPasswordForm onSubmit={handleSubmit} />
+        <ResetPasswordForm onSubmit={handleSubmit} loading={loading} />
       </div>
 
       <div className="bg-muted/50 border border-muted rounded-lg p-4">

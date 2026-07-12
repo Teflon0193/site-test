@@ -1,18 +1,48 @@
-import type React from "react";
-import { redirect } from "next/navigation";
-import { getUser } from "@/lib/auth-server";
+"use client";
+
+import type { ReactNode } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import DashboardLayoutClient from "./DashboardLayoutClient";
 
-export default async function EspaceMembreLayout({
+export default function EspaceMembreLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  const user = await getUser();
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-  if (!user) {
-    redirect("/auth/login");
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace(
+        "/auth/login?redirectUrl=/espace-membre"
+      );
+    }
+  }, [loading, user, router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+
+          <p className="mt-4 text-sm text-muted-foreground">
+            Chargement de votre session...
+          </p>
+        </div>
+      </div>
+    );
   }
 
-  return <DashboardLayoutClient user={user}>{children}</DashboardLayoutClient>;
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <DashboardLayoutClient user={user}>
+      {children}
+    </DashboardLayoutClient>
+  );
 }

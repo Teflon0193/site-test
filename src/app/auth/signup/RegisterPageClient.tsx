@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { useState } from "react"; // ✅ added missing import
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -9,29 +10,43 @@ import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
 import SignupForm, {
   type SignupFormValues,
 } from "@/app/components/auth/SignupForm";
-import { signUp } from "@/lib/auth-client";
+import { register } from "@/services/auth";
+import { isAxiosError } from "axios";
 
 export function RegisterPageClient({ initialEmail }: { initialEmail: string }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleSignupSubmit = async (values: SignupFormValues) => {
-    await signUp.email(
-      {
+    setLoading(true);
+    try {
+      const response = await register({
         email: values.email,
-        phone: values.phone,
         password: values.password,
-        name: values.firstName + " " + values.lastName,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Compte créé avec succès !");
-          router.push("/auth/verify-email");
-        },
-        onError: (error) => {
-          toast.error(error.error.message);
-        },
+        first_name: values.firstName,
+        last_name: values.lastName,
+        phone: values.phone || "",
+      });
+
+      if (response.success) {
+        toast.success(
+          "Compte créé avec succès ! Un email de vérification vous a été envoyé."
+        );
+        router.push("/auth/verify-email");
+      } else {
+        toast.error(response.message || "Erreur lors de l'inscription");
       }
-    );
+    } catch (error: unknown) {
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : error instanceof Error
+          ? error.message
+          : "Erreur lors de l'inscription";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,6 +75,7 @@ export function RegisterPageClient({ initialEmail }: { initialEmail: string }) {
           <SignupForm
             initialEmail={initialEmail}
             onSubmit={handleSignupSubmit}
+            loading={loading}
           />
         </div>
 

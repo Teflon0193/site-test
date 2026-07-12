@@ -1,151 +1,248 @@
-import { fetchFromStrapi } from "@/lib/strapi";
-import { transformStrapiMedia } from "@/lib/strapi";
+// src/services/mediaService.ts
+import api from "@/lib/api";
 import { Media, MediaFilters } from "@/types/media";
 
-const buildMediaQuery = (filters: MediaFilters): URLSearchParams => {
-  const queryParams = new URLSearchParams();
+// =============================================================================
+// Type guards
+// =============================================================================
 
-  // Filtres de recherche
-  if (filters.search) {
-    queryParams.append("filters[$or][0][title][$containsi]", filters.search);
-    queryParams.append(
-      "filters[$or][1][description][$containsi]",
-      filters.search
-    );
-    queryParams.append("filters[$or][2][location][$containsi]", filters.search);
-    queryParams.append(
-      "filters[$or][3][photographer][$containsi]",
-      filters.search
-    );
-  }
+function isObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
 
-  // Filtres par catégorie
-  if (filters.category && filters.category !== "Tous") {
-    queryParams.append("filters[category][$eq]", filters.category);
-  }
+function isArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
 
-  // Filtres par type d'événement
-  if (filters.eventType && filters.eventType !== "Tous") {
-    queryParams.append("filters[eventType][$eq]", filters.eventType);
-  }
+function isMediaLike(obj: unknown): obj is Record<string, unknown> {
+  if (!isObject(obj)) return false;
+  return "id" in obj || "name" in obj || "formats" in obj;
+}
 
-  // Filtres par année
-  if (filters.year) {
-    queryParams.append("filters[year][$eq]", filters.year.toString());
-  }
+// =============================================================================
+// Helper: check if URL is an image
+// =============================================================================
 
-  // Filtres par mois
-  if (filters.month) {
-    queryParams.append("filters[month][$eq]", filters.month.toString());
-  }
+function isImageUrl(url: string): boolean {
+  if (!url) return false;
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.tiff', '.ico'];
+  const lower = url.toLowerCase();
+  return imageExtensions.some(ext => lower.endsWith(ext));
+}
 
-  // Filtres par galerie
-  if (filters.gallery) {
-    queryParams.append("filters[gallery][$eq]", filters.gallery);
-  }
+// =============================================================================
+// Image URL extraction – handles both array and object formats
+// =============================================================================
 
-  // Filtres par lieu
-  if (filters.location) {
-    queryParams.append("filters[location][$containsi]", filters.location);
-  }
+function extractImageUrl(val: unknown): string {
+  if (!val) return "";
+  if (typeof val === "string") return val;
 
-  // Filtres par photographe
-  if (filters.photographer) {
-    queryParams.append(
-      "filters[photographer][$containsi]",
-      filters.photographer
-    );
-  }
+  if (isObject(val)) {
+    // Direct 'url' property
+    if (typeof val.url === "string") return val.url;
 
-  // Filtres par tags
-  if (filters.tags && filters.tags.length > 0) {
-    filters.tags.forEach((tag, index) => {
-      queryParams.append(`filters[tags][$in][${index}]`, tag);
-    });
-  }
-
-  // Filtres par featured
-  if (filters.featured !== undefined) {
-    queryParams.append("filters[featured][$eq]", filters.featured.toString());
-  }
-
-  // Paramètres globaux
-  queryParams.append("populate", "image");
-  queryParams.append("sort", filters.sort || "eventDate:desc");
-  queryParams.append("pagination[pageSize]", (filters.limit || 12).toString());
-
-  if (filters.page) {
-    queryParams.append("pagination[page]", filters.page.toString());
-  }
-
-  return queryParams;
-};
-
-const fetchMediaFromStrapi = async (
-  filters: MediaFilters = {}
-): Promise<Media[]> => {
-  try {
-    const queryParams = buildMediaQuery(filters);
-    const transformedData = await fetchFromStrapi(
-      "media-galleries",
-      queryParams,
-      transformStrapiMedia
-    );
-
-    return transformedData;
-  } catch (error) {
-    // Si 403, retourner un tableau vide au lieu de lever une erreur
-    if (error instanceof Error && error.message.includes("403")) {
-      console.warn(
-        "Permissions manquantes pour media, retour d'un tableau vide"
-      );
-      return [];
+    // Formats as an array: [ { url: ... }, ... ]
+    const formats = val.formats;
+    if (isArray(formats) && formats.length > 0) {
+      const first = formats[0];
+      if (isObject(first) && typeof first.url === "string") return first.url;
     }
 
-    console.error("Erreur lors de la récupération des médias:", error);
-    throw new Error(
-      `Impossible de récupérer les médias: ${
-        error instanceof Error ? error.message : "Erreur inconnue"
-      }`
-    );
+    // Formats as an object: { large: { url }, medium: { url } }
+    if (isObject(formats)) {
+      for (const key of ["large", "medium", "small", "thumbnail"]) {
+        const fmt = formats[key];
+        if (isObject(fmt) && typeof fmt.url === "string") return fmt.url;
+      }
+    }
+
+    // Nested Strapi style: { data: { attributes: { url } } }
+    const data = val.data;
+    if (isObject(data)) {
+      if (typeof data.url === "string") return data.url;
+      if (isObject(data.attributes) && typeof data.attributes.url === "string") {
+        return data.attributes.url;
+      }
+    }
+
+    // If val itself is an array of objects
+    if (isArray(val)) {
+      const first = val[0];
+      if (isObject(first) && typeof first.url === "string") return first.url;
+    }
+  }
+
+  return "";
+}
+
+// =============================================================================
+// Normalise media item
+// =============================================================================
+
+function normalizeMedia(raw: Record<string, unknown>): Media {
+  // Extract image URL from formats array or object
+  let imageUrl = "";
+  const formats = raw.formats;
+
+  if (isArray(formats) && formats.length > 0) {
+    const first = formats[0];
+    if (isObject(first) && typeof first.url === "string") {
+      imageUrl = first.url;
+    }
+  } else if (isObject(formats)) {
+    for (const key of ["large", "medium", "small", "thumbnail"]) {
+      const fmt = formats[key];
+      if (isObject(fmt) && typeof fmt.url === "string") {
+        imageUrl = fmt.url;
+        break;
+      }
+    }
+  }
+
+  // Fallback: if no formats, try other fields
+  if (!imageUrl) {
+    imageUrl = extractImageUrl(raw.image ?? raw.url ?? raw.coverImage ?? raw.cover);
+  }
+
+  // If the URL is not an image (e.g., PDF), or is empty, use a placeholder
+  if (!imageUrl || !isImageUrl(imageUrl)) {
+    console.log(`[normalizeMedia] Non-image URL or empty, using placeholder: ${imageUrl}`);
+    // Use a static placeholder image from public folder
+    imageUrl = "/images/placeholder.jpg";
+  }
+
+  const media: Media = {
+    id: String(raw.id ?? raw.ID ?? ""),
+    title: String(raw.name ?? raw.title ?? ""),
+    description: String(raw.alternative_text ?? raw.description ?? raw.caption ?? ""),
+    image: imageUrl,
+    category: String(raw.category ?? ""),
+    eventType: String(raw.eventType ?? raw.event_type ?? ""),
+    year: Number(raw.year ?? new Date().getFullYear()),
+    month: Number(raw.month ?? 0),
+    gallery: String(raw.gallery ?? ""),
+    location: String(raw.location ?? ""),
+    photographer: String(raw.photographer ?? ""),
+    tags: Array.isArray(raw.tags) ? raw.tags.map(String) : [],
+    featured: Boolean(raw.featured ?? false),
+    eventDate: String(raw.eventDate ?? raw.event_date ?? ""),
+    createdAt: String(raw.createdAt ?? raw.created_at ?? raw.uploadedAt ?? ""),
+  } as unknown as Media;
+
+  return media;
+}
+
+// =============================================================================
+// Extract media array
+// =============================================================================
+
+function extractMedia(payload: unknown): Media[] {
+  if (!payload) {
+    console.warn("[extractMedia] No payload");
+    return [];
+  }
+  console.log("[extractMedia] Raw payload type:", typeof payload);
+  console.log("[extractMedia] Is array?", Array.isArray(payload));
+  console.log("[extractMedia] Sample:", JSON.stringify(payload).slice(0, 200));
+
+  if (isArray(payload)) {
+    if (payload.every((item) => isMediaLike(item))) {
+      const result = payload.map((item) => normalizeMedia(item as Record<string, unknown>));
+      console.log(`[extractMedia] Extracted ${result.length} items from array`);
+      return result;
+    }
+    console.warn("[extractMedia] Array items are not Media-like");
+    return [];
+  }
+
+  if (isObject(payload)) {
+    const dataProp = payload.data;
+    if (isArray(dataProp) && dataProp.every((item) => isMediaLike(item))) {
+      const result = dataProp.map((item) => normalizeMedia(item as Record<string, unknown>));
+      console.log(`[extractMedia] Extracted ${result.length} items from data property`);
+      return result;
+    }
+    const itemsProp = payload.items;
+    if (isArray(itemsProp) && itemsProp.every((item) => isMediaLike(item))) {
+      const result = itemsProp.map((item) => normalizeMedia(item as Record<string, unknown>));
+      console.log(`[extractMedia] Extracted ${result.length} items from items property`);
+      return result;
+    }
+    const mediaProp = payload.media;
+    if (isArray(mediaProp) && mediaProp.every((item) => isMediaLike(item))) {
+      const result = mediaProp.map((item) => normalizeMedia(item as Record<string, unknown>));
+      console.log(`[extractMedia] Extracted ${result.length} items from media property`);
+      return result;
+    }
+    console.warn("[extractMedia] No matching property found in payload", Object.keys(payload));
+    return [];
+  }
+
+  return [];
+}
+
+// =============================================================================
+// Build query string
+// =============================================================================
+
+const buildMediaQuery = (filters: MediaFilters): URLSearchParams => {
+  const params = new URLSearchParams();
+  if (filters.search) params.append("search", filters.search);
+  if (filters.category && filters.category !== "Tous") params.append("category", filters.category);
+  if (filters.eventType && filters.eventType !== "Tous") params.append("eventType", filters.eventType);
+  if (filters.year) params.append("year", String(filters.year));
+  if (filters.month) params.append("month", String(filters.month));
+  if (filters.gallery) params.append("gallery", filters.gallery);
+  if (filters.location) params.append("location", filters.location);
+  if (filters.photographer) params.append("photographer", filters.photographer);
+  if (filters.tags && filters.tags.length) filters.tags.forEach(t => params.append("tags", t));
+  if (filters.featured !== undefined) params.append("featured", String(filters.featured));
+  if (filters.sort) params.append("sort", filters.sort);
+  if (filters.limit) params.append("limit", String(filters.limit));
+  if (filters.page) params.append("page", String(filters.page));
+  return params;
+};
+
+// =============================================================================
+// Main fetch function
+// =============================================================================
+
+const fetchMedia = async (filters: MediaFilters = {}): Promise<Media[]> => {
+  try {
+    const params = buildMediaQuery(filters);
+    const url = `/galleries?${params.toString()}`;
+    console.log("[fetchMedia] Requesting:", url);
+    const res = await api.get(url);
+    console.log("[fetchMedia] Response status:", res.status);
+    console.log("[fetchMedia] Response data type:", typeof res.data);
+    const extracted = extractMedia(res.data);
+    console.log(`[fetchMedia] Final extracted: ${extracted.length} items`);
+    if (extracted.length > 0) {
+      console.log("[fetchMedia] First item image URL:", extracted[0].image);
+    }
+    return extracted;
+  } catch (error) {
+    console.error("[fetchMedia] Error:", error);
+    return [];
   }
 };
 
-/**
- * Récupère tous les médias
- */
-export const getMedia = async (filters?: MediaFilters): Promise<Media[]> => {
-  return fetchMediaFromStrapi(filters);
-};
+// =============================================================================
+// Exported functions
+// =============================================================================
 
-/**
- * Récupère les médias mis en avant
- */
-export const getFeaturedMedia = async (): Promise<Media[]> => {
-  return fetchMediaFromStrapi({ featured: true });
-};
+export const getMedia = async (filters?: MediaFilters): Promise<Media[]> =>
+  fetchMedia(filters);
 
-/**
- * Récupère les médias par catégorie
- */
-export const getMediaByCategory = async (
-  category: string
-): Promise<Media[]> => {
-  return fetchMediaFromStrapi({ category });
-};
+export const getFeaturedMedia = async (): Promise<Media[]> =>
+  fetchMedia({ featured: true });
 
-/**
- * Récupère les médias par année
- */
-export const getMediaByYear = async (year: number): Promise<Media[]> => {
-  return fetchMediaFromStrapi({ year });
-};
+export const getMediaByCategory = async (category: string): Promise<Media[]> =>
+  fetchMedia({ category });
 
-/**
- * Récupère les médias par galerie
- */
-export const getMediaByGallery = async (gallery: string): Promise<Media[]> => {
-  return fetchMediaFromStrapi({ gallery });
-};
+export const getMediaByYear = async (year: number): Promise<Media[]> =>
+  fetchMedia({ year });
 
-// Plus de fonction pour vider le cache : TanStack Query gère désormais le cache côté client
+export const getMediaByGallery = async (gallery: string): Promise<Media[]> =>
+  fetchMedia({ gallery });

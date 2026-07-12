@@ -61,9 +61,14 @@ export const useMediaGallery = ({
     refetch,
   } = useMediaGalleryQuery(filters);
 
+  // Ensure mediaItems is always an array
+  const safeMediaItems = Array.isArray(mediaItems) ? mediaItems : [];
+
   // Filtrage des éléments
   const filteredItems = useMemo(() => {
-    return mediaItems.filter((item) => {
+    // If there are no media items or not an array, return empty array
+    if (!Array.isArray(safeMediaItems)) return [];
+    return safeMediaItems.filter((item) => {
       const matchesCategory =
         selectedCategories.includes("Tous") ||
         selectedCategories.includes(item.category);
@@ -71,7 +76,7 @@ export const useMediaGallery = ({
         selectedEventTypes.includes("Tous") ||
         selectedEventTypes.includes(item.eventType || "");
       const matchesSearch =
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.title?.toLowerCase()?.includes(searchQuery.toLowerCase()) ?? false) ||
         (item.description &&
           item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (item.location &&
@@ -80,10 +85,10 @@ export const useMediaGallery = ({
           item.photographer.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesCategory && matchesEventType && matchesSearch;
     });
-  }, [mediaItems, selectedCategories, selectedEventTypes, searchQuery]);
+  }, [safeMediaItems, selectedCategories, selectedEventTypes, searchQuery]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / itemsPerPage));
   const paginatedItems = filteredItems.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -101,7 +106,7 @@ export const useMediaGallery = ({
   ]);
 
   return {
-    mediaItems,
+    mediaItems: safeMediaItems,
     loading: isLoading,
     error: isError ? (error as Error | null)?.message ?? null : null,
     filteredItems,

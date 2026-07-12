@@ -9,7 +9,12 @@ import {
   FaXmark,
   FaChevronLeft,
   FaChevronRight,
+  FaBuilding,
+  FaUsers,
+  FaArrowRight,
+  FaCalendar,
 } from "react-icons/fa6";
+import { Button } from "../ui/button";
 
 type EventItem = {
   id: number;
@@ -30,6 +35,43 @@ type CalendarCell = {
   date: Date;
   day: number;
   current: boolean;
+};
+
+// ✅ Liste des espaces du Grand Tambour
+const grandTambourSpaces = [
+  { id: 1, name: "Grand théâtre", capacity: 2000, description: "Espace scénique modulable pour spectacles et concerts" },
+  { id: 2, name: "Petit théâtre", capacity: 800, description: "Espace intimiste pour pièces de théâtre et conférences" },
+  { id: 3, name: "Salle de danse", capacity: 120, description: "Espace avec miroirs et barres de danse" },
+  { id: 4, name: "Hall", capacity: 200, description: "Espace d'accueil polyvalent" },
+  { id: 5, name: "Latriumhome", capacity: 80, description: "Espace de travail collaboratif" },
+  { id: 6, name: "Cafétéria", capacity: 50, description: "Espace de restauration et de convivialité" },
+  { id: 7, name: "Salle de musique 1", capacity: 25, description: "Studio d'enregistrement et de répétition" },
+  { id: 8, name: "Salle de musique 2", capacity: 25, description: "Studio d'enregistrement et de répétition" },
+  { id: 9, name: "Parking", capacity: 2000, description: "Parking sécurisé" },
+];
+
+// ✅ Fonction pour vérifier si l'utilisateur est connecté
+const isUserLoggedIn = (): boolean => {
+  const token = localStorage.getItem('strapi_token');
+  const userStr = localStorage.getItem('user');
+  return !!(token && userStr);
+};
+
+// ✅ Fonction pour rediriger vers la demande d'espace
+const redirectToRequest = (spaceId: number, router: ReturnType<typeof useRouter>) => {
+  const token = localStorage.getItem('strapi_token');
+  const userStr = localStorage.getItem('user');
+  
+  if (token && userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      router.push(`/espace-membre/membre/nouvelle-demande?space=${spaceId}`);
+    } catch {
+      router.push(`/auth/login?redirect=/espace-membre/membre/nouvelle-demande?space=${spaceId}`);
+    }
+  } else {
+    router.push(`/auth/login?redirect=/espace-membre/membre/nouvelle-demande?space=${spaceId}`);
+  }
 };
 
 export default function MonthlyCalendar({ events }: MonthlyCalendarProps) {
@@ -287,10 +329,10 @@ export default function MonthlyCalendar({ events }: MonthlyCalendarProps) {
         </div>
       </div>
 
-      {/* DRAWER */}
+      {/* DRAWER - avec événements ET espaces */}
       {selectedDate && (
         <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-          <div className="w-full md:w-[400px] bg-white h-full overflow-y-auto">
+          <div className="w-full md:w-[450px] bg-white h-full overflow-y-auto">
             {/* HEADER */}
             <div className="sticky top-0 bg-[#D1965B] text-white p-4 flex justify-between items-center">
               <div>
@@ -302,7 +344,7 @@ export default function MonthlyCalendar({ events }: MonthlyCalendarProps) {
                     year: "numeric",
                   })}
                 </h2>
-                <p className="text-xs opacity-80 font-medium">Programme de la journée</p>
+                <p className="text-xs opacity-80 font-medium">Programme et espaces disponibles</p>
               </div>
 
               <button
@@ -314,51 +356,110 @@ export default function MonthlyCalendar({ events }: MonthlyCalendarProps) {
             </div>
 
             {/* CONTENT */}
-            <div className="p-4 space-y-4">
-              {selectedEvents.map((event) => (
-                <div
-                  key={event.id}
-                  onClick={() => router.push(`/evenement/${event.slug}`)}
-                  className="cursor-pointer border rounded-lg overflow-hidden hover:shadow-lg transition"
-                >
-                  <div className="relative h-40">
-                    <Image
-                      src={event.image || "/placeholder.jpg"}
-                      alt={event.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+            <div className="p-4 space-y-6">
+              {/* ✅ ÉVÉNEMENTS DU JOUR */}
+              {selectedEvents.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#5C4033] mb-3 flex items-center gap-2">
+                    <FaCalendar className="text-[#D1965B]" />
+                    Événements
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        onClick={() => router.push(`/evenement/${event.slug}`)}
+                        className="cursor-pointer border rounded-lg overflow-hidden hover:shadow-lg transition"
+                      >
+                        <div className="relative h-32">
+                          <Image
+                            src={event.image || "/placeholder.jpg"}
+                            alt={event.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
 
-                  <div className="p-4">
-                    <span className="text-[10px] bg-[#D1965B]/10 text-[#D1965B] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide">
-                      {event.discipline}
-                    </span>
+                        <div className="p-3">
+                          <span className="text-[10px] bg-[#D1965B]/10 text-[#D1965B] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide">
+                            {event.discipline}
+                          </span>
 
-                    <h3 className="text-base font-bold mt-2 mb-2">
-                      {event.title}
-                    </h3>
+                          <h3 className="text-sm font-bold mt-1 mb-2">
+                            {event.title}
+                          </h3>
 
-                    <div className="text-sm text-gray-600 space-y-1.5 font-medium">
-                      <div className="flex items-center gap-2">
-                        <FaClock className="text-[#D1965B] text-sm" />
-                        <span>{event.startTime}</span>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <FaClock className="text-[#D1965B] text-xs" />
+                              <span>{event.startTime}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <FaLocationDot className="text-[#D1965B] text-xs" />
+                              <span>{event.location}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <FaLocationDot className="text-[#D1965B] text-sm" />
-                        <span>{event.location}</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
 
               {selectedEvents.length === 0 && (
-                <p className="text-gray-500 text-center py-8 font-medium">
-                  Aucun événement pour cette journée
-                </p>
+                <div className="text-center py-4 text-gray-500 bg-muted/5 rounded-xl">
+                  <FaCalendar className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
+                  <p className="text-sm">Aucun événement ce jour-là</p>
+                </div>
               )}
+
+              {/* ✅ ESPACES DISPONIBLES */}
+              <div className="border-t border-muted/20 pt-4">
+                <h3 className="text-sm font-semibold text-[#5C4033] mb-3 flex items-center gap-2">
+                  <FaBuilding className="text-[#D1965B]" />
+                  Espaces disponibles
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {grandTambourSpaces.map((space) => (
+                    <div
+                      key={space.id}
+                      className="bg-gradient-to-br from-muted/5 to-white rounded-lg p-3 border border-muted/20 hover:shadow-md transition-all hover:border-[#D1965B]/30"
+                    >
+                      <h4 className="font-semibold text-[#5C4033] text-xs">
+                        {space.name}
+                      </h4>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                        {space.description}
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[10px] text-muted-foreground">
+                          <FaUsers className="inline w-3 h-3 mr-1" />
+                          {space.capacity} pers.
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-[10px] border-[#D1965B]/30 text-[#D1965B] hover:bg-[#D1965B] hover:text-white transition-colors px-2 py-1 h-7"
+                          onClick={() => redirectToRequest(space.id, router)}
+                        >
+                          Disponible
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-center mt-3">
+                  <Button
+                    size="sm"
+                    className="bg-[#2d1b0e] hover:bg-[#4a2d1a] text-white text-xs"
+                    onClick={() => router.push('/grand-tambour/espaces')}
+                  >
+                    Voir tous les espaces
+                    <FaArrowRight className="ml-1 text-xs" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

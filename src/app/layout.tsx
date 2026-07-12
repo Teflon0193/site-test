@@ -3,8 +3,11 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 import NextTopLoader from "nextjs-toploader";
+
 import "./globals.css";
+
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/context/AuthContext";
 import { QueryProvider } from "./query-provider";
 
 const GTM_ID = "GTM-TM76Z944";
@@ -13,11 +16,31 @@ const poppins = localFont({
   variable: "--font-poppins",
   display: "swap",
   src: [
-    { path: "./fonts/poppins-300.ttf", weight: "300", style: "normal" },
-    { path: "./fonts/poppins-400.ttf", weight: "400", style: "normal" },
-    { path: "./fonts/poppins-500.ttf", weight: "500", style: "normal" },
-    { path: "./fonts/poppins-600.ttf", weight: "600", style: "normal" },
-    { path: "./fonts/poppins-700.ttf", weight: "700", style: "normal" },
+    {
+      path: "./fonts/poppins-300.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-400.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-500.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-600.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-700.ttf",
+      weight: "700",
+      style: "normal",
+    },
   ],
 });
 
@@ -27,14 +50,17 @@ export const metadata: Metadata = {
   description:
     "Centre Culturel et Artistique pour les pays d'Afrique Centrale - Promotion de la culture et des arts d'Afrique Centrale",
   manifest: "/manifest.json",
+
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "CCAPAC",
   },
+
   formatDetection: {
     telephone: false,
   },
+
   icons: {
     icon: [
       {
@@ -48,7 +74,14 @@ export const metadata: Metadata = {
         type: "image/png",
       },
     ],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+
+    apple: [
+      {
+        url: "/apple-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
 };
 
@@ -57,9 +90,16 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#cd935b" },
-    { media: "(prefers-color-scheme: dark)", color: "#ffcc02" },
+    {
+      media: "(prefers-color-scheme: light)",
+      color: "#cd935b",
+    },
+    {
+      media: "(prefers-color-scheme: dark)",
+      color: "#ffcc02",
+    },
   ],
 };
 
@@ -73,39 +113,65 @@ export default function RootLayout({
       <body className={`${poppins.variable} font-sans antialiased`}>
         <Script id="google-tag-manager" strategy="afterInteractive">
           {`
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            (function(w,d,s,l,i){
+              w[l]=w[l]||[];
+              w[l].push({
+                'gtm.start': new Date().getTime(),
+                event:'gtm.js'
+              });
+
+              var f=d.getElementsByTagName(s)[0],
+              j=d.createElement(s),
+              dl=l!='dataLayer'?'&l='+l:'';
+
+              j.async=true;
+              j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+              f.parentNode.insertBefore(j,f);
             })(window,document,'script','dataLayer','${GTM_ID}');
           `}
         </Script>
+
         <noscript>
           <iframe
             src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
             height="0"
             width="0"
-            style={{ display: "none", visibility: "hidden" }}
+            title="Google Tag Manager"
+            style={{
+              display: "none",
+              visibility: "hidden",
+            }}
           />
         </noscript>
+
         <QueryProvider>
-          <NextTopLoader
-            color="#ffffff"
-            initialPosition={0.08}
-            crawlSpeed={200}
-            height={3}
-            crawl={true}
-            showSpinner={false}
-            easing="ease"
-            speed={200}
-            shadow="0 0 10px #ffffff,0 0 5px #ffffff"
-            template='<div class="bar" role="bar"><div class="peg"></div></div> 
-          <div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'
-            zIndex={1600}
-            showAtBottom={false}
-          />
-          {children}
-          <Toaster />
+          <AuthProvider>
+            <NextTopLoader
+              color="#ffffff"
+              initialPosition={0.08}
+              crawlSpeed={200}
+              height={3}
+              crawl
+              showSpinner={false}
+              easing="ease"
+              speed={200}
+              shadow="0 0 10px #ffffff, 0 0 5px #ffffff"
+              template={`
+                <div class="bar" role="bar">
+                  <div class="peg"></div>
+                </div>
+                <div class="spinner" role="spinner">
+                  <div class="spinner-icon"></div>
+                </div>
+              `}
+              zIndex={1600}
+              showAtBottom={false}
+            />
+
+            {children}
+
+            <Toaster />
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

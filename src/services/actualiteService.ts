@@ -1,12 +1,123 @@
-import { STRAPI_BASE_URL, STRAPI_TOKEN } from "@/lib/constant";
+// src/services/actualiteService.ts
+import api from "@/lib/api";
 import {
   Actualite,
-  ActualiteBlock,
   ActualiteForDownload,
   ActualiteMois,
   ActualiteType,
-  StrapiActualite,
 } from "@/types/actualite";
+
+// =============================================================================
+// Type guards
+// =============================================================================
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
+
+function isArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
+function isActualiteLike(obj: unknown): obj is Record<string, unknown> {
+  if (!isObject(obj)) return false;
+  return (
+    "id" in obj ||
+    "title" in obj ||
+    "slug" in obj ||
+    "documentId" in obj
+  );
+}
+
+// =============================================================================
+// Helper to extract image URL from various formats
+// =============================================================================
+
+function extractImageUrl(val: unknown): string {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+
+  if (isObject(val)) {
+    if (typeof val.url === "string") return val.url;
+    const data = val.data;
+    if (isObject(data)) {
+      if (typeof data.url === "string") return data.url;
+      if (isObject(data.attributes) && typeof data.attributes.url === "string") {
+        return data.attributes.url;
+      }
+    }
+    const formats = val.formats;
+    if (isObject(formats)) {
+      for (const key of ["large", "medium", "small", "thumbnail"]) {
+        const fmt = formats[key];
+        if (isObject(fmt) && typeof fmt.url === "string") return fmt.url;
+      }
+    }
+    if (isArray(val)) {
+      const first = val[0];
+      if (isObject(first) && typeof first.url === "string") return first.url;
+    }
+  }
+
+  return "";
+}
+
+// =============================================================================
+// Field normalizer – maps backend fields to frontend Actualite interface
+// =============================================================================
+
+function normalizeActualite(raw: Record<string, unknown>): Actualite {
+  return {
+    id: String(raw.id ?? raw.documentId ?? ""),
+    documentId: String(raw.documentId ?? raw.id ?? ""),
+    title: String(raw.title ?? ""),
+    slug: String(raw.slug ?? ""),
+    type: String(raw.type ?? ""),
+    summary: String(raw.summary ?? raw.description ?? ""),
+    blocks: [], // You might need to map blocks if your backend returns them
+    pdf: undefined, // You can map if needed
+    coverImage: extractImageUrl(raw.coverImage ?? raw.image ?? raw.cover),
+    mois: String(raw.mois ?? ""),
+    annee: raw.annee ? Number(raw.annee) : new Date().getFullYear(),
+    pageCount: raw.pageCount ? Number(raw.pageCount) : 0,
+    isFeatured: Boolean(raw.isFeatured ?? raw.featured ?? false),
+    datePublication: String(raw.datePublication ?? raw.publishedAt ?? raw.createdAt ?? ""),
+    createdAt: String(raw.createdAt ?? ""),
+    publishedAt: String(raw.publishedAt ?? raw.datePublication ?? ""),
+  } as unknown as Actualite;
+}
+
+// =============================================================================
+// Extract actualites from any API response shape
+// =============================================================================
+
+function extractActualites(payload: unknown): Actualite[] {
+  if (!payload) return [];
+
+  if (isArray(payload)) {
+    if (payload.every((item) => isActualiteLike(item))) {
+      return payload.map((item) => normalizeActualite(item as Record<string, unknown>));
+    }
+    return [];
+  }
+
+  if (isObject(payload)) {
+    const dataProp = payload.data;
+    if (isArray(dataProp) && dataProp.every((item) => isActualiteLike(item))) {
+      return dataProp.map((item) => normalizeActualite(item as Record<string, unknown>));
+    }
+    const itemsProp = payload.items;
+    if (isArray(itemsProp) && itemsProp.every((item) => isActualiteLike(item))) {
+      return itemsProp.map((item) => normalizeActualite(item as Record<string, unknown>));
+    }
+  }
+
+  return [];
+}
+
+// =============================================================================
+// Actualité API functions
+// =============================================================================
 
 interface ActualiteFilters {
   type?: ActualiteType;
@@ -15,137 +126,50 @@ interface ActualiteFilters {
   search?: string;
 }
 
-const getMediaUrl = (url?: string) => {
-  if (!url) return undefined;
-  if (url.startsWith("http")) return url;
-  return `${STRAPI_BASE_URL}${url}`;
-};
-
-const getCoverImageUrl = (image: StrapiActualite["coverImage"]) =>
-  getMediaUrl(
-    image?.formats?.large?.url ||
-      image?.formats?.medium?.url ||
-      image?.formats?.small?.url ||
-      image?.url
-  );
-
-const transformActualiteBlocks = (
-  blocks?: ActualiteBlock[]
-): ActualiteBlock[] | undefined =>
-  blocks?.map((block) => ({
-    ...block,
-    file: block.file
-      ? {
-          ...block.file,
-          url: getMediaUrl(block.file.url),
-        }
-      : undefined,
-    files: block.files?.map((file) => ({
-      ...file,
-      url: getMediaUrl(file.url),
-    })),
-  }));
-
-const transformStrapiActualite = (data: StrapiActualite): Actualite => ({
-  id: data.id,
-  documentId: data.documentId,
-  title: data.title,
-  slug: data.slug,
-  type: data.type,
-  summary: data.summary,
-  blocks: transformActualiteBlocks(data.blocks),
-  pdf: data.pdf
-    ? {
-        name: data.pdf.name,
-        size: data.pdf.size,
-        ext: data.pdf.ext,
-      }
-    : undefined,
-  coverImage: getCoverImageUrl(data.coverImage),
-  mois: data.mois,
-  annee: data.annee,
-  pageCount: data.pageCount,
-  isFeatured: data.isFeatured ?? false,
-  datePublication: data.datePublication,
-  createdAt: data.createdAt,
-  publishedAt: data.publishedAt,
-});
-
-const buildActualiteQuery = (filters: ActualiteFilters = {}) => {
-  const params = new URLSearchParams();
-  params.append("populate[0]", "pdf");
-  params.append("populate[1]", "coverImage");
-  params.append("populate[blocks][populate]", "*");
-  params.append("sort[0]", "annee:desc");
-  params.append("sort[1]", "datePublication:desc");
-  params.append("sort[2]", "createdAt:desc");
-
-  if (filters.type) {
-    params.append("filters[type][$eq]", filters.type);
-  }
-
-  if (filters.annee) {
-    params.append("filters[annee][$eq]", filters.annee.toString());
-  }
-
-  if (filters.mois) {
-    params.append("filters[mois][$eq]", filters.mois);
-  }
-
-  if (filters.search) {
-    params.append("filters[$or][0][title][$containsi]", filters.search);
-    params.append("filters[$or][1][summary][$containsi]", filters.search);
-  }
-
-  return params;
-};
-
-const fetchActualiteJson = async (url: string) => {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-
-  if (STRAPI_TOKEN) {
-    headers.Authorization = `Bearer ${STRAPI_TOKEN}`;
-  }
-
-  const response = await fetch(url, {
-    headers,
-    next: { revalidate: 60 },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Erreur API Strapi: ${response.status}`);
-  }
-
-  return response.json();
-};
-
 export const getActualites = async (
   filters: ActualiteFilters = {}
 ): Promise<Actualite[]> => {
-  const params = buildActualiteQuery(filters);
-  const url = `${STRAPI_BASE_URL}/api/actualites?${params.toString()}`;
-  const data = await fetchActualiteJson(url);
+  try {
+    const params = new URLSearchParams();
+    if (filters.type) params.append("type", filters.type);
+    if (filters.annee) params.append("annee", String(filters.annee));
+    if (filters.mois) params.append("mois", filters.mois);
+    if (filters.search) params.append("search", filters.search);
 
-  return data.data.map(transformStrapiActualite);
+    const url = `/actualites?${params.toString()}`;
+    const res = await api.get(url);
+
+    console.log("[getActualites] Status:", res.status);
+    console.log("[getActualites] Data type:", typeof res.data);
+    console.log("[getActualites] Is array?", Array.isArray(res.data));
+    console.log("[getActualites] Sample:", JSON.stringify(res.data).slice(0, 200));
+
+    const actualites = extractActualites(res.data);
+    console.log(`[getActualites] Extracted ${actualites.length} actualites`);
+    return actualites;
+  } catch (error) {
+    console.error("getActualites error:", error);
+    return [];
+  }
 };
 
 export const getActualiteBySlug = async (
   slug: string
 ): Promise<Actualite | null> => {
-  const params = buildActualiteQuery();
-  params.append("filters[slug][$eq]", slug);
-  params.append("pagination[limit]", "1");
-
   try {
-    const url = `${STRAPI_BASE_URL}/api/actualites?${params.toString()}`;
-    const data = await fetchActualiteJson(url);
-    const actualite = data.data[0];
-
-    return actualite ? transformStrapiActualite(actualite) : null;
+    const res = await api.get(`/actualites/${slug}`);
+    if (isObject(res.data)) {
+      const dataProp = res.data.data;
+      if (isArray(dataProp) && dataProp.length > 0) {
+        return normalizeActualite(dataProp[0] as Record<string, unknown>);
+      }
+      if (isActualiteLike(res.data)) {
+        return normalizeActualite(res.data as Record<string, unknown>);
+      }
+    }
+    return null;
   } catch (error) {
-    console.error("[Actualite Service] Error fetching actualite by slug:", error);
+    console.error("getActualiteBySlug error:", error);
     return null;
   }
 };
@@ -153,25 +177,15 @@ export const getActualiteBySlug = async (
 export const getActualiteForDownload = async (
   id: number
 ): Promise<ActualiteForDownload | null> => {
-  const params = new URLSearchParams();
-  params.append("populate", "pdf,coverImage");
-
   try {
-    const url = `${STRAPI_BASE_URL}/api/actualites/${id}?${params.toString()}`;
-    const data = await fetchActualiteJson(url);
-    const actualite = data.data as StrapiActualite;
-
-    if (!actualite?.pdf?.url) {
-      return null;
+    const res = await api.get(`/actualites/${id}/download`);
+    const data = res.data;
+    if (isObject(data) && "pdfUrl" in data) {
+      return data as unknown as ActualiteForDownload;
     }
-
-    return {
-      ...transformStrapiActualite(actualite),
-      pdfUrl: getMediaUrl(actualite.pdf.url) || actualite.pdf.url,
-      pdfName: actualite.pdf.name,
-    };
+    return null;
   } catch (error) {
-    console.error("[Actualite Service] Error fetching actualite for download:", error);
+    console.error("getActualiteForDownload error:", error);
     return null;
   }
 };
