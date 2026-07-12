@@ -1,5 +1,9 @@
-import type React from "react";
-import type { Metadata, Viewport } from "next";
+
+import type {
+  Metadata,
+  Viewport,
+} from "next";
+
 import localFont from "next/font/local";
 import Script from "next/script";
 import NextTopLoader from "nextjs-toploader";
@@ -7,16 +11,17 @@ import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/context/AuthContext";
-import { QueryProvider } from "./query-provider";
+import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
 
-export const dynamic = "force-dynamic";
+import { QueryProvider } from "./query-provider";
+import { AuthProvider } from "@/context/AuthContext";
 
 const GTM_ID = "GTM-TM76Z944";
 
 const poppins = localFont({
   variable: "--font-poppins",
   display: "swap",
+
   src: [
     {
       path: "./fonts/poppins-300.ttf",
@@ -49,8 +54,10 @@ const poppins = localFont({
 export const metadata: Metadata = {
   title:
     "CCAPAC - Centre Culturel et Artistique pour les pays d'Afrique Centrale",
+
   description:
     "Centre Culturel et Artistique pour les pays d'Afrique Centrale - Promotion de la culture et des arts d'Afrique Centrale",
+
   manifest: "/manifest.json",
 
   appleWebApp: {
@@ -95,11 +102,13 @@ export const viewport: Viewport = {
 
   themeColor: [
     {
-      media: "(prefers-color-scheme: light)",
+      media:
+        "(prefers-color-scheme: light)",
       color: "#cd935b",
     },
     {
-      media: "(prefers-color-scheme: dark)",
+      media:
+        "(prefers-color-scheme: dark)",
       color: "#ffcc02",
     },
   ],
@@ -112,24 +121,49 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${poppins.variable} font-sans antialiased`}>
-        <Script id="google-tag-manager" strategy="afterInteractive">
+      <body
+        className={`${poppins.variable} font-sans antialiased`}
+      >
+        {/*
+         * Supprime les anciens service workers
+         * et caches PWA installés dans le navigateur.
+         *
+         * Ce composant peut être retiré plus tard,
+         * après quelques déploiements.
+         */}
+        <ServiceWorkerCleanup />
+
+        <Script
+          id="google-tag-manager"
+          strategy="afterInteractive"
+        >
           {`
             (function(w,d,s,l,i){
               w[l]=w[l]||[];
               w[l].push({
                 'gtm.start': new Date().getTime(),
-                event:'gtm.js'
+                event: 'gtm.js'
               });
 
               var f=d.getElementsByTagName(s)[0],
               j=d.createElement(s),
-              dl=l!='dataLayer'?'&l='+l:'';
+              dl=l!='dataLayer'
+                ? '&l='+l
+                : '';
 
               j.async=true;
-              j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+              j.src=
+                'https://www.googletagmanager.com/gtm.js?id='
+                + i + dl;
+
               f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','${GTM_ID}');
+            })(
+              window,
+              document,
+              'script',
+              'dataLayer',
+              '${GTM_ID}'
+            );
           `}
         </Script>
 
@@ -159,11 +193,20 @@ export default function RootLayout({
               speed={200}
               shadow="0 0 10px #ffffff, 0 0 5px #ffffff"
               template={`
-                <div class="bar" role="bar">
+                <div
+                  class="bar"
+                  role="bar"
+                >
                   <div class="peg"></div>
                 </div>
-                <div class="spinner" role="spinner">
-                  <div class="spinner-icon"></div>
+
+                <div
+                  class="spinner"
+                  role="spinner"
+                >
+                  <div
+                    class="spinner-icon"
+                  ></div>
                 </div>
               `}
               zIndex={1600}
