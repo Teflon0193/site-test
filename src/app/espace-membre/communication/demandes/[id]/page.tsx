@@ -88,6 +88,8 @@ const statusLabels: Record<
     "À traiter par la Communication",
   awaiting_member_confirmation:
     "Confirmation du demandeur",
+  communication_review_after_confirmation:
+    "Confirmation à vérifier par la Communication",
   program_review_after_confirmation:
     "Retour aux Programmes",
   legal_review:
@@ -178,7 +180,9 @@ function StatusPill({
   status: string;
 }) {
   const colors =
-    status === "communication_review"
+    status === "communication_review" ||
+    status ===
+      "communication_review_after_confirmation"
       ? "border-amber-200 bg-amber-50 text-amber-800"
       : status === "rejected"
         ? "border-red-200 bg-red-50 text-red-700"
@@ -290,10 +294,16 @@ export default function CommunicationRequestDetailPage() {
   }, [loadRequest]);
 
   const canProcess =
-    request?.status ===
-      "communication_review" &&
+    (request?.status ===
+      "communication_review" ||
+      request?.status ===
+        "communication_review_after_confirmation") &&
     request.assignedDepartment ===
       "COMMUNICATION";
+
+  const isConfirmationReturn =
+    request?.status ===
+    "communication_review_after_confirmation";
 
   const fullName =
     request?.user?.username ||
@@ -336,14 +346,14 @@ export default function CommunicationRequestDetailPage() {
 
     if (!initialRequestDocument) {
       toast.error(
-        "Le formulaire initial est absent. La demande ne peut pas être transmise au demandeur."
+        "Le formulaire initial est absent. La demande ne peut pas être transmise."
       );
       return;
     }
 
     if (!artisticOpinion) {
       toast.error(
-        "L'avis artistique est absent. La demande ne peut pas être transmise au demandeur."
+        "L'avis artistique est absent. La demande ne peut pas être transmise."
       );
       return;
     }
@@ -364,15 +374,21 @@ export default function CommunicationRequestDetailPage() {
       await spaceRequestService.validate(
         request.id,
         comment.trim() ||
-          "Éléments de communication vérifiés",
+          (isConfirmationReturn
+            ? "Confirmation signée du demandeur vérifiée par la Communication"
+            : "Éléments de communication vérifiés"),
         cleanSignature
       );
 
       toast.success(
-        "Dossier transmis au demandeur",
+        isConfirmationReturn
+          ? "Dossier transmis au Programme"
+          : "Dossier transmis au demandeur",
         {
           description:
-            "Le demandeur devra confirmer ses informations.",
+            isConfirmationReturn
+              ? "La confirmation a été vérifiée. Le Programme peut poursuivre le processus."
+              : "Le demandeur devra confirmer ses informations.",
         }
       );
 
@@ -802,10 +818,9 @@ export default function CommunicationRequestDetailPage() {
                         </p>
 
                         <p className="mt-1 text-sm leading-6 text-amber-800">
-                          Vérifiez les éléments
-                          publics et les besoins
-                          de communication du
-                          dossier.
+                          {isConfirmationReturn
+                            ? "Vérifiez la confirmation et la signature du demandeur avant de retourner le dossier au Programme."
+                            : "Vérifiez les éléments publics et les besoins de communication du dossier."}
                         </p>
                       </div>
 
@@ -821,7 +836,9 @@ export default function CommunicationRequestDetailPage() {
                         className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
                       >
                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Valider la Communication
+                        {isConfirmationReturn
+                          ? "Signer et transmettre au Programme"
+                          : "Valider et transmettre au demandeur"}
                       </Button>
 
                       <Button
@@ -862,7 +879,9 @@ export default function CommunicationRequestDetailPage() {
                             <p className="mt-1 text-xs leading-5 opacity-80">
                               {decisionMode ===
                               "validate"
-                                ? "Le dossier sera envoyé au demandeur pour confirmation."
+                                ? isConfirmationReturn
+                                  ? "Le dossier sera signé puis retourné au Programme pour poursuivre le processus."
+                                  : "Le dossier sera envoyé au demandeur pour confirmation."
                                 : "Le traitement du dossier sera arrêté."}
                             </p>
                           </div>
@@ -980,7 +999,9 @@ export default function CommunicationRequestDetailPage() {
                             "validate" ? (
                             <>
                               <FileSignature className="mr-2 h-4 w-4" />
-                              Signer et transmettre
+                              {isConfirmationReturn
+                                ? "Signer et transmettre au Programme"
+                                : "Signer et transmettre au demandeur"}
                             </>
                           ) : (
                             <>

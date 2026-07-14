@@ -299,7 +299,10 @@ export default function MemberRequestDetailPage() {
         toast.success(
           refusing
             ? "Demande refusée"
-            : "Documents confirmés et transmis au Programme"
+            : request.status ===
+                "awaiting_member_confirmation"
+              ? "Documents confirmés et retournés à la Communication"
+              : "Demande signée et transmise au Programme"
         );
 
         await loadRequest();
@@ -870,7 +873,9 @@ export default function MemberRequestDetailPage() {
                   <p className="mt-1 text-sm text-[#5C4033]/70">
                     {refusing
                       ? "Expliquez votre refus et signez votre décision."
-                      : "Confirmez les documents avant leur retour au Service des Programmes."}
+                      : canConfirm
+                        ? "Confirmez les documents avant leur retour au Service Communication."
+                        : "Signez la demande avant sa transmission au Service des Programmes."}
                   </p>
                 </div>
               </div>

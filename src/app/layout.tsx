@@ -51,48 +51,7 @@ const poppins = localFont({
   ],
 });
 
-export const metadata: Metadata = {
-  title:
-    "CCAPAC - Centre Culturel et Artistique pour les pays d'Afrique Centrale",
 
-  description:
-    "Centre Culturel et Artistique pour les pays d'Afrique Centrale - Promotion de la culture et des arts d'Afrique Centrale",
-
-  manifest: "/manifest.json",
-
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "CCAPAC",
-  },
-
-  formatDetection: {
-    telephone: false,
-  },
-
-  icons: {
-    icon: [
-      {
-        url: "/web-app-manifest-192x192.png",
-        sizes: "192x192",
-        type: "image/png",
-      },
-      {
-        url: "/web-app-manifest-512x512.png",
-        sizes: "512x512",
-        type: "image/png",
-      },
-    ],
-
-    apple: [
-      {
-        url: "/apple-icon.png",
-        sizes: "180x180",
-        type: "image/png",
-      },
-    ],
-  },
-};
 
 export const viewport: Viewport = {
   width: "device-width",

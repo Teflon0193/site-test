@@ -275,6 +275,30 @@ const dashboardConfigs: Record<
     ],
   },
 
+  SUPERVISEUR: {
+    name: "Espace de supervision",
+    shortName: "SUPERVISEUR",
+    home: "/espace-membre/superviseur",
+
+    menuItems: [
+      {
+        href: "/espace-membre/superviseur",
+        label: "Vue globale",
+        icon: LayoutDashboard,
+      },
+      {
+        href: "/espace-membre/superviseur/utilisateurs",
+        label: "Utilisateurs et rôles",
+        icon: Users,
+      },
+      {
+        href: "/espace-membre/profile",
+        label: "Mon profil",
+        icon: User,
+      },
+    ],
+  },
+
   ADMIN: {
     name: "Administration",
     shortName: "ADMINISTRATEUR",
