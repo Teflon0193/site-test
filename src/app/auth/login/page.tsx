@@ -40,22 +40,18 @@ const roleDestinations: Record<
   string,
   string
 > = {
-  MEMBER: "/espace-membre/membre",
+ MEMBER: "/espace-membre/membre",
   PROGRAMME: "/espace-membre/programme",
-  REGISSEUR_GENERAL:
-    "/espace-membre/regisseur",
-  DIRECTION_ARTISTIQUE:
-    "/espace-membre/direction-artistique",
-  COMMUNICATION:
-    "/espace-membre/communication",
-  JURIDIQUE:
-    "/espace-membre/juridique",
-  FINANCE:
-    "/espace-membre/finance",
-  SUPERVISEUR:
-    "/espace-membre/superviseur",
-  ADMIN:
-    "/espace-membre/admin",
+  PROGRAMME_SUPERVISEUR: "/espace-membre/programme",
+  PROGRAMME_ASSISTANT: "/espace-membre/programme",
+  REGISSEUR_GENERAL: "/espace-membre/regisseur",
+  DIRECTION_ARTISTIQUE: "/espace-membre/direction-artistique",
+  COMMUNICATION: "/espace-membre/communication",
+  JURIDIQUE: "/espace-membre/juridique",
+  FINANCE: "/espace-membre/finance",
+  SUPERVISEUR: "/espace-membre/superviseur",
+  ADMIN: "/espace-membre/admin",
+
 };
 
 function LoginContent() {

@@ -8,404 +8,449 @@ import {
 } from "react";
 import Link from "next/link";
 import {
-  Calendar,
-  ClipboardCheck,
-  Clock,
-  Download,
-  Eye,
-  FileText,
+  BriefcaseBusiness,
+  CheckCircle2,
+  ClipboardList,
   RefreshCw,
-  User,
+  Search,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "../../components/ui/card";
-import RequestStatusBadge from "@/components/space-requests/RequestStatusBadge";
+import { useAuth } from "@/context/AuthContext";
 import {
   spaceRequestService,
   type SpaceRequest,
 } from "@/services/spaceRequestService";
+import {
+  programmeTeamService,
+  type ProgrammeAssistant,
+} from "@/services/programmeTeamService";
 
-const API_ORIGIN =
-  process.env.NEXT_PUBLIC_API_URL?.replace(
-    /\/api\/?$/,
-    ""
-  ) || "http://localhost:5000";
+const SUPERVISOR_ROLES = [
+  "ADMIN",
+  "PROGRAMME",
+  "PROGRAMME_SUPERVISEUR",
+];
 
-function formatDate(
-  value?: string | null
-): string {
-  if (!value) {
-    return "Date non renseignée";
-  }
+const statusLabels: Record<string, string> = {
+  program_review: "Examen initial Programme",
+  program_review_after_confirmation:
+    "Retour après confirmation",
+  program_review_after_legal:
+    "Retour du Juridique",
+  program_review_after_finance:
+    "Retour des Finances",
+  program_payment_review:
+    "Vérification du paiement",
+  completed: "Terminée",
+  rejected: "Rejetée",
+};
 
-  const date = new Date(value);
+function assistantName(
+  assistant?: ProgrammeAssistant
+) {
+  if (!assistant) return "";
 
-  if (Number.isNaN(date.getTime())) {
-    return "Date non renseignée";
-  }
-
-  return date.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function getDocumentUrl(
-  documentUrl?: string
-): string | null {
-  if (!documentUrl) {
-    return null;
-  }
-
-  if (
-    documentUrl.startsWith("http://") ||
-    documentUrl.startsWith("https://")
-  ) {
-    return documentUrl;
-  }
-
-  return `${API_ORIGIN}${documentUrl}`;
+  return (
+    `${assistant.firstName || ""} ${
+      assistant.lastName || ""
+    }`.trim() || assistant.email
+  );
 }
 
 export default function ProgrammeDashboardPage() {
+  const { user } = useAuth();
+
+  const isSupervisor = SUPERVISOR_ROLES.includes(
+    user?.role || ""
+  );
+
   const [requests, setRequests] = useState<
     SpaceRequest[]
   >([]);
+  const [assistants, setAssistants] = useState<
+    ProgrammeAssistant[]
+  >([]);
+  const [selectedAssistants, setSelectedAssistants] =
+    useState<Record<number, string>>({});
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [assigningId, setAssigningId] = useState<
+    number | null
+  >(null);
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [refreshing, setRefreshing] =
-    useState(false);
-
-  const loadRequests = useCallback(
-    async (showLoader = true) => {
+  const loadData = useCallback(
+    async (initial = false) => {
       try {
-        if (showLoader) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
+        if (initial) setLoading(true);
+        else setRefreshing(true);
 
-        const data =
-          await spaceRequestService.getDepartmentRequests();
+        const [requestData, assistantData] =
+          await Promise.all([
+            spaceRequestService.getDepartmentRequests(),
+            isSupervisor
+              ? programmeTeamService.getAssistants()
+              : Promise.resolve([]),
+          ]);
 
         setRequests(
-          Array.isArray(data) ? data : []
+          Array.isArray(requestData) ? requestData : []
         );
-      } catch (error) {
-        console.error(
-          "Programme requests error:",
-          error
-        );
+        setAssistants(assistantData);
 
+        setSelectedAssistants((current) => {
+          const next = { ...current };
+
+          for (const request of requestData) {
+            if (request.assignedToUserId) {
+              next[request.id] = String(
+                request.assignedToUserId
+              );
+            }
+          }
+
+          return next;
+        });
+      } catch (error) {
+        console.error("Programme dashboard error:", error);
         toast.error(
           error instanceof Error
             ? error.message
-            : "Impossible de charger les demandes"
+            : "Impossible de charger le tableau de bord"
         );
-
-        setRequests([]);
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    []
+    [isSupervisor]
   );
 
   useEffect(() => {
-    void loadRequests();
-  }, [loadRequests]);
+    void loadData(true);
+  }, [loadData]);
 
-  const statistics = useMemo(
-    () => ({
-      total: requests.length,
+  const filteredRequests = useMemo(() => {
+    const value = search.trim().toLowerCase();
 
-      pending: requests.filter(
-        (request) =>
-          request.status ===
-          "program_review"
-      ).length,
+    if (!value) return requests;
 
-      returned: requests.filter(
-        (request) =>
-          request.status ===
-            "program_review_after_confirmation" ||
-          request.status ===
-            "program_review_after_legal" ||
-          request.status ===
-            "program_review_after_finance"
-      ).length,
-    }),
-    [requests]
-  );
+    return requests.filter((request) =>
+      [
+        request.reference,
+        request.eventName,
+        request.user?.username,
+        request.user?.email,
+        request.assignedTo?.username,
+      ].some((field) =>
+        String(field || "")
+          .toLowerCase()
+          .includes(value)
+      )
+    );
+  }, [requests, search]);
+
+  const unassigned = requests.filter(
+    (request) => !request.assignedToUserId
+  ).length;
+
+  const handleAssign = async (requestId: number) => {
+    const assistantId = Number(
+      selectedAssistants[requestId]
+    );
+
+    if (!assistantId) {
+      toast.error("Sélectionnez un assistant Programme.");
+      return;
+    }
+
+    try {
+      setAssigningId(requestId);
+
+      const updated =
+        await programmeTeamService.assignRequest(
+          requestId,
+          assistantId
+        );
+
+      setRequests((current) =>
+        current.map((request) =>
+          request.id === requestId ? updated : request
+        )
+      );
+
+      const assistant = assistants.find(
+        (item) => item.id === assistantId
+      );
+
+      toast.success(
+        `Demande affectée à ${assistantName(assistant)}`
+      );
+
+      await loadData(false);
+    } catch (error) {
+      console.error("Programme assignment error:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Impossible d'affecter la demande"
+      );
+    } finally {
+      setAssigningId(null);
+    }
+  };
 
   return (
-    <div className="space-y-7">
-      {/* En-tête */}
+    <div className="space-y-6 text-[#5C4033]">
       <section className="rounded-2xl bg-[#D1965B] p-6 text-white shadow-sm sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-wider text-white/80">
+        <p className="text-sm font-semibold uppercase tracking-wider text-white/80">
           Service des Programmes
         </p>
 
         <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-          Tableau de bord
+          {isSupervisor
+            ? "Supervision et affectation"
+            : "Mes demandes assignées"}
         </h1>
 
-        <p className="mt-3 max-w-2xl text-white/90">
-          Consultez et traitez les demandes
-          d&apos;occupation d&apos;espace transmises
-          au Service des Programmes.
+        <p className="mt-2 max-w-3xl text-white/90">
+          {isSupervisor
+            ? "Répartissez les demandes entre les assistants et suivez leur charge de travail."
+            : "Traitez uniquement les dossiers qui vous ont été confiés par votre superviseur."}
         </p>
       </section>
 
-      {/* Statistiques */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="border-[#D1965B]/20 bg-white">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-[#5C4033]/70">
-                  Total assigné
-                </p>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label="Demandes visibles"
+          value={requests.length}
+          icon={ClipboardList}
+        />
+        <Stat
+          label={
+            isSupervisor
+              ? "Non affectées"
+              : "À traiter"
+          }
+          value={isSupervisor ? unassigned : requests.length}
+          icon={BriefcaseBusiness}
+        />
+        <Stat
+          label="Assistants actifs"
+          value={isSupervisor ? assistants.length : 1}
+          icon={Users}
+        />
+        <Stat
+          label="Affectées"
+          value={
+            isSupervisor
+              ? requests.length - unassigned
+              : requests.length
+          }
+          icon={UserCheck}
+        />
+      </section>
 
-                <p className="mt-1 text-3xl font-bold text-[#5C4033]">
-                  {statistics.total}
-                </p>
-              </div>
+      <section className="rounded-2xl border border-[#D1965B]/15 bg-white shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-[#D1965B]/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold">
+              {isSupervisor
+                ? "File des demandes Programme"
+                : "Mes dossiers"}
+            </h2>
+            <p className="mt-1 text-sm text-[#5C4033]/60">
+              {filteredRequests.length} dossier
+              {filteredRequests.length > 1 ? "s" : ""}
+            </p>
+          </div>
 
-              <FileText className="h-8 w-8 text-[#D1965B]" />
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <label className="relative block">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5C4033]/45" />
+              <input
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Référence, activité, demandeur..."
+                className="h-10 w-full rounded-lg border border-[#D1965B]/25 bg-white pl-9 pr-3 text-sm outline-none focus:border-[#D1965B] sm:w-72"
+              />
+            </label>
 
-        <Card className="border-[#D1965B]/20 bg-white">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-[#5C4033]/70">
-                  Nouvelles demandes
-                </p>
-
-                <p className="mt-1 text-3xl font-bold text-[#5C4033]">
-                  {statistics.pending}
-                </p>
-              </div>
-
-              <Clock className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-[#D1965B]/20 bg-white">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-[#5C4033]/70">
-                  Dossiers retournés
-                </p>
-
-                <p className="mt-1 text-3xl font-bold text-[#5C4033]">
-                  {statistics.returned}
-                </p>
-              </div>
-
-              <ClipboardCheck className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Barre du tableau */}
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-[#5C4033]">
-            Demandes à traiter
-          </h2>
-
-          <p className="text-sm text-[#5C4033]/70">
-            Tous les agents Programme voient cette
-            même liste.
-          </p>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={refreshing}
+              onClick={() => void loadData(false)}
+              className="border-[#D1965B]/30"
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${
+                  refreshing ? "animate-spin" : ""
+                }`}
+              />
+              Actualiser
+            </Button>
+          </div>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            void loadRequests(false)
-          }
-          disabled={refreshing}
-          className="border-[#D1965B]/40 text-[#5C4033]"
-        >
-          <RefreshCw
-            className={`mr-2 h-4 w-4 ${
-              refreshing ? "animate-spin" : ""
-            }`}
-          />
-          Actualiser
-        </Button>
-      </div>
-
-      {/* Tableau */}
-      <Card className="overflow-hidden border-[#D1965B]/20 bg-white">
-        <CardContent className="p-0">
+        <div className="p-5">
           {loading ? (
-            <div className="p-12 text-center">
-              <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-[#D1965B] border-t-transparent" />
-
-              <p className="mt-4 text-[#5C4033]/70">
-                Chargement des demandes...
-              </p>
+            <div className="py-14 text-center">
+              Chargement...
             </div>
-          ) : requests.length === 0 ? (
-            <div className="p-12 text-center">
-              <FileText className="mx-auto h-12 w-12 text-[#D1965B]/50" />
-
-              <h3 className="mt-4 font-semibold text-[#5C4033]">
-                Aucune demande à traiter
-              </h3>
-
-              <p className="mt-1 text-sm text-[#5C4033]/70">
-                Les demandes transmises par les membres
-                apparaîtront ici.
-              </p>
+          ) : filteredRequests.length === 0 ? (
+            <div className="py-14 text-center text-[#5C4033]/60">
+              <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-[#D1965B]/45" />
+              Aucune demande disponible.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[950px]">
-                <thead className="bg-[#F3EEE5]">
-                  <tr className="border-b border-[#D1965B]/20">
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-[#5C4033]">
-                      Demande
-                    </th>
+            <div className="space-y-3">
+              {filteredRequests.map((request) => (
+                <article
+                  key={request.id}
+                  className="rounded-xl border border-[#D1965B]/15 bg-[#FBF9F5] p-4"
+                >
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-wide text-[#D1965B]">
+                        {request.reference}
+                      </p>
+                      <h3 className="mt-1 truncate text-lg font-bold">
+                        {request.eventName}
+                      </h3>
+                      <p className="mt-1 text-sm text-[#5C4033]/60">
+                        {request.user?.username ||
+                          request.user?.email}
+                      </p>
+                      <span className="mt-2 inline-flex rounded-full bg-[#D1965B]/10 px-2.5 py-1 text-xs font-semibold text-[#B97D47]">
+                        {statusLabels[request.status] ||
+                          request.currentStep ||
+                          request.status}
+                      </span>
 
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-[#5C4033]">
-                      Demandeur
-                    </th>
-
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-[#5C4033]">
-                      Date
-                    </th>
-
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-[#5C4033]">
-                      Statut
-                    </th>
-
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-[#5C4033]">
-                      Document
-                    </th>
-
-                    <th className="px-5 py-4 text-right text-xs font-semibold uppercase text-[#5C4033]">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {requests.map((request) => {
-                    const documentUrl =
-                      getDocumentUrl(
-                        request.document?.url
-                      );
-
-                    return (
-                      <tr
-                        key={request.id}
-                        className="border-b border-[#D1965B]/10 last:border-0 hover:bg-[#F3EEE5]/40"
-                      >
-                        <td className="px-5 py-4">
-                          <p className="text-xs font-semibold text-[#D1965B]">
-                            {request.reference ||
-                              `#${request.id}`}
-                          </p>
-
-                          <p className="mt-1 max-w-[240px] font-semibold text-[#5C4033]">
-                            {request.eventName}
-                          </p>
-                        </td>
-
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-[#D1965B]" />
-
-                            <div>
-                              <p className="text-sm font-medium text-[#5C4033]">
-                                {request.user
-                                  ?.username ||
-                                  "Membre"}
-                              </p>
-
-                              <p className="text-xs text-[#5C4033]/60">
-                                {request.user?.email}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-5 py-4">
-                          <span className="flex items-center gap-2 text-sm text-[#5C4033]/70">
-                            <Calendar className="h-4 w-4" />
-                            {formatDate(
-                              request.submittedAt ||
-                                request.createdAt
-                            )}
+                      {isSupervisor &&
+                        request.programmeReviewState ===
+                          "assistant_validated" && (
+                          <span className="ml-2 mt-2 inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">
+                            Avis favorable reçu — décision requise
                           </span>
-                        </td>
+                        )}
 
-                        <td className="px-5 py-4">
-                          <RequestStatusBadge
-                            status={request.status}
-                          />
-                        </td>
+                      {isSupervisor &&
+                        request.programmeReviewState ===
+                          "assistant_rejected" && (
+                          <span className="ml-2 mt-2 inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
+                            Rejet recommandé — décision requise
+                          </span>
+                        )}
+                    </div>
 
-                        <td className="px-5 py-4">
-                          {documentUrl ? (
-                            <a
-                              href={documentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-sm font-medium text-[#D1965B] hover:underline"
-                            >
-                              <Download className="h-4 w-4" />
-                              Télécharger
-                            </a>
-                          ) : (
-                            <span className="text-sm text-gray-400">
-                              Aucun document
-                            </span>
-                          )}
-                        </td>
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                      {isSupervisor &&
+                        ![
+                          "assistant_validated",
+                          "assistant_rejected",
+                        ].includes(
+                          request.programmeReviewState || ""
+                        ) && (
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <select
+                            value={
+                              selectedAssistants[request.id] || ""
+                            }
+                            onChange={(event) =>
+                              setSelectedAssistants((current) => ({
+                                ...current,
+                                [request.id]: event.target.value,
+                              }))
+                            }
+                            className="h-10 min-w-60 rounded-lg border border-[#D1965B]/25 bg-white px-3 text-sm"
+                          >
+                            <option value="">
+                              Sélectionner un assistant
+                            </option>
+                            {assistants.map((assistant) => (
+                              <option
+                                key={assistant.id}
+                                value={assistant.id}
+                              >
+                                {assistantName(assistant)} - {assistant.activeRequests} dossier(s)
+                              </option>
+                            ))}
+                          </select>
 
-                        <td className="px-5 py-4 text-right">
                           <Button
-                            asChild
+                            type="button"
+                            disabled={assigningId === request.id}
+                            onClick={() =>
+                              void handleAssign(request.id)
+                            }
                             className="bg-[#D1965B] text-white hover:bg-[#B97D47]"
                           >
-                            <Link
-                              href={`/espace-membre/programme/demandes/${request.id}`}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              Traiter
-                            </Link>
+                            {assigningId === request.id
+                              ? "Affectation..."
+                              : request.assignedToUserId
+                                ? "Réaffecter"
+                                : "Affecter"}
                           </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                      )}
+
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="border-[#D1965B]/30"
+                      >
+                        <Link
+                          href={`/espace-membre/programme/demandes/${request.id}`}
+                        >
+                          {isSupervisor
+                            ? "Consulter"
+                            : "Traiter"}
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
+  icon: typeof ClipboardList;
+}) {
+  return (
+    <div className="rounded-2xl border border-[#D1965B]/15 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-[#5C4033]/60">
+            {label}
+          </p>
+          <p className="mt-1 text-3xl font-bold">
+            {value}
+          </p>
+        </div>
+        <div className="rounded-xl bg-[#D1965B]/10 p-3">
+          <Icon className="h-6 w-6 text-[#D1965B]" />
+        </div>
+      </div>
     </div>
   );
 }

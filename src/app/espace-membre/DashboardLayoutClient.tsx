@@ -1,9 +1,9 @@
 "use client";
 
-import type React from "react";
+import type { ReactNode } from "react";
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 import {
   usePathname,
   useRouter,
@@ -14,22 +14,21 @@ import {
   ClipboardList,
   FileClock,
   FilePlus2,
+  Files,
   Gavel,
   HandCoins,
-  History,
   Home,
   LayoutDashboard,
   Loader2,
   LogOut,
+  Megaphone,
   Menu,
   MessageSquare,
   Palette,
-  Radio,
   User,
   Users,
   Wrench,
   X,
-  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,374 +43,298 @@ import type {
   User as AppUser,
 } from "@/services/auth";
 
+type MenuItem = {
+  href: string;
+  label: string;
+  icon: typeof Home;
+};
+
 interface DashboardLayoutClientProps {
-  children: React.ReactNode;
+  children: ReactNode;
   user: AppUser;
 }
 
-interface MenuItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  badge?: number;
-}
-
-interface DashboardConfig {
-  name: string;
-  shortName: string;
-  home: string;
-  menuItems: MenuItem[];
-}
-
-const dashboardConfigs: Record<
-  string,
-  DashboardConfig
-> = {
-  MEMBER: {
-    name: "Espace membre",
-    shortName: "MEMBRE",
-    home: "/espace-membre/membre",
-
-    menuItems: [
-      {
-        href: "/espace-membre/membre",
-        label: "Accueil",
-        icon: Home,
-      },
-      {
-        href: "/espace-membre/membre/nouvelle-demande",
-        label: "Nouvelle demande",
-        icon: FilePlus2,
-      },
-      {
-        href: "/espace-membre/membre/demandes",
-        label: "Mes demandes",
-        icon: ClipboardList,
-      },
-      {
-        href: "/espace-membre/membre/historique",
-        label: "Historique",
-        icon: History,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
-
-  PROGRAMME: {
-    name: "Service des Programmes",
-    shortName: "PROGRAMME",
-    home: "/espace-membre/programme",
-
-    menuItems: [
-      {
-        href: "/espace-membre/programme",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/espace-membre/programme/demandes",
-        label: "Demandes à traiter",
-        icon: ClipboardList,
-      },
-      {
-        href: "/espace-membre/programme/historique",
-        label: "Historique",
-        icon: History,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
-
-  REGISSEUR_GENERAL: {
-    name: "Régisseur général",
-    shortName: "RÉGISSEUR",
-    home: "/espace-membre/regisseur",
-
-    menuItems: [
-      {
-        href: "/espace-membre/regisseur",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/espace-membre/regisseur/demandes",
-        label: "Demandes à traiter",
-        icon: Wrench,
-      },
-      {
-        href: "/espace-membre/regisseur/historique",
-        label: "Historique",
-        icon: History,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
-
-  DIRECTION_ARTISTIQUE: {
-    name: "Direction artistique",
-    shortName: "DIRECTION ARTISTIQUE",
-    home: "/espace-membre/direction-artistique",
-
-    menuItems: [
-      {
-        href: "/espace-membre/direction-artistique",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/espace-membre/direction-artistique/demandes",
-        label: "Demandes à traiter",
-        icon: Palette,
-      },
-      {
-        href: "/espace-membre/direction-artistique/historique",
-        label: "Historique",
-        icon: History,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
-
-  COMMUNICATION: {
-    name: "Communication et Marketing",
-    shortName: "COMMUNICATION",
-    home: "/espace-membre/communication",
-
-    menuItems: [
-      {
-        href: "/espace-membre/communication",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/espace-membre/communication/demandes",
-        label: "Demandes à traiter",
-        icon: Radio,
-      },
-      {
-        href: "/espace-membre/communication/historique",
-        label: "Historique",
-        icon: History,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
-
-  JURIDIQUE: {
-    name: "Service juridique",
-    shortName: "JURIDIQUE",
-    home: "/espace-membre/juridique",
-
-    menuItems: [
-      {
-        href: "/espace-membre/juridique",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/espace-membre/juridique/demandes",
-        label: "Demandes à traiter",
-        icon: Gavel,
-      },
-      {
-        href: "/espace-membre/juridique/historique",
-        label: "Historique",
-        icon: History,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
-
-  FINANCE: {
-    name: "Service des Finances",
-    shortName: "FINANCE",
-    home: "/espace-membre/finance",
-
-    menuItems: [
-      {
-        href: "/espace-membre/finance",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/espace-membre/finance/demandes",
-        label: "Demandes à traiter",
-        icon: BadgeDollarSign,
-      },
-      {
-        href: "/espace-membre/finance/historique",
-        label: "Historique",
-        icon: History,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
-
-  SUPERVISEUR: {
-    name: "Espace de supervision",
-    shortName: "SUPERVISEUR",
-    home: "/espace-membre/superviseur",
-
-    menuItems: [
-      {
-        href: "/espace-membre/superviseur",
-        label: "Vue globale",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/espace-membre/superviseur/utilisateurs",
-        label: "Utilisateurs et rôles",
-        icon: Users,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
-
-  ADMIN: {
-    name: "Administration",
-    shortName: "ADMINISTRATEUR",
-    home: "/espace-membre/admin",
-
-    menuItems: [
-      {
-        href: "/espace-membre/admin",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/espace-membre/admin/members",
-        label: "Utilisateurs",
-        icon: Users,
-      },
-      {
-        href: "/espace-membre/admin/events",
-        label: "Événements",
-        icon: Calendar,
-      },
-      {
-        href: "/espace-membre/admin/suggestions",
-        label: "Suggestions",
-        icon: MessageSquare,
-      },
-      {
-        href: "/espace-membre/admin/fundraising",
-        label: "Dons",
-        icon: HandCoins,
-      },
-      {
-        href: "/espace-membre/profile",
-        label: "Mon profil",
-        icon: User,
-      },
-    ],
-  },
+const roleLabels: Record<string, string> = {
+  MEMBER: "Membre",
+  ADMIN: "Administrateur",
+  SUPERVISEUR: "Superviseur",
+  PROGRAMME: "Service des Programmes",
+  PROGRAMME_SUPERVISEUR:
+    "Superviseur Programme",
+  PROGRAMME_ASSISTANT:
+    "Assistant Programme",
+  REGISSEUR_GENERAL:
+    "Régisseur général",
+  DIRECTION_ARTISTIQUE:
+    "Direction artistique",
+  COMMUNICATION: "Communication",
+  JURIDIQUE: "Service juridique",
+  FINANCE: "Service des Finances",
 };
 
-const fallbackConfig: DashboardConfig = {
-  name: "Espace professionnel",
-  shortName: "UTILISATEUR",
-  home: "/espace-membre",
+const memberMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/membre",
+    label: "Accueil",
+    icon: Home,
+  },
+  {
+    href: "/espace-membre/membre/nouvelle-demande",
+    label: "Nouvelle demande",
+    icon: FilePlus2,
+  },
+  {
+    href: "/espace-membre/membre/demandes",
+    label: "Mes demandes",
+    icon: Files,
+  },
+  {
+    href: "/espace-membre/membre/historique",
+    label: "Historique",
+    icon: FileClock,
+  },
+  {
+    href: "/espace-membre/profile",
+    label: "Mon profil",
+    icon: User,
+  },
+];
 
-  menuItems: [
+const programmeSupervisorMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/programme",
+    label: "Tableau de bord",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/espace-membre/programme/demandes",
+    label: "Demandes à affecter",
+    icon: ClipboardList,
+  },
+  {
+    href: "/espace-membre/programme/historique",
+    label: "Historique",
+    icon: FileClock,
+  },
+  {
+    href: "/espace-membre/profile",
+    label: "Mon profil",
+    icon: User,
+  },
+];
+
+const programmeAssistantMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/programme",
+    label: "Tableau de bord",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/espace-membre/programme/demandes",
+    label: "Mes demandes",
+    icon: ClipboardList,
+  },
+  {
+    href: "/espace-membre/programme/historique",
+    label: "Historique",
+    icon: FileClock,
+  },
+  {
+    href: "/espace-membre/profile",
+    label: "Mon profil",
+    icon: User,
+  },
+];
+
+const adminMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/admin",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/espace-membre/admin/members",
+    label: "Membres",
+    icon: Users,
+  },
+  {
+    href: "/espace-membre/admin/events",
+    label: "Événements",
+    icon: Calendar,
+  },
+  {
+    href: "/espace-membre/admin/suggestions",
+    label: "Suggestions",
+    icon: MessageSquare,
+  },
+  {
+    href: "/espace-membre/admin/fundraising",
+    label: "Dons",
+    icon: HandCoins,
+  },
+];
+
+const supervisorMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/superviseur",
+    label: "Vue globale",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/espace-membre/superviseur/utilisateurs",
+    label: "Utilisateurs",
+    icon: Users,
+  },
+];
+
+function departmentMenu(
+  basePath: string,
+  dashboardIcon: typeof Home
+): MenuItem[] {
+  return [
+    {
+      href: basePath,
+      label: "Tableau de bord",
+      icon: dashboardIcon,
+    },
+    {
+      href: `${basePath}/demandes`,
+      label: "Demandes à traiter",
+      icon: ClipboardList,
+    },
+    {
+      href: `${basePath}/historique`,
+      label: "Historique",
+      icon: FileClock,
+    },
     {
       href: "/espace-membre/profile",
       label: "Mon profil",
       icon: User,
     },
-  ],
-};
+  ];
+}
+
+function getMenuItems(
+  role: string
+): MenuItem[] {
+  switch (role) {
+    case "ADMIN":
+      return adminMenu;
+
+    case "SUPERVISEUR":
+      return supervisorMenu;
+
+    case "PROGRAMME_ASSISTANT":
+      return programmeAssistantMenu;
+
+    case "PROGRAMME":
+    case "PROGRAMME_SUPERVISEUR":
+      return programmeSupervisorMenu;
+
+    case "REGISSEUR_GENERAL":
+      return departmentMenu(
+        "/espace-membre/regisseur",
+        Wrench
+      );
+
+    case "DIRECTION_ARTISTIQUE":
+      return departmentMenu(
+        "/espace-membre/direction-artistique",
+        Palette
+      );
+
+    case "COMMUNICATION":
+      return departmentMenu(
+        "/espace-membre/communication",
+        Megaphone
+      );
+
+    case "JURIDIQUE":
+      return departmentMenu(
+        "/espace-membre/juridique",
+        Gavel
+      );
+
+    case "FINANCE":
+      return departmentMenu(
+        "/espace-membre/finance",
+        BadgeDollarSign
+      );
+
+    case "MEMBER":
+    default:
+      return memberMenu;
+  }
+}
+
+function isActivePath(
+  pathname: string,
+  href: string,
+  items: MenuItem[]
+) {
+  if (pathname === href) {
+    return true;
+  }
+
+  const moreSpecificItemIsActive =
+    items.some(
+      (item) =>
+        item.href !== href &&
+        item.href.startsWith(
+          `${href}/`
+        ) &&
+        (pathname === item.href ||
+          pathname.startsWith(
+            `${item.href}/`
+          ))
+    );
+
+  return (
+    !moreSpecificItemIsActive &&
+    pathname.startsWith(`${href}/`)
+  );
+}
 
 export default function DashboardLayoutClient({
   children,
   user,
 }: DashboardLayoutClientProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] =
+    useState(false);
+  const [isLoggingOut, setIsLoggingOut] =
+    useState(false);
+
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
 
-  const [mobileMenuOpen, setMobileMenuOpen] =
-    useState(false);
-
-  const [isLoggingOut, setIsLoggingOut] =
-    useState(false);
-
-  const config =
-    dashboardConfigs[user.role] ||
-    fallbackConfig;
+  const menuItems = getMenuItems(
+    user.role
+  );
 
   const fullName =
     `${user.first_name || ""} ${
       user.last_name || ""
     }`.trim() || user.email;
 
-  const initials =
-    [
-      user.first_name?.charAt(0),
-      user.last_name?.charAt(0),
-    ]
-      .filter(Boolean)
-      .join("")
-      .toUpperCase() || "U";
-
-  const isActive = (href: string) => {
-    if (href === config.home) {
-      return pathname === href;
-    }
-
-    return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`)
-    );
-  };
+  const initials = [
+    user.first_name?.charAt(0),
+    user.last_name?.charAt(0),
+  ]
+    .filter(Boolean)
+    .join("")
+    .toUpperCase() || "U";
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
 
   const handleLogout = async () => {
-    if (isLoggingOut) {
-      return;
-    }
-
-    setIsLoggingOut(true);
-
     try {
+      setIsLoggingOut(true);
       await logout();
-
       toast.success("Déconnexion réussie");
-
       router.replace("/");
       router.refresh();
     } catch (error) {
@@ -419,7 +342,6 @@ export default function DashboardLayoutClient({
         "Erreur lors de la déconnexion :",
         error
       );
-
       toast.error(
         "Une erreur inattendue s'est produite"
       );
@@ -430,11 +352,11 @@ export default function DashboardLayoutClient({
 
   return (
     <div className="flex h-screen bg-muted/30">
-      {/* En-tête mobile */}
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b bg-primary px-4 lg:hidden">
+      {/* Mobile Header */}
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b bg-primary px-4 lg:hidden">
         <Link
-          href={config.home}
-          className="flex items-center"
+          href="/"
+          className="font-bold uppercase"
         >
           <Image
             src="/logo.png"
@@ -442,23 +364,18 @@ export default function DashboardLayoutClient({
             width={120}
             height={60}
             className="h-10 w-auto object-contain"
-            priority
           />
         </Link>
 
         <button
           type="button"
           onClick={() =>
-            setMobileMenuOpen(
-              (previous) => !previous
+            setMobileMenuOpen((current) =>
+              !current
             )
           }
           className="rounded-lg p-2 transition-colors hover:bg-muted"
-          aria-label={
-            mobileMenuOpen
-              ? "Fermer le menu"
-              : "Ouvrir le menu"
-          }
+          aria-label="Afficher le menu"
         >
           {mobileMenuOpen ? (
             <X size={24} />
@@ -468,7 +385,7 @@ export default function DashboardLayoutClient({
         </button>
       </header>
 
-      {/* Fond mobile */}
+      {/* Mobile Overlay */}
       {mobileMenuOpen && (
         <button
           type="button"
@@ -478,7 +395,7 @@ export default function DashboardLayoutClient({
         />
       )}
 
-      {/* Sidebar universelle */}
+      {/* Sidebar originale */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r bg-primary transition-transform duration-300 lg:static lg:translate-x-0",
@@ -487,42 +404,43 @@ export default function DashboardLayoutClient({
             : "-translate-x-full"
         )}
       >
-        {/* Logo desktop */}
+        {/* Header desktop */}
         <div className="hidden h-20 items-center border-b px-6 lg:flex">
-          <Link
-            href={config.home}
-            className="block"
-          >
+          <Link href="/" className="block">
             <Image
               src="/logo.png"
               alt="CCAPAC"
               width={160}
               height={80}
               className="h-12 w-auto object-contain"
-              priority
             />
           </Link>
         </div>
 
-        {/* En-tête mobile sidebar */}
+        {/* Header mobile */}
         <div className="flex h-16 items-center border-b px-6 lg:hidden">
           <span className="text-lg font-semibold">
             Menu
           </span>
         </div>
 
-        {/* Nom du dashboard */}
-        <div className="border-b px-5 py-4">
+        {/* Libellé du service */}
+        <div className="border-b px-6 py-3">
           <p className="text-xs font-bold uppercase tracking-wider text-foreground/70">
-            {config.name}
+            {roleLabels[user.role] ||
+              user.role}
           </p>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {config.menuItems.map((item) => {
+          {menuItems.map((item) => {
             const Icon = item.icon;
-            const active = isActive(item.href);
+            const active = isActivePath(
+              pathname,
+              item.href,
+              menuItems
+            );
 
             return (
               <Link
@@ -536,27 +454,14 @@ export default function DashboardLayoutClient({
                     : "text-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <div className="relative">
-                  <Icon size={18} />
-
-                  {typeof item.badge ===
-                    "number" &&
-                    item.badge > 0 && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                        {item.badge > 9
-                          ? "9+"
-                          : item.badge}
-                      </span>
-                    )}
-                </div>
-
+                <Icon size={18} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Utilisateur et déconnexion */}
+        {/* Profil et déconnexion */}
         <div className="border-t bg-muted/10 p-4">
           <div className="mb-4 flex items-center gap-3 px-2">
             <Avatar className="h-10 w-10">
@@ -574,9 +479,10 @@ export default function DashboardLayoutClient({
                 {user.email}
               </p>
 
-              <span className="mt-1 inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground">
-                {config.shortName}
-              </span>
+              <p className="mt-1 truncate text-[10px] font-bold uppercase tracking-wide text-foreground/60">
+                {roleLabels[user.role] ||
+                  user.role}
+              </p>
             </div>
           </div>
 
@@ -602,9 +508,9 @@ export default function DashboardLayoutClient({
         </div>
       </aside>
 
-      {/* Contenu */}
+      {/* Main Content - sans grand espace */}
       <main className="flex-1 overflow-auto pt-16 lg:pt-0">
-        <div className="mx-auto max-w-7xl p-6 lg:p-10">
+        <div className="w-full p-4 sm:p-6 lg:p-8">
           {children}
         </div>
       </main>

@@ -97,6 +97,25 @@ export interface SpaceRequest {
   currentDepartment: string;
   assignedDepartment?: string;
 
+  assignedToUserId?: number | null;
+  assignedTo?: {
+    id: number;
+    username: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+  } | null;
+
+  programmeReviewState?:
+    | "unassigned"
+    | "assigned"
+    | "assistant_validated"
+    | "assistant_rejected"
+    | null;
+  assistantComment?: string | null;
+  assistantSignature?: string | null;
+  assistantReviewedAt?: string | null;
+
   currentStep?: string | null;
 
   electronicSignature?: string | null;
@@ -541,6 +560,42 @@ export const spaceRequestService = {
       ApiResponse<SpaceRequest>
     >(`/space-requests/${id}/validate`, {
       comment: comment.trim(),
+      electronicSignature: signature,
+    });
+
+    return response.data.data;
+  },
+
+  /*
+   * Avis signé de l'assistant Programme.
+   * Le statut du workflow ne change pas : la demande
+   * retourne au superviseur pour la décision finale.
+   */
+  async assistantReview(
+    id: number,
+    decision: "VALIDATED" | "REJECTED",
+    comment: string,
+    electronicSignature: string
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+
+    const cleanComment = comment.trim();
+
+    if (cleanComment.length < 5) {
+      throw new Error(
+        "Le commentaire doit contenir au moins 5 caractères."
+      );
+    }
+
+    const signature = requireSignature(
+      electronicSignature
+    );
+
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(`/space-requests/${id}/assistant-review`, {
+      decision,
+      comment: cleanComment,
       electronicSignature: signature,
     });
 

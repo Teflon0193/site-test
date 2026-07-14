@@ -39,11 +39,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import RequestStatusBadge from "@/components/space-requests/RequestStatusBadge";
 import RequestDocuments from "@/components/space-requests/RequestDocuments";
+import { useAuth } from "@/context/AuthContext";
 import {
   spaceRequestService,
   type SpaceRequest,
   type SpaceRequestDocument,
-  type SpaceRequestDocumentType,
   type ValidationHistory,
 } from "@/services/spaceRequestService";
 
@@ -230,12 +230,65 @@ function getNextDepartment(
   }
 }
 
+function normalizeDocuments(
+  requestData: SpaceRequest,
+  documentData: SpaceRequestDocument[]
+): SpaceRequestDocument[] {
+  const documentsByUrl = new Map<
+    string,
+    SpaceRequestDocument
+  >();
+
+  const addDocument = (
+    document?: SpaceRequestDocument | null
+  ) => {
+    if (!document?.url) {
+      return;
+    }
+
+    documentsByUrl.set(
+      document.url,
+      document
+    );
+  };
+
+  if (Array.isArray(documentData)) {
+    documentData.forEach(addDocument);
+  }
+
+  if (Array.isArray(requestData.documents)) {
+    requestData.documents.forEach(
+      addDocument
+    );
+  }
+
+  /*
+   * Compatibilité avec les anciennes demandes :
+   * le formulaire initial est parfois encore
+   * retourné dans request.document au lieu de
+   * request.documents.
+   */
+  if (requestData.document?.url) {
+    addDocument({
+      ...requestData.document,
+      type:
+        requestData.document.type ||
+        "INITIAL_REQUEST",
+    });
+  }
+
+  return Array.from(
+    documentsByUrl.values()
+  );
+}
+
 export default function ProgrammeRequestDetailPage() {
   const params = useParams<{
     id: string;
   }>();
 
   const router = useRouter();
+  const { user } = useAuth();
 
   const requestId = Number(params.id);
 
@@ -310,9 +363,12 @@ export default function ProgrammeRequestDetailPage() {
         setRequest(requestData);
         setHistories(historyData);
         setDocuments(
-          Array.isArray(documentData)
-            ? documentData
-            : []
+          normalizeDocuments(
+            requestData,
+            Array.isArray(documentData)
+              ? documentData
+              : []
+          )
         );
       } catch (error) {
         console.error(
@@ -338,73 +394,38 @@ export default function ProgrammeRequestDetailPage() {
   }, [loadRequest]);
 
   const canProcess = useMemo(() => {
-    if (!request) {
+    if (!request || !user) {
       return false;
     }
 
-    return (
-      request.assignedDepartment ===
-        "PROGRAMME" &&
-      PROGRAMME_STATUSES.includes(
-        request.status
-      )
-    );
-  }, [request]);
-
-  const requiredDocumentTypes = useMemo<
-    SpaceRequestDocumentType[]
-  >(() => {
-    if (!request) {
-      return [];
+    if (
+      request.assignedDepartment !== "PROGRAMME" ||
+      !PROGRAMME_STATUSES.includes(request.status)
+    ) {
+      return false;
     }
 
-    switch (request.status) {
-      case "program_review_after_confirmation":
-        return [
-          "INITIAL_REQUEST",
-          "ARTISTIC_OPINION",
-        ];
-
-      case "program_review_after_legal":
-        return [
-          "INITIAL_REQUEST",
-          "ARTISTIC_OPINION",
-          "LEGAL_DOCUMENT",
-        ];
-
-      case "program_review_after_finance":
-        return [
-          "INITIAL_REQUEST",
-          "ARTISTIC_OPINION",
-          "LEGAL_DOCUMENT",
-          "FINANCE_QUOTE",
-        ];
-
-      case "program_payment_review":
-        return [
-          "INITIAL_REQUEST",
-          "ARTISTIC_OPINION",
-          "LEGAL_DOCUMENT",
-          "FINANCE_QUOTE",
-          "PAYMENT_PROOF",
-        ];
-
-      default:
-        return ["INITIAL_REQUEST"];
+    if (user.role === "PROGRAMME_ASSISTANT") {
+      return (
+        Number(request.assignedToUserId) === Number(user.id) &&
+        ![
+          "assistant_validated",
+          "assistant_rejected",
+        ].includes(
+          request.programmeReviewState || ""
+        )
+      );
     }
-  }, [request]);
 
-  const missingDocumentTypes = useMemo(
-    () =>
-      requiredDocumentTypes.filter(
-        (requiredType) =>
-          !documents.some(
-            (document) =>
-              document.type === requiredType
-          )
-      ),
-    [documents, requiredDocumentTypes]
-  );
+    return [
+      "ADMIN",
+      "PROGRAMME",
+      "PROGRAMME_SUPERVISEUR",
+    ].includes(user.role);
+  }, [request, user]);
+
+  const isProgrammeAssistant =
+    user?.role === "PROGRAMME_ASSISTANT";
 
   const handleValidate = async () => {
     if (!request || processing) {
@@ -416,9 +437,12 @@ export default function ProgrammeRequestDetailPage() {
       return;
     }
 
-    if (missingDocumentTypes.length > 0) {
+    if (
+      isProgrammeAssistant &&
+      comment.trim().length < 5
+    ) {
       toast.error(
-        `Documents manquants : ${missingDocumentTypes.join(", ")}`
+        "Ajoutez un commentaire d'au moins 5 caractères."
       );
       return;
     }
@@ -426,12 +450,18 @@ export default function ProgrammeRequestDetailPage() {
     try {
       setProcessing(true);
 
-      const updatedRequest =
-        await spaceRequestService.validate(
-          request.id,
-          comment.trim(),
-          validationSignature.trim()
-        );
+      const updatedRequest = isProgrammeAssistant
+        ? await spaceRequestService.assistantReview(
+            request.id,
+            "VALIDATED",
+            comment.trim(),
+            validationSignature.trim()
+          )
+        : await spaceRequestService.validate(
+            request.id,
+            comment.trim(),
+            validationSignature.trim()
+          );
 
       setRequest(updatedRequest);
       setValidateModalOpen(false);
@@ -439,12 +469,16 @@ export default function ProgrammeRequestDetailPage() {
       setValidationSignature("");
 
       toast.success(
-        request.status === "program_payment_review"
+        isProgrammeAssistant
+          ? "Avis transmis au superviseur Programme"
+          : request.status === "program_payment_review"
           ? "Paiement et date confirmés"
           : "Demande validée",
         {
           description:
-            request.status === "program_payment_review"
+            isProgrammeAssistant
+              ? "Le superviseur Programme doit maintenant prendre la décision finale."
+              : request.status === "program_payment_review"
               ? "Le membre a reçu la confirmation définitive. Le processus est terminé."
               : "Le dossier a été transmis au service suivant.",
         }
@@ -493,12 +527,18 @@ export default function ProgrammeRequestDetailPage() {
     try {
       setProcessing(true);
 
-      const updatedRequest =
-        await spaceRequestService.reject(
-          request.id,
-          rejectionComment.trim(),
-          rejectionSignature.trim()
-        );
+      const updatedRequest = isProgrammeAssistant
+        ? await spaceRequestService.assistantReview(
+            request.id,
+            "REJECTED",
+            rejectionComment.trim(),
+            rejectionSignature.trim()
+          )
+        : await spaceRequestService.reject(
+            request.id,
+            rejectionComment.trim(),
+            rejectionSignature.trim()
+          );
 
       setRequest(updatedRequest);
       setRejectModalOpen(false);
@@ -506,10 +546,14 @@ export default function ProgrammeRequestDetailPage() {
       setRejectionSignature("");
 
       toast.success(
-        "Demande rejetée",
+        isProgrammeAssistant
+          ? "Rejet recommandé au superviseur Programme"
+          : "Demande rejetée",
         {
           description:
-            "Le demandeur pourra consulter le motif du rejet.",
+            isProgrammeAssistant
+              ? "Le workflow reste au Programme jusqu'à la décision du superviseur."
+              : "Le demandeur pourra consulter le motif du rejet.",
         }
       );
 
@@ -609,7 +653,7 @@ export default function ProgrammeRequestDetailPage() {
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div>
             <Link
-              href="/espace-membre/programme/demandes"
+              href="/espace-membre/programme"
               className="inline-flex items-center gap-2 text-sm font-medium text-[#D1965B] hover:text-[#B97D47]"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -646,7 +690,9 @@ export default function ProgrammeRequestDetailPage() {
                 className="border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                Rejeter
+                {isProgrammeAssistant
+                  ? "Recommander le rejet"
+                  : "Rejeter"}
               </Button>
 
               <Button
@@ -657,7 +703,9 @@ export default function ProgrammeRequestDetailPage() {
                 className="bg-[#D1965B] text-white hover:bg-[#B97D47]"
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                Valider
+                {isProgrammeAssistant
+                  ? "Terminer le traitement"
+                  : "Valider et continuer"}
               </Button>
             </div>
           )}
@@ -697,6 +745,36 @@ export default function ProgrammeRequestDetailPage() {
               {request.rejectionComment ||
                 "Aucun motif renseigné."}
             </p>
+          </div>
+        )}
+
+        {[
+          "assistant_validated",
+          "assistant_rejected",
+        ].includes(request.programmeReviewState || "") && (
+          <div
+            className={`rounded-xl border p-5 ${
+              request.programmeReviewState === "assistant_validated"
+                ? "border-green-200 bg-green-50"
+                : "border-red-200 bg-red-50"
+            }`}
+          >
+            <p className="font-bold text-[#5C4033]">
+              {request.programmeReviewState === "assistant_validated"
+                ? "L’assistant confirme que le dossier est prêt"
+                : "L’assistant recommande le rejet"}
+            </p>
+
+            <p className="mt-2 whitespace-pre-wrap text-sm text-[#5C4033]/75">
+              {request.assistantComment ||
+                "Aucun commentaire renseigné."}
+            </p>
+
+            {request.assistantSignature && (
+              <p className="mt-3 font-serif text-xl italic text-[#5C4033]">
+                Signé par {request.assistantSignature}
+              </p>
+            )}
           </div>
         )}
 
@@ -1058,11 +1136,11 @@ export default function ProgrammeRequestDetailPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-[#5C4033]/70">
-                  Le dossier sera transmis au{" "}
-                  {getNextDepartment(
-                    request.status
-                  )}
-                  .
+                  {isProgrammeAssistant
+                    ? "Votre avis signé sera transmis au superviseur Programme."
+                    : `Le dossier sera transmis au ${getNextDepartment(
+                        request.status
+                      )}.`}
                 </p>
               </div>
 
@@ -1083,7 +1161,9 @@ export default function ProgrammeRequestDetailPage() {
 
             <div className="space-y-5 p-6">
               <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm leading-6 text-green-900">
-                {request.status === "program_payment_review"
+                {isProgrammeAssistant
+                  ? "Vous confirmez avoir terminé l'examen du dossier. Le superviseur Programme prendra la décision finale."
+                  : request.status === "program_payment_review"
                   ? "Vous confirmez avoir vérifié la preuve de paiement. La date demandée sera définitivement confirmée et le processus sera clôturé."
                   : "Vous confirmez avoir examiné cette demande et autorisez sa transmission à l’étape suivante."}
               </div>
@@ -1175,9 +1255,11 @@ export default function ProgrammeRequestDetailPage() {
                   ) : (
                     <>
                       <FileSignature className="mr-2 h-4 w-4" />
-                      {getNextStepLabel(
-                        request.status
-                      )}
+                      {isProgrammeAssistant
+                        ? "Signer et transmettre au superviseur"
+                        : getNextStepLabel(
+                            request.status
+                          )}
                     </>
                   )}
                 </Button>
