@@ -17,6 +17,8 @@ import {
 const roleLabels: Record<AssignableRole, string> = {
   MEMBER: "Membre",
   PROGRAMME: "Programmes",
+  PROGRAMME_SUPERVISEUR: "Superviseur Programme",
+  PROGRAMME_ASSISTANT: "Assistant Programme",
   REGISSEUR_GENERAL: "Régisseur général",
   DIRECTION_ARTISTIQUE: "Direction artistique",
   COMMUNICATION: "Communication",

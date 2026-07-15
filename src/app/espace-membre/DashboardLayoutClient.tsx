@@ -79,6 +79,11 @@ const memberMenu: MenuItem[] = [
     icon: Home,
   },
   {
+    href: "/espace-membre/membre/evenements",
+    label: "Événements",
+    icon: Calendar,
+  },
+  {
     href: "/espace-membre/membre/nouvelle-demande",
     label: "Nouvelle demande",
     icon: FilePlus2,
@@ -112,6 +117,11 @@ const programmeSupervisorMenu: MenuItem[] = [
     icon: ClipboardList,
   },
   {
+    href: "/espace-membre/programme/evenements",
+    label: "Événements",
+    icon: Calendar,
+  },
+  {
     href: "/espace-membre/programme/historique",
     label: "Historique",
     icon: FileClock,
@@ -133,6 +143,11 @@ const programmeAssistantMenu: MenuItem[] = [
     href: "/espace-membre/programme/demandes",
     label: "Mes demandes",
     icon: ClipboardList,
+  },
+  {
+    href: "/espace-membre/programme/evenements",
+    label: "Événements",
+    icon: Calendar,
   },
   {
     href: "/espace-membre/programme/historique",

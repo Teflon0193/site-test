@@ -52,6 +52,13 @@ export interface SpaceRequestUser {
   phone?: string | null;
 }
 
+export interface BookedCalendarEvent {
+  id: number;
+  reference: string;
+  title: string;
+  date: string;
+}
+
 export interface HistoryPerformedBy {
   id?: number;
   username?: string;
@@ -509,6 +516,18 @@ export const spaceRequestService = {
     });
 
     return response.data.data;
+  },
+
+  async getBookedCalendarEvents(): Promise<
+    BookedCalendarEvent[]
+  > {
+    const response = await api.get<
+      ApiResponse<BookedCalendarEvent[]>
+    >("/space-requests/calendar");
+
+    return Array.isArray(response.data.data)
+      ? response.data.data
+      : [];
   },
 
   /*

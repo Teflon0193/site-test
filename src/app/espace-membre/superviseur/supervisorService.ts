@@ -4,6 +4,8 @@ import type { SpaceRequest } from "@/services/spaceRequestService";
 export const ASSIGNABLE_ROLES = [
   "MEMBER",
   "PROGRAMME",
+  "PROGRAMME_SUPERVISEUR",
+  "PROGRAMME_ASSISTANT",
   "REGISSEUR_GENERAL",
   "DIRECTION_ARTISTIQUE",
   "COMMUNICATION",
