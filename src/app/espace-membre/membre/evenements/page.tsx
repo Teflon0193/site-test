@@ -8,6 +8,7 @@ import {
 } from "react";
 import Link from "next/link";
 import {
+  Building2,
   CalendarCheck2,
   ChevronLeft,
   ChevronRight,
@@ -15,14 +16,19 @@ import {
   CircleX,
   Loader2,
   RefreshCw,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import {
   spaceRequestService,
   type BookedCalendarEvent,
 } from "@/services/spaceRequestService";
+import {
+  CCAPAC_SPACES,
+} from "../../../../constants/spaces";
 
 const weekDays = [
   "Lun",
@@ -33,6 +39,8 @@ const weekDays = [
   "Sam",
   "Dim",
 ];
+
+const spaces = CCAPAC_SPACES;
 
 function dateKey(date: Date) {
   const year = date.getFullYear();
@@ -68,6 +76,8 @@ function formatLongDate(value: string) {
 }
 
 export default function MemberEventsCalendarPage() {
+  const { user } = useAuth();
+
   const today = useMemo(() => {
     const value = new Date();
     value.setHours(0, 0, 0, 0);
@@ -187,6 +197,36 @@ export default function MemberEventsCalendarPage() {
   const selectedEvents = selectedDate
     ? eventsByDate.get(selectedDate) || []
     : [];
+
+  const selectedOccupiedSpaceIds =
+    useMemo(
+      () =>
+        new Set(
+          selectedEvents
+            .map((event) => event.spaceId)
+            .filter(
+              (spaceId): spaceId is number =>
+                typeof spaceId === "number"
+            )
+        ),
+      [selectedEvents]
+    );
+
+  const selectedAvailableSpaces =
+    useMemo(
+      () =>
+        spaces.filter(
+          (space) =>
+            !selectedOccupiedSpaceIds.has(
+              space.id
+            )
+        ),
+      [selectedOccupiedSpaceIds]
+    );
+
+  const selectedDateIsFull =
+    selectedOccupiedSpaceIds.size >=
+    spaces.length;
 
   const selectedIsPast = selectedDate
     ? parseDate(selectedDate) < today
@@ -354,6 +394,24 @@ export default function MemberEventsCalendarPage() {
                       eventsByDate.get(key) || [];
                     const isBooked =
                       bookedEvents.length > 0;
+                    const occupiedSpaceIds =
+                      new Set(
+                        bookedEvents
+                          .map(
+                            (event) =>
+                              event.spaceId
+                          )
+                          .filter(
+                            (
+                              spaceId
+                            ): spaceId is number =>
+                              typeof spaceId ===
+                              "number"
+                          )
+                      );
+                    const isFull =
+                      occupiedSpaceIds.size >=
+                      spaces.length;
                     const isPast = date < today;
                     const isToday =
                       key === dateKey(today);
@@ -373,8 +431,10 @@ export default function MemberEventsCalendarPage() {
                             ? "cursor-not-allowed border-transparent bg-gray-100 text-gray-400"
                             : isSelected
                               ? "border-[#5C4033] ring-2 ring-[#D1965B]/25"
-                              : isBooked
-                                ? "border-red-200 bg-red-50 hover:border-red-300"
+                              : isFull
+                                ? "border-red-300 bg-red-100 hover:border-red-400"
+                                : isBooked
+                                  ? "border-orange-300 bg-orange-50 hover:border-orange-400"
                                 : "border-emerald-100 bg-emerald-50/60 hover:border-emerald-300 hover:bg-emerald-50"
                         }`}
                       >
@@ -391,19 +451,29 @@ export default function MemberEventsCalendarPage() {
                         {!isPast && (
                           <span
                             className={`mt-1 hidden text-[11px] font-semibold sm:block ${
-                              isBooked
+                              isFull
                                 ? "text-red-700"
+                                : isBooked
+                                  ? "text-orange-700"
                                 : "text-emerald-700"
                             }`}
                           >
-                            {isBooked
-                              ? "Occupée"
+                            {isFull
+                              ? "Complet"
+                              : isBooked
+                                ? "Partielle"
                               : "Disponible"}
                           </span>
                         )}
 
                         {isBooked && !isPast && (
-                          <span className="absolute bottom-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" />
+                          <span
+                            className={`absolute bottom-2 right-2 h-2.5 w-2.5 rounded-full ${
+                              isFull
+                                ? "bg-red-500"
+                                : "bg-orange-500"
+                            }`}
+                          />
                         )}
                       </button>
                     );
@@ -426,8 +496,12 @@ export default function MemberEventsCalendarPage() {
                 Date disponible
               </div>
               <div className="flex items-center gap-3">
+                <span className="h-4 w-4 rounded bg-orange-100 ring-1 ring-orange-300" />
+                Certains espaces sont occupés
+              </div>
+              <div className="flex items-center gap-3">
                 <span className="h-4 w-4 rounded bg-red-100 ring-1 ring-red-300" />
-                Date occupée et confirmée
+                Tous les espaces sont occupés
               </div>
               <div className="flex items-center gap-3">
                 <span className="h-4 w-4 rounded bg-gray-100 ring-1 ring-gray-200" />
@@ -455,61 +529,140 @@ export default function MemberEventsCalendarPage() {
                   Date passée
                 </h2>
               </div>
-            ) : selectedEvents.length > 0 ? (
-              <div>
-                <CircleX className="h-9 w-9 text-red-500" />
-                <p className="mt-3 text-xs font-bold uppercase tracking-wide text-red-600">
-                  Date occupée
-                </p>
-                <h2 className="mt-1 font-bold capitalize">
-                  {formatLongDate(selectedDate)}
-                </h2>
-
-                <div className="mt-4 space-y-3">
-                  {selectedEvents.map((event) => (
-                    <div
-                      key={event.id}
-                      className="rounded-xl border border-red-100 bg-red-50 p-3"
-                    >
-                      <p className="font-semibold text-red-900">
-                        {event.title}
-                      </p>
-                      <p className="mt-1 text-xs text-red-700">
-                        {event.reference}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="mt-4 text-sm leading-6 text-[#5C4033]/65">
-                  Choisissez une autre date pour votre
-                  demande d’occupation.
-                </p>
-              </div>
             ) : (
               <div>
-                <CircleCheck className="h-9 w-9 text-emerald-600" />
-                <p className="mt-3 text-xs font-bold uppercase tracking-wide text-emerald-700">
-                  Date disponible
+                {selectedDateIsFull ? (
+                  <CircleX className="h-9 w-9 text-red-500" />
+                ) : (
+                  <CircleCheck
+                    className={`h-9 w-9 ${
+                      selectedEvents.length > 0
+                        ? "text-orange-500"
+                        : "text-emerald-600"
+                    }`}
+                  />
+                )}
+
+                <p
+                  className={`mt-3 text-xs font-bold uppercase tracking-wide ${
+                    selectedDateIsFull
+                      ? "text-red-600"
+                      : selectedEvents.length > 0
+                        ? "text-orange-600"
+                        : "text-emerald-700"
+                  }`}
+                >
+                  {selectedDateIsFull
+                    ? "Date complète"
+                    : selectedEvents.length > 0
+                      ? "Disponibilité partielle"
+                      : "Date disponible"}
                 </p>
+
                 <h2 className="mt-1 font-bold capitalize">
                   {formatLongDate(selectedDate)}
                 </h2>
+
                 <p className="mt-3 text-sm leading-6 text-[#5C4033]/65">
-                  Aucune occupation confirmée n’est
-                  enregistrée pour cette date.
+                  {selectedDateIsFull
+                    ? "Tous les espaces sont occupés par des événements confirmés."
+                    : selectedEvents.length > 0
+                      ? `${selectedOccupiedSpaceIds.size} espace(s) occupé(s) et ${selectedAvailableSpaces.length} espace(s) encore disponible(s).`
+                      : "Aucune occupation confirmée n’est enregistrée pour cette date."}
                 </p>
 
-                <Button
-                  asChild
-                  className="mt-5 w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
-                >
-                  <Link
-                    href={`/espace-membre/membre/nouvelle-demande?date=${selectedDate}`}
-                  >
-                    Demander cette date
-                  </Link>
-                </Button>
+                {selectedEvents.length > 0 && (
+                  <div className="mt-5 border-t border-[#D1965B]/15 pt-5">
+                    <h3 className="font-bold">
+                      Événements programmés
+                    </h3>
+
+                    <div className="mt-3 space-y-2">
+                      {selectedEvents.map(
+                        (event) => {
+                          const occupiedSpace =
+                            spaces.find(
+                              (space) =>
+                                space.id ===
+                                event.spaceId
+                            );
+
+                          return (
+                            <div
+                              key={event.id}
+                              className={`rounded-xl border p-3 ${
+                                selectedDateIsFull
+                                  ? "border-red-100 bg-red-50"
+                                  : "border-orange-100 bg-orange-50"
+                              }`}
+                            >
+                              <p className="text-sm font-semibold">
+                                {event.title}
+                              </p>
+                              <p className="mt-1 text-xs text-[#5C4033]/65">
+                                {occupiedSpace?.name ||
+                                  "Espace non renseigné"}
+                                {" · "}
+                                {event.reference}
+                              </p>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {!selectedDateIsFull && (
+                  <div className="mt-6 border-t border-[#D1965B]/15 pt-5">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-[#D1965B]" />
+                    <h3 className="font-bold">
+                      Espaces disponibles
+                    </h3>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                    {selectedAvailableSpaces.map((space) => (
+                      <article
+                        key={space.id}
+                        className="flex min-w-0 flex-col rounded-xl border border-[#D1965B]/15 bg-[#FBF9F5] p-3"
+                      >
+                        <h4 className="truncate text-sm font-bold text-[#5C4033]">
+                          {space.name}
+                        </h4>
+
+                        <p
+                          className="mt-1 line-clamp-2 text-xs leading-5 text-[#5C4033]/65"
+                          title={space.description}
+                        >
+                          {space.description}
+                        </p>
+
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1 text-xs text-[#5C4033]/65">
+                            <Users className="h-3.5 w-3.5" />
+                            {space.capacityLabel}
+                          </span>
+
+                          {user?.role === "MEMBER" ? (
+                            <Link
+                              href={`/espace-membre/membre/nouvelle-demande?date=${selectedDate}&space=${space.id}`}
+                              className="shrink-0 rounded-lg border border-[#D1965B]/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-[#D1965B] transition hover:bg-[#D1965B] hover:text-white"
+                            >
+                              Choisir
+                            </Link>
+                          ) : (
+                            <span className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700">
+                              Disponible
+                            </span>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                  </div>
+                )}
               </div>
             )}
           </section>

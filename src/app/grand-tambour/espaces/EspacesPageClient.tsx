@@ -157,14 +157,14 @@ export default function EspacesPageClient() {
                   href="/auth/login"
                   className="w-full sm:w-fit bg-[#D1965B] hover:bg-[#B8834A] text-white px-10 py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg text-center"
                 >
-                  Faire une demande d&apos;espace
+                  Faire une demande de réservation
                 </Link>
 
                 <p className="text-sm text-gray-500 mt-6">
                   Vous n&apos;avez pas encore de compte ?
                   <br />
-                  Vous pourrez créer votre espace membre avant d&apos;effectuer votre
-                  première demande.
+                  Créez gratuitement votre espace membre pour déposer votre première demande de réservation 
+                  et suivre son traitement en toute simplicité.
                 </p>
 
               </div>

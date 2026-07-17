@@ -1,48 +1,130 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react"; // ✅ added missing import
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { isAxiosError } from "axios";
 import { toast } from "sonner";
+
 import { AuthLayout } from "@/app/components/auth/AuthLayout";
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
 import SignupForm, {
   type SignupFormValues,
 } from "@/app/components/auth/SignupForm";
 import { register } from "@/services/auth";
-import { isAxiosError } from "axios";
 
-export function RegisterPageClient({ initialEmail }: { initialEmail: string }) {
+type RegisterPageClientProps = {
+  initialEmail: string;
+};
+
+type ApiErrorResponse = {
+  success?: boolean;
+  message?: string;
+  errors?: Array<{
+    msg?: string;
+    message?: string;
+  }>;
+};
+
+export function RegisterPageClient({
+  initialEmail,
+}: RegisterPageClientProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
 
-  const handleSignupSubmit = async (values: SignupFormValues) => {
-    setLoading(true);
+  const [loading, setLoading] =
+    useState(false);
+
+  const handleSignupSubmit = async (
+    values: SignupFormValues
+  ) => {
+    if (loading) {
+      return;
+    }
+
+    const normalizedEmail = values.email
+      .trim()
+      .toLowerCase();
+
     try {
+      setLoading(true);
+
       const response = await register({
-        email: values.email,
+        email: normalizedEmail,
         password: values.password,
-        first_name: values.firstName,
-        last_name: values.lastName,
-        phone: values.phone || "",
+        first_name:
+          values.firstName.trim(),
+        last_name:
+          values.lastName.trim(),
+        phone: values.phone?.trim() || "",
       });
 
-      if (response.success) {
-        toast.success(
-          "Compte créé avec succès ! Un email de vérification vous a été envoyé."
+      if (!response.success) {
+        toast.error(
+          response.message ||
+            "Erreur lors de l'inscription."
         );
-        router.push("/auth/verify-email");
-      } else {
-        toast.error(response.message || "Erreur lors de l'inscription");
+
+        return;
       }
+
+      toast.success(
+        response.message ||
+          "Compte créé. Un email de vérification vous a été envoyé."
+      );
+
+      /*
+       * Ne pas rediriger directement vers
+       * /auth/verify-email.
+       *
+       * Cette page nécessite le token contenu
+       * dans le lien envoyé par email.
+       */
+      router.replace(
+        `/auth/check-email?email=${encodeURIComponent(
+          normalizedEmail
+        )}`
+      );
     } catch (error: unknown) {
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : error instanceof Error
-          ? error.message
-          : "Erreur lors de l'inscription";
+      console.error(
+        "Registration error:",
+        isAxiosError(error)
+          ? error.response?.data
+          : error
+      );
+
+      let message =
+        "Erreur lors de l'inscription.";
+
+      if (
+        isAxiosError<ApiErrorResponse>(
+          error
+        )
+      ) {
+        const backendMessage =
+          error.response?.data?.message;
+
+        const validationMessage =
+          error.response?.data?.errors?.[0]
+            ?.msg ||
+          error.response?.data?.errors?.[0]
+            ?.message;
+
+        if (backendMessage) {
+          message = backendMessage;
+        } else if (validationMessage) {
+          message = validationMessage;
+        } else if (
+          error.code === "ERR_NETWORK"
+        ) {
+          message =
+            "Impossible de contacter le serveur.";
+        }
+      } else if (
+        error instanceof Error
+      ) {
+        message = error.message;
+      }
+
       toast.error(message);
     } finally {
       setLoading(false);
@@ -56,6 +138,11 @@ export function RegisterPageClient({ initialEmail }: { initialEmail: string }) {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Créer un compte
           </h1>
+
+          <p className="text-sm text-muted-foreground">
+            Inscrivez-vous pour accéder à
+            votre espace membre.
+          </p>
         </div>
 
         <div className="space-y-4">
@@ -65,6 +152,7 @@ export function RegisterPageClient({ initialEmail }: { initialEmail: string }) {
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-muted/50" />
             </div>
+
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
                 ou s&apos;inscrire avec
@@ -92,12 +180,19 @@ export function RegisterPageClient({ initialEmail }: { initialEmail: string }) {
         </div>
 
         <div className="px-4 text-center text-xs text-muted-foreground/60">
-          En créant un compte, vous acceptez nos{" "}
-          <Link href="#" className="underline hover:text-foreground">
+          En créant un compte, vous
+          acceptez nos{" "}
+          <Link
+            href="#"
+            className="underline hover:text-foreground"
+          >
             Conditions d&apos;utilisation
           </Link>{" "}
           et notre{" "}
-          <Link href="#" className="underline hover:text-foreground">
+          <Link
+            href="#"
+            className="underline hover:text-foreground"
+          >
             Politique de confidentialité
           </Link>
           .

@@ -1,142 +1,218 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import {
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
-import { AuthLayout } from "@/app/components/auth/AuthLayout";
-import { verifyEmail, resendVerification } from "@/services/auth";
-import { toast } from "sonner";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { isAxiosError } from "axios";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  MailCheck,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import api from "@/lib/api";
+
+type VerificationState =
+  | "loading"
+  | "success"
+  | "error";
+
+type ApiErrorResponse = {
+  success?: boolean;
+  message?: string;
+};
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const token = searchParams.get("token");
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("");
-  const [email, setEmail] = useState("");
+  const token = searchParams.get("token")?.trim();
+
+  const verificationStarted = useRef(false);
+
+  const [status, setStatus] =
+    useState<VerificationState>("loading");
+
+  const [message, setMessage] = useState(
+    "Vérification de votre adresse email en cours..."
+  );
 
   useEffect(() => {
+    if (verificationStarted.current) {
+      return;
+    }
+
+    verificationStarted.current = true;
+
     if (!token) {
       setStatus("error");
-      setMessage("Aucun token de vérification fourni.");
+      setMessage(
+        "Le lien de vérification est incomplet : aucun token n’a été fourni."
+      );
       return;
     }
 
-    verifyEmail(token)
-      .then((response) => {
-        if (response.success) {
-          setStatus("success");
-          setMessage("Votre email a été vérifié avec succès !");
-          toast.success("Email vérifié !");
-          setTimeout(() => router.push("/auth/login"), 3000);
-        } else {
-          setStatus("error");
-          setMessage(response.message || "Token invalide ou expiré.");
+    const verifyEmail = async () => {
+      try {
+        const response = await api.get<{
+          success: boolean;
+          message?: string;
+        }>("/auth/verify-email", {
+          params: { token },
+        });
+
+        setStatus("success");
+        setMessage(
+          response.data.message ||
+            "Votre adresse email a été vérifiée avec succès."
+        );
+      } catch (error) {
+        console.error(
+          "Email verification error:",
+          isAxiosError(error)
+            ? error.response?.data
+            : error
+        );
+
+        let errorMessage =
+          "Impossible de vérifier votre adresse email.";
+
+        if (isAxiosError<ApiErrorResponse>(error)) {
+          errorMessage =
+            error.response?.data?.message ||
+            (error.code === "ERR_NETWORK"
+              ? "Impossible de contacter le serveur."
+              : errorMessage);
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
         }
-      })
-      .catch((error) => {
+
         setStatus("error");
-        setMessage(error?.response?.data?.message || "Erreur lors de la vérification.");
-      });
-  }, [token, router]);
-
-  const handleResend = async () => {
-    if (!email) {
-      toast.error("Veuillez entrer votre email");
-      return;
-    }
-    try {
-      const response = await resendVerification(email);
-      if (response.success) {
-        toast.success("Un nouveau lien de vérification a été envoyé !");
-      } else {
-        toast.error(response.message || "Erreur lors de l'envoi");
+        setMessage(errorMessage);
       }
-    } catch (error) {
-      toast.error("Erreur lors de l'envoi");
-    }
-  };
+    };
 
-  if (status === "loading") {
-    return (
-      <div className="text-center space-y-4 py-8">
-        <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-        <p className="text-muted-foreground">Vérification de votre email en cours...</p>
-      </div>
-    );
-  }
-
-  if (status === "success") {
-    return (
-      <div className="text-center space-y-4 py-8">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-        <h1 className="text-2xl font-bold text-foreground">Email vérifié !</h1>
-        <p className="text-muted-foreground">{message}</p>
-        <p className="text-sm text-muted-foreground">
-          Vous serez redirigé vers la page de connexion dans quelques secondes...
-        </p>
-        <Link
-          href="/auth/login"
-          className="inline-block mt-4 text-primary hover:underline"
-        >
-          Se connecter maintenant
-        </Link>
-      </div>
-    );
-  }
+    void verifyEmail();
+  }, [token]);
 
   return (
-    <div className="text-center space-y-4 py-8">
-      <XCircle className="w-16 h-16 text-red-500 mx-auto" />
-      <h1 className="text-2xl font-bold text-foreground">Vérification échouée</h1>
-      <p className="text-muted-foreground">{message}</p>
+    <main className="flex min-h-screen items-center justify-center bg-[#F3EEE5] px-4 py-10">
+      <section className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#D1965B]/20 bg-white shadow-lg">
+        <div className="bg-[#D1965B] px-6 py-8 text-center text-white sm:px-8">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15">
+            <MailCheck className="h-8 w-8" />
+          </div>
 
-      <div className="bg-muted/50 border border-muted rounded-lg p-4 mt-4 space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Vous pouvez demander un nouveau lien de vérification :
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="email"
-            placeholder="Votre email"
-            className="flex-1 px-3 py-2 border rounded-md bg-background"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button
-            onClick={handleResend}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            Renvoyer
-          </button>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">
+            CCAPAC
+          </p>
+
+          <h1 className="mt-2 text-2xl font-bold">
+            Vérification de l’email
+          </h1>
         </div>
-      </div>
 
-      <div className="text-center text-sm">
-        <Link
-          href="/auth/login"
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Retour à la connexion
-        </Link>
+        <div className="p-6 text-center sm:p-8">
+          {status === "loading" && (
+            <>
+              <Loader2 className="mx-auto h-12 w-12 animate-spin text-[#D1965B]" />
+
+              <h2 className="mt-5 text-xl font-bold text-[#5C4033]">
+                Veuillez patienter
+              </h2>
+            </>
+          )}
+
+          {status === "success" && (
+            <>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+              </div>
+
+              <h2 className="mt-5 text-xl font-bold text-[#5C4033]">
+                Email vérifié
+              </h2>
+            </>
+          )}
+
+          {status === "error" && (
+            <>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                <AlertCircle className="h-9 w-9 text-red-600" />
+              </div>
+
+              <h2 className="mt-5 text-xl font-bold text-[#5C4033]">
+                Vérification impossible
+              </h2>
+            </>
+          )}
+
+          <p
+            className={`mt-3 text-sm leading-6 ${
+              status === "error"
+                ? "text-red-700"
+                : "text-[#5C4033]/70"
+            }`}
+          >
+            {message}
+          </p>
+
+          {status === "success" && (
+            <Button
+              asChild
+              className="mt-7 w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
+            >
+              <Link href="/auth/login">
+                Se connecter
+              </Link>
+            </Button>
+          )}
+
+          {status === "error" && (
+            <div className="mt-7 space-y-3">
+              <Button
+                asChild
+                className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
+              >
+                <Link href="/auth/login">
+                  Retour à la connexion
+                </Link>
+              </Button>
+
+              <p className="text-xs text-[#5C4033]/55">
+                Depuis la page de connexion, vous pourrez demander le renvoi d’un email de vérification.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function VerificationFallback() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#F3EEE5]">
+      <div className="text-center">
+        <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#D1965B]" />
+
+        <p className="mt-4 text-sm text-[#5C4033]/70">
+          Chargement de la vérification...
+        </p>
       </div>
-    </div>
+    </main>
   );
 }
 
 export default function VerifyEmailPage() {
   return (
-    <AuthLayout title="Vérification de l'email">
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        }
-      >
-        <VerifyEmailContent />
-      </Suspense>
-    </AuthLayout>
+    <Suspense fallback={<VerificationFallback />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

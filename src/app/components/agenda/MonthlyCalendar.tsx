@@ -43,7 +43,7 @@ const grandTambourSpaces = [
   { id: 2, name: "Petit théâtre", capacity: 800, description: "Espace intimiste pour pièces de théâtre et conférences" },
   { id: 3, name: "Salle de danse", capacity: 120, description: "Espace avec miroirs et barres de danse" },
   { id: 4, name: "Hall", capacity: 200, description: "Espace d'accueil polyvalent" },
-  { id: 5, name: "Latriumhome", capacity: 80, description: "Espace de travail collaboratif" },
+  { id: 5, name: "Atrium", capacity: 80, description: "Espace de travail collaboratif" },
   { id: 6, name: "Cafétéria", capacity: 50, description: "Espace de restauration et de convivialité" },
   { id: 7, name: "Salle de musique 1", capacity: 25, description: "Studio d'enregistrement et de répétition" },
   { id: 8, name: "Salle de musique 2", capacity: 25, description: "Studio d'enregistrement et de répétition" },

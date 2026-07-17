@@ -8,6 +8,7 @@ import {
 } from "react";
 import Link from "next/link";
 import {
+  Building2,
   CalendarCheck2,
   ChevronLeft,
   ChevronRight,
@@ -15,10 +16,12 @@ import {
   CircleX,
   Loader2,
   RefreshCw,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import {
   spaceRequestService,
   type BookedCalendarEvent,
@@ -33,6 +36,72 @@ const weekDays = [
   "Sam",
   "Dim",
 ];
+
+const spaces = [
+  {
+    id: 1,
+    name: "Grand théâtre",
+    description:
+      "Espace scénique modulable pour spectacles et grandes cérémonies.",
+    capacity: 2000,
+  },
+  {
+    id: 2,
+    name: "Petit théâtre",
+    description:
+      "Espace intimiste pour pièces de théâtre, projections et rencontres.",
+    capacity: 800,
+  },
+  {
+    id: 3,
+    name: "Salle de danse",
+    description:
+      "Espace avec miroirs et barres destiné aux répétitions et ateliers.",
+    capacity: 120,
+  },
+  {
+    id: 4,
+    name: "Hall",
+    description:
+      "Espace d’accueil polyvalent pour expositions et réceptions.",
+    capacity: 200,
+  },
+  {
+    id: 5,
+    name: "Atrium",
+    description:
+      "Espace de travail collaboratif et de rencontres professionnelles.",
+    capacity: 80,
+  },
+  {
+    id: 6,
+    name: "Cafétéria",
+    description:
+      "Espace de restauration et de détente pour les participants.",
+    capacity: 50,
+  },
+  {
+    id: 7,
+    name: "Salle de musique 1",
+    description:
+      "Studio d’enregistrement et de répétition musicale équipé.",
+    capacity: 25,
+  },
+  {
+    id: 8,
+    name: "Salle de musique 2",
+    description:
+      "Studio d’enregistrement et de répétition musicale équipé.",
+    capacity: 25,
+  },
+  {
+    id: 9,
+    name: "Parking",
+    description:
+      "Parking sécurisé pour les visiteurs, artistes et organisateurs.",
+    capacity: 2000,
+  },
+] as const;
 
 function dateKey(date: Date) {
   const year = date.getFullYear();
@@ -68,6 +137,8 @@ function formatLongDate(value: string) {
 }
 
 export default function MemberEventsCalendarPage() {
+  const { user } = useAuth();
+
   const today = useMemo(() => {
     const value = new Date();
     value.setHours(0, 0, 0, 0);
@@ -500,16 +571,57 @@ export default function MemberEventsCalendarPage() {
                   enregistrée pour cette date.
                 </p>
 
-                <Button
-                  asChild
-                  className="mt-5 w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
-                >
-                  <Link
-                    href={`/espace-membre/membre/nouvelle-demande?date=${selectedDate}`}
-                  >
-                    Demander cette date
-                  </Link>
-                </Button>
+                <div className="mt-6 border-t border-[#D1965B]/15 pt-5">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-[#D1965B]" />
+                    <h3 className="font-bold">
+                      Espaces disponibles
+                    </h3>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                    {spaces.map((space) => (
+                      <article
+                        key={space.id}
+                        className="flex min-w-0 flex-col rounded-xl border border-[#D1965B]/15 bg-[#FBF9F5] p-3"
+                      >
+                        <h4 className="truncate text-sm font-bold text-[#5C4033]">
+                          {space.name}
+                        </h4>
+
+                        <p
+                          className="mt-1 line-clamp-2 text-xs leading-5 text-[#5C4033]/65"
+                          title={space.description}
+                        >
+                          {space.description}
+                        </p>
+
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1 text-xs text-[#5C4033]/65">
+                            <Users className="h-3.5 w-3.5" />
+                            {space.capacity.toLocaleString(
+                              "fr-FR"
+                            )}{" "}
+                            pers.
+                          </span>
+
+                          {user?.role === "MEMBER" ? (
+                            <Link
+                              href={`/espace-membre/membre/nouvelle-demande?date=${selectedDate}&space=${space.id}`}
+                              className="shrink-0 rounded-lg border border-[#D1965B]/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-[#D1965B] transition hover:bg-[#D1965B] hover:text-white"
+                            >
+                              Choisir
+                            </Link>
+                          ) : (
+                            <span className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700">
+                              Disponible
+                            </span>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </section>

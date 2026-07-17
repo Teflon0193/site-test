@@ -9,7 +9,6 @@ import {
 import Link from "next/link";
 import {
   Calendar,
-  Download,
   Eye,
   FileClock,
   FileText,
@@ -31,12 +30,6 @@ import {
   type SpaceRequest,
 } from "@/services/spaceRequestService";
 
-const API_ORIGIN =
-  process.env.NEXT_PUBLIC_API_URL?.replace(
-    /\/api\/?$/,
-    ""
-  ) || "http://localhost:5000";
-
 function formatDate(
   value?: string | null
 ): string {
@@ -55,23 +48,6 @@ function formatDate(
     month: "long",
     year: "numeric",
   });
-}
-
-function getDocumentUrl(
-  documentUrl?: string | null
-): string | null {
-  if (!documentUrl) {
-    return null;
-  }
-
-  if (
-    documentUrl.startsWith("http://") ||
-    documentUrl.startsWith("https://")
-  ) {
-    return documentUrl;
-  }
-
-  return `${API_ORIGIN}${documentUrl}`;
 }
 
 export default function ProgrammeHistoryPage() {
@@ -251,9 +227,6 @@ export default function ProgrammeHistoryPage() {
                       Dernière modification
                     </th>
 
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase">
-                      Document
-                    </th>
 
                     <th className="px-5 py-4 text-right text-xs font-semibold uppercase">
                       Action
@@ -263,13 +236,7 @@ export default function ProgrammeHistoryPage() {
 
                 <tbody>
                   {filteredRequests.map(
-                    (request) => {
-                      const documentUrl =
-                        getDocumentUrl(
-                          request.document?.url
-                        );
-
-                      return (
+                    (request) => (
                         <tr
                           key={request.id}
                           className="border-b transition-colors last:border-0 hover:bg-muted/40"
@@ -306,7 +273,7 @@ export default function ProgrammeHistoryPage() {
                           <td className="px-5 py-4">
                             <RequestStatusBadge
                               status={
-                                request.status
+                                request.status as never
                               }
                             />
                           </td>
@@ -320,24 +287,6 @@ export default function ProgrammeHistoryPage() {
                                   request.createdAt
                               )}
                             </span>
-                          </td>
-
-                          <td className="px-5 py-4">
-                            {documentUrl ? (
-                              <a
-                                href={documentUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                              >
-                                <Download className="h-4 w-4" />
-                                Télécharger
-                              </a>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">
-                                Aucun document
-                              </span>
-                            )}
                           </td>
 
                           <td className="px-5 py-4 text-right">
@@ -355,8 +304,7 @@ export default function ProgrammeHistoryPage() {
                             </Button>
                           </td>
                         </tr>
-                      );
-                    }
+                      )
                   )}
                 </tbody>
               </table>

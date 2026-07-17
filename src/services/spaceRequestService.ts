@@ -57,6 +57,7 @@ export interface BookedCalendarEvent {
   reference: string;
   title: string;
   date: string;
+  spaceId?: number | null;
 }
 
 export interface HistoryPerformedBy {
@@ -90,6 +91,7 @@ export interface ValidationHistory {
 export interface SpaceRequest {
   id: number;
   reference: string;
+  spaceId?: number | null;
 
   eventName: string;
   title?: string;

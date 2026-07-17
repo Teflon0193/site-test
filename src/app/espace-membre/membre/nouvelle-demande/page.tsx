@@ -31,6 +31,7 @@ import {
 } from "../../../components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import SpaceSelect from "@/components/space-requests/SpaceSelect";
 import {
   spaceRequestService,
   type SpaceRequest,
@@ -41,6 +42,7 @@ type RequestFormData = {
   email: string;
   phone: string;
   eventName: string;
+  space: number;
   desiredDate: string;
 };
 
@@ -171,6 +173,7 @@ export default function NewRequestPage() {
       email: "",
       phone: "",
       eventName: "",
+      space: 0,
       desiredDate: "",
     });
 
@@ -335,6 +338,13 @@ export default function NewRequestPage() {
       return;
     }
 
+    if (!formData.space) {
+      toast.error(
+        "Veuillez sélectionner l’espace souhaité."
+      );
+      return;
+    }
+
     if (!formData.desiredDate) {
       toast.error(
         "Veuillez sélectionner la date souhaitée pour l’occupation."
@@ -394,7 +404,7 @@ export default function NewRequestPage() {
             eventName:
               formData.eventName.trim(),
 
-            space: 1,
+            space: formData.space,
 
             date:
               formData.desiredDate,
@@ -809,7 +819,24 @@ export default function NewRequestPage() {
                     />
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
+                  <div>
+                    <SpaceSelect
+                      value={formData.space}
+                      onChange={(space) =>
+                        setFormData((current) => ({
+                          ...current,
+                          space,
+                        }))
+                      }
+                      disabled={
+                        loading ||
+                        submitting ||
+                        Boolean(createdRequest)
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label
                       htmlFor="desiredDate"
                       className="text-[#5C4033]"
