@@ -12,6 +12,7 @@ import {
 } from "next/navigation";
 import { isAxiosError } from "axios";
 import {
+  AlertTriangle,
   ArrowLeft,
   Calendar,
   CheckCircle2,
@@ -41,6 +42,7 @@ import {
   spaceRequestService,
   type SpaceRequest,
   type SpaceRequestDocument,
+  type ValidationHistory,
 } from "@/services/spaceRequestService";
 
 type ApiErrorResponse = {
@@ -134,6 +136,9 @@ export default function MemberRequestDetailPage() {
   const [documents, setDocuments] =
     useState<SpaceRequestDocument[]>([]);
 
+  const [history, setHistory] =
+    useState<ValidationHistory[]>([]);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -176,14 +181,24 @@ export default function MemberRequestDetailPage() {
       try {
         setLoading(true);
 
-        const [requestData, documentData] = await Promise.all([
-          spaceRequestService.getOne(requestId),
-          spaceRequestService.getDocuments(requestId).catch(() => []),
-        ]);
+        const [requestData, documentData, historyData] =
+          await Promise.all([
+            spaceRequestService.getOne(requestId),
+            spaceRequestService
+              .getDocuments(requestId)
+              .catch(() => []),
+            spaceRequestService
+              .getHistory(requestId)
+              .catch(() => []),
+          ]);
 
         setRequest(requestData);
         setDocuments(
           Array.isArray(documentData) ? documentData : []
+        );
+
+        setHistory(
+          Array.isArray(historyData) ? historyData : []
         );
       } catch (error) {
         console.error(
@@ -255,7 +270,7 @@ export default function MemberRequestDetailPage() {
 
       if (!refusing && !confirmed) {
         toast.error(
-          "Vous devez confirmer l’exactitude des informations."
+          "Vous devez accepter les termes et conditions avant de signer."
         );
 
         return;
@@ -452,6 +467,19 @@ export default function MemberRequestDetailPage() {
   const processCompleted =
     request.status === "completed";
 
+  const communicationMessage = [...history]
+    .sort(
+      (first, second) =>
+        new Date(second.performedAt).getTime() -
+        new Date(first.performedAt).getTime()
+    )
+    .find(
+      (item) =>
+        item.fromDepartment === "COMMUNICATION" &&
+        item.toDepartment === "MEMBER" &&
+        Boolean(item.comment?.trim())
+    );
+
   const canAct = canSubmit || canConfirm;
 
   const alreadySubmitted =
@@ -514,7 +542,7 @@ export default function MemberRequestDetailPage() {
               >
                 <FileSignature className="mr-2 h-4 w-4" />
                 {canConfirm
-                  ? "Confirmer et signer"
+                  ? "Accepter les termes et conditions et signer"
                   : "Signer et envoyer"}
               </Button>
             </div>
@@ -562,6 +590,37 @@ export default function MemberRequestDetailPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {communicationMessage?.comment && (
+          <section className="overflow-hidden rounded-2xl border border-amber-300 bg-white shadow-sm">
+            <div className="flex items-start gap-3 border-b border-amber-200 bg-amber-50 px-5 py-4 sm:px-6">
+              <div className="rounded-xl bg-amber-100 p-2.5">
+                <AlertTriangle className="h-6 w-6 text-amber-700" />
+              </div>
+
+              <div>
+                <p className="font-bold text-amber-950">
+                  Avertissement de Communication &amp; Marketing
+                </p>
+
+                <p className="mt-1 text-sm text-amber-800">
+                  Veuillez lire attentivement ce message avant de confirmer ou de refuser le dossier.
+                </p>
+              </div>
+            </div>
+
+            <div className="px-5 py-5 sm:px-6">
+              <p className="whitespace-pre-line text-sm leading-7 text-[#5C4033] sm:text-base">
+                {communicationMessage.comment}
+              </p>
+
+              <p className="mt-4 border-t border-[#D1965B]/15 pt-3 text-xs text-[#5C4033]/55">
+                Transmis par Communication &amp; Marketing le{" "}
+                {formatDateTime(communicationMessage.performedAt)}
+              </p>
+            </div>
+          </section>
         )}
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -829,7 +888,7 @@ export default function MemberRequestDetailPage() {
               >
                 <FileSignature className="mr-2 h-4 w-4" />
                 {canConfirm
-                  ? "Confirmer et signer"
+                  ? "Accepter les termes et conditions et signer"
                   : "Signer et envoyer"}
               </Button>
             </CardContent>
@@ -978,10 +1037,11 @@ export default function MemberRequestDetailPage() {
                 />
 
                 <span className="text-sm leading-6 text-[#5C4033]/80">
-                  Je confirme avoir vérifié
-                  toutes les informations et
-                  j&apos;accepte que mon nom
-                  constitue ma signature
+                  J&apos;ai vérifié toutes les
+                  informations, j&apos;accepte les
+                  termes et conditions et
+                  j&apos;autorise l&apos;utilisation de
+                  mon nom comme signature
                   électronique.
                 </span>
               </label>
@@ -1034,7 +1094,7 @@ export default function MemberRequestDetailPage() {
                       {refusing
                         ? "Signer et refuser"
                         : canConfirm
-                          ? "Signer et confirmer"
+                          ? "Accepter les termes et conditions et signer"
                           : "Signer et envoyer"}
                     </>
                   )}

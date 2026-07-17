@@ -11,7 +11,6 @@ import {
   Calendar,
   ClipboardCheck,
   Clock,
-  Download,
   Eye,
   FileText,
   Radio,
@@ -31,12 +30,6 @@ import {
   type SpaceRequest,
 } from "@/services/spaceRequestService";
 
-const API_ORIGIN =
-  process.env.NEXT_PUBLIC_API_URL?.replace(
-    /\/api\/?$/,
-    ""
-  ) || "http://localhost:5000";
-
 function formatDate(
   value?: string | null
 ): string {
@@ -55,23 +48,6 @@ function formatDate(
     month: "long",
     year: "numeric",
   });
-}
-
-function getDocumentUrl(
-  value?: string | null
-): string | null {
-  if (!value) {
-    return null;
-  }
-
-  if (
-    value.startsWith("http://") ||
-    value.startsWith("https://")
-  ) {
-    return value;
-  }
-
-  return `${API_ORIGIN}${value}`;
 }
 
 export default function CommunicationDashboardPage() {
@@ -286,7 +262,7 @@ export default function CommunicationDashboardPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[950px]">
+              <table className="w-full min-w-[800px]">
                 <thead className="bg-muted/70">
                   <tr className="border-b">
                     <th className="px-5 py-4 text-left text-xs font-semibold uppercase">
@@ -305,10 +281,6 @@ export default function CommunicationDashboardPage() {
                       Statut
                     </th>
 
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase">
-                      Document
-                    </th>
-
                     <th className="px-5 py-4 text-right text-xs font-semibold uppercase">
                       Action
                     </th>
@@ -316,13 +288,7 @@ export default function CommunicationDashboardPage() {
                 </thead>
 
                 <tbody>
-                  {requests.map((request) => {
-                    const documentUrl =
-                      getDocumentUrl(
-                        request.document?.url
-                      );
-
-                    return (
+                  {requests.map((request) => (
                       <tr
                         key={request.id}
                         className="border-b transition-colors last:border-0 hover:bg-muted/40"
@@ -374,24 +340,6 @@ export default function CommunicationDashboardPage() {
                           />
                         </td>
 
-                        <td className="px-5 py-4">
-                          {documentUrl ? (
-                            <a
-                              href={documentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                            >
-                              <Download className="h-4 w-4" />
-                              Télécharger
-                            </a>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">
-                              Aucun document
-                            </span>
-                          )}
-                        </td>
-
                         <td className="px-5 py-4 text-right">
                           <Button asChild size="sm">
                             <Link
@@ -403,8 +351,7 @@ export default function CommunicationDashboardPage() {
                           </Button>
                         </td>
                       </tr>
-                    );
-                  })}
+                  ))}
                 </tbody>
               </table>
             </div>

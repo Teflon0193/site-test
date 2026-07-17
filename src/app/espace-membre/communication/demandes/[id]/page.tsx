@@ -104,6 +104,9 @@ const statusLabels: Record<
   rejected: "Rejetée",
 };
 
+const LEGAL_WARNING_MESSAGE =
+  "AVERTISSEMENT JURIDIQUE : L’avis artistique, les prescriptions de communication et les conditions d’utilisation transmises avec ce dossier doivent être strictement respectés. Tout manquement, toute modification non autorisée ou toute utilisation non conforme peut entraîner le retrait de l’autorisation, la suspension de l’activité et engager la responsabilité civile du demandeur ainsi que, le cas échéant, donner lieu aux poursuites prévues par la législation applicable.";
+
 function getErrorMessage(
   error: unknown,
   fallback: string
@@ -371,12 +374,32 @@ export default function CommunicationRequestDetailPage() {
     try {
       setProcessing(true);
 
+      const communicationComment =
+        comment.trim();
+
+      const additionalObservation =
+        communicationComment
+          .replace(
+            LEGAL_WARNING_MESSAGE,
+            ""
+          )
+          .trim();
+
+      const validationMessage =
+        isConfirmationReturn
+          ? communicationComment ||
+            "Confirmation signée du demandeur vérifiée par la Communication"
+          : [
+              additionalObservation ||
+                null,
+              LEGAL_WARNING_MESSAGE,
+            ]
+              .filter(Boolean)
+              .join("\n\n");
+
       await spaceRequestService.validate(
         request.id,
-        comment.trim() ||
-          (isConfirmationReturn
-            ? "Confirmation signée du demandeur vérifiée par la Communication"
-            : "Éléments de communication vérifiés"),
+        validationMessage,
         cleanSignature
       );
 
@@ -903,6 +926,24 @@ export default function CommunicationRequestDetailPage() {
                       </div>
 
                       <div className="space-y-2">
+                        {decisionMode ===
+                          "validate" &&
+                          !isConfirmationReturn && (
+                            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+                              <p className="text-sm font-bold text-amber-950">
+                                Avertissement juridique obligatoire
+                              </p>
+
+                              <p className="mt-2 text-xs leading-5 text-amber-900">
+                                {LEGAL_WARNING_MESSAGE}
+                              </p>
+
+                              <p className="mt-3 text-xs font-semibold text-amber-950">
+                                Ce texte sera automatiquement ajouté au message transmis au membre.
+                              </p>
+                            </div>
+                          )}
+
                         <Label
                           htmlFor="communicationComment"
                           className="text-[#5C4033]"
@@ -910,7 +951,9 @@ export default function CommunicationRequestDetailPage() {
                           {decisionMode ===
                           "reject"
                             ? "Motif du rejet *"
-                            : "Commentaire"}
+                            : isConfirmationReturn
+                              ? "Commentaire"
+                              : "Message et avertissement au demandeur"}
                         </Label>
 
                         <textarea
@@ -928,7 +971,9 @@ export default function CommunicationRequestDetailPage() {
                             decisionMode ===
                             "reject"
                               ? "Expliquez le motif du rejet..."
-                              : "Public, visuels, diffusion, observations..."
+                              : isConfirmationReturn
+                                ? "Observations sur la confirmation..."
+                                : "Ajoutez vos observations avant l’avertissement juridique..."
                           }
                           className="w-full resize-none rounded-xl border border-[#D1965B]/25 bg-white px-3 py-3 text-sm text-[#5C4033] outline-none focus:border-[#D1965B] focus:ring-2 focus:ring-[#D1965B]/10"
                         />

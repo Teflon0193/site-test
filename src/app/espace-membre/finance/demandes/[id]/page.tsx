@@ -4,22 +4,30 @@ import {
   useCallback,
   useEffect,
   useState,
-  type ChangeEvent,
 } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  BadgeDollarSign,
-  CheckCircle2,
-  Loader2,
-  Send,
-  Upload,
-  XCircle,
-} from "lucide-react";
 import {
   useParams,
   useRouter,
 } from "next/navigation";
+import { isAxiosError } from "axios";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  FileSignature,
+  FileText,
+  Loader2,
+  ReceiptText,
+  Send,
+  Upload,
+  User,
+  X,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -29,54 +37,96 @@ import {
 } from "../../../../components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import RequestDocuments from "@/components/space-requests/RequestDocuments";
+import RequestStatusBadge from "@/components/space-requests/RequestStatusBadge";
 import {
   spaceRequestService,
   type SpaceRequest,
   type SpaceRequestDocument,
-  type SpaceRequestDocumentType,
   type ValidationHistory,
 } from "@/services/spaceRequestService";
 
-type CompatibleDocument = SpaceRequestDocument & {
-  documentType?: SpaceRequestDocumentType;
-  document_type?: SpaceRequestDocumentType;
+type ApiErrorResponse = {
+  success?: boolean;
+  message?: string;
+  error?: string;
 };
 
-function getDocumentType(
-  document: CompatibleDocument
-): SpaceRequestDocumentType | undefined {
-  return document.type || document.documentType || document.document_type;
-}
+function formatDate(
+  value?: string | null
+) {
+  if (!value) {
+    return "Non renseignée";
+  }
 
-function FinanceStatusPill({ status }: { status: string }) {
-  const label =
-    status === "finance_cotation"
-      ? "En attente de cotation"
-      : status === "rejected"
-        ? "Demande rejetée"
-        : status === "program_review_after_finance"
-          ? "Retournée au Programme"
-          : status;
+  const date = new Date(value);
 
-  const colors =
-    status === "rejected"
-      ? "border-red-200 bg-red-50 text-red-700"
-      : status === "program_review_after_finance"
-        ? "border-green-200 bg-green-50 text-green-700"
-        : "border-white/30 bg-white/15 text-white";
+  if (Number.isNaN(date.getTime())) {
+    return "Non renseignée";
+  }
 
-  return (
-    <span className={`inline-flex h-fit w-fit shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${colors}`}>
-      <span className="h-2 w-2 rounded-full bg-current" />
-      {label}
-    </span>
+  return date.toLocaleDateString(
+    "fr-FR",
+    {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }
   );
 }
 
-export default function FinanceRequestPage() {
-  const params = useParams();
+function formatDateTime(
+  value?: string | null
+) {
+  if (!value) {
+    return "Non renseignée";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Non renseignée";
+  }
+
+  return date.toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getErrorMessage(
+  error: unknown,
+  fallback: string
+) {
+  if (
+    isAxiosError<ApiErrorResponse>(
+      error
+    )
+  ) {
+    return (
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      (error.code === "ERR_NETWORK"
+        ? "Impossible de contacter le serveur."
+        : fallback)
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+export default function MemberRequestDetailPage() {
+  const params = useParams<{
+    id: string;
+  }>();
+
   const router = useRouter();
 
   const requestId = Number(params.id);
@@ -84,559 +134,1002 @@ export default function FinanceRequestPage() {
   const [request, setRequest] =
     useState<SpaceRequest | null>(null);
 
-  const [history, setHistory] = useState<
-    ValidationHistory[]
-  >([]);
+  const [documents, setDocuments] =
+    useState<SpaceRequestDocument[]>([]);
 
-  const [documents, setDocuments] = useState<
-    SpaceRequestDocument[]
-  >([]);
-
-  const [quoteFile, setQuoteFile] =
-    useState<File | null>(null);
-
-  const [uploadingQuote, setUploadingQuote] =
-    useState(false);
-
-  const [quoteUploaded, setQuoteUploaded] =
-    useState(false);
-
-  const [amount, setAmount] = useState("");
-  const [comment, setComment] = useState("");
-  const [signature, setSignature] =
-    useState("");
+  const [history, setHistory] =
+    useState<ValidationHistory[]>([]);
 
   const [loading, setLoading] =
     useState(true);
 
-  const [processing, setProcessing] =
-    useState<"validate" | "reject" | null>(
-      null
-    );
+  const [submitting, setSubmitting] =
+    useState(false);
 
-  const loadRequest = useCallback(async () => {
-    try {
-      setLoading(true);
+  const [
+    signatureModalOpen,
+    setSignatureModalOpen,
+  ] = useState(false);
 
-      const [requestData, historyData, documentData] =
-        await Promise.all([
-          spaceRequestService.getOne(
-            requestId
-          ),
+  const [signature, setSignature] =
+    useState("");
 
-          spaceRequestService.getHistory(
-            requestId
-          ),
+  const [confirmed, setConfirmed] =
+    useState(false);
 
-          spaceRequestService
-            .getDocuments(requestId)
-            .catch(() => []),
-        ]);
+  const [refusing, setRefusing] =
+    useState(false);
 
-      setRequest(requestData);
-      setHistory(historyData);
-      const safeDocuments = Array.isArray(documentData)
-        ? documentData
-        : [];
+  const [decisionComment, setDecisionComment] =
+    useState("");
 
-      setDocuments(safeDocuments);
-      setQuoteUploaded(
-        safeDocuments.some(
-          (document) =>
-            getDocumentType(document as CompatibleDocument) ===
-            "FINANCE_QUOTE"
-        )
-      );
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Impossible de charger la demande"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [requestId]);
+  const [paymentProof, setPaymentProof] =
+    useState<File | null>(null);
 
-  useEffect(() => {
-    if (
-      Number.isInteger(requestId) &&
-      requestId > 0
-    ) {
-      void loadRequest();
-    }
-  }, [requestId, loadRequest]);
+  const [uploadingPayment, setUploadingPayment] =
+    useState(false);
 
-  const financeQuote = documents.find(
-    (document) =>
-      getDocumentType(document as CompatibleDocument) ===
-      "FINANCE_QUOTE"
-  );
+  const loadRequest =
+    useCallback(async () => {
+      if (
+        !Number.isInteger(requestId) ||
+        requestId <= 0
+      ) {
+        setLoading(false);
+        return;
+      }
 
-  const handleQuoteFileChange = (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+      try {
+        setLoading(true);
 
-    if (!file) {
-      setQuoteFile(null);
-      return;
-    }
+        const [requestData, documentData, historyData] =
+          await Promise.all([
+            spaceRequestService.getOne(requestId),
+            spaceRequestService
+              .getDocuments(requestId)
+              .catch(() => []),
+            spaceRequestService
+              .getHistory(requestId)
+              .catch(() => []),
+          ]);
 
-    const validExtension = [".pdf", ".doc", ".docx"].some(
-      (extension) => file.name.toLowerCase().endsWith(extension)
-    );
-
-    if (!validExtension) {
-      event.target.value = "";
-      setQuoteFile(null);
-      toast.error("Seuls les fichiers PDF, DOC et DOCX sont autorisés.");
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      event.target.value = "";
-      setQuoteFile(null);
-      toast.error("Le fichier ne doit pas dépasser 10 Mo.");
-      return;
-    }
-
-    setQuoteFile(file);
-  };
-
-  const handleUploadQuote = async () => {
-    if (!request || !quoteFile || uploadingQuote) {
-      return;
-    }
-
-    try {
-      setUploadingQuote(true);
-
-      const uploadedDocument =
-        await spaceRequestService.uploadDocument(
-          request.id,
-          "FINANCE_QUOTE",
-          quoteFile
+        setRequest(requestData);
+        setDocuments(
+          Array.isArray(documentData) ? documentData : []
         );
 
-      setQuoteFile(null);
-      setQuoteUploaded(true);
-      setDocuments((currentDocuments) => [
-        ...currentDocuments.filter(
-          (document) =>
-            getDocumentType(document as CompatibleDocument) !==
-            "FINANCE_QUOTE"
-        ),
-        {
-          ...uploadedDocument,
-          type: "FINANCE_QUOTE",
-        },
-      ]);
+        setHistory(
+          Array.isArray(historyData) ? historyData : []
+        );
+      } catch (error) {
+        console.error(
+          "Erreur de chargement :",
+          isAxiosError(error)
+            ? error.response?.data
+            : error
+        );
 
-      toast.success("Cotation ajoutée avec succès.");
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Impossible d'ajouter la cotation."
-      );
-    } finally {
-      setUploadingQuote(false);
+        toast.error(
+          getErrorMessage(
+            error,
+            "Impossible de charger la demande."
+          )
+        );
+      } finally {
+        setLoading(false);
+      }
+    }, [requestId]);
+
+  useEffect(() => {
+    void loadRequest();
+  }, [loadRequest]);
+
+  useEffect(() => {
+    if (!signatureModalOpen) {
+      return;
     }
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+    };
+  }, [signatureModalOpen]);
+
+  const closeSignatureModal = () => {
+    if (submitting) {
+      return;
+    }
+
+    setSignatureModalOpen(false);
+    setRefusing(false);
+    setDecisionComment("");
+    setConfirmed(false);
   };
 
-  const handleValidate = async () => {
-    if (!request) {
-      return;
-    }
+  const handleSubmitRequest =
+    async () => {
+      if (!request) {
+        return;
+      }
 
-    if (!financeQuote && !quoteUploaded) {
-      toast.error(
-        "Ajoutez le document de cotation avant de valider."
-      );
-      return;
-    }
+      const cleanSignature =
+        signature.trim();
 
-    const paymentAmount = Number(amount);
+      if (cleanSignature.length < 3) {
+        toast.error(
+          "Veuillez saisir votre nom complet comme signature."
+        );
 
-    if (
-      !Number.isFinite(paymentAmount) ||
-      paymentAmount <= 0
-    ) {
-      toast.error(
-        "Saisissez un montant valide"
-      );
+        return;
+      }
 
-      return;
-    }
+      if (!refusing && !confirmed) {
+        toast.error(
+          "Vous devez accepter les termes et conditions avant de signer."
+        );
 
-    if (!signature.trim()) {
-      toast.error(
-        "La signature électronique est obligatoire"
-      );
+        return;
+      }
 
+      try {
+        setSubmitting(true);
+
+        let updatedRequest: SpaceRequest;
+
+        if (refusing) {
+          if (decisionComment.trim().length < 5) {
+            toast.error("Veuillez expliquer le motif du refus.");
+            return;
+          }
+
+          updatedRequest = await spaceRequestService.reject(
+            request.id,
+            decisionComment.trim(),
+            cleanSignature
+          );
+        } else if (
+          request.status === "awaiting_member_confirmation"
+        ) {
+          updatedRequest = await spaceRequestService.confirmMember(
+            request.id,
+            cleanSignature,
+            decisionComment.trim() ||
+              "Les deux documents ont été lus et confirmés."
+          );
+        } else {
+          updatedRequest = await spaceRequestService.submit(
+            request.id,
+            cleanSignature
+          );
+        }
+
+        setRequest(updatedRequest);
+        setSignatureModalOpen(false);
+
+        toast.success(
+          refusing
+            ? "Demande refusée"
+            : request.status ===
+                "awaiting_member_confirmation"
+              ? "Documents confirmés et retournés à la Communication"
+              : "Demande signée et transmise au Programme"
+        );
+
+        await loadRequest();
+
+        router.refresh();
+      } catch (error) {
+        console.error(
+          "Erreur d’envoi :",
+          isAxiosError(error)
+            ? error.response?.data
+            : error
+        );
+
+        toast.error(
+          getErrorMessage(
+            error,
+            "Impossible d’envoyer la demande."
+          )
+        );
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+  const handlePaymentProofUpload = async () => {
+    if (!request || !paymentProof || uploadingPayment) {
       return;
     }
 
     try {
-      setProcessing("validate");
+      setUploadingPayment(true);
 
-      await spaceRequestService.validateFinance(
-        request.id,
-        paymentAmount,
-        comment.trim() ||
-          "Cotation établie par les Finances",
-        signature.trim()
-      );
+      const updatedRequest =
+        await spaceRequestService.uploadPaymentProof(
+          request.id,
+          paymentProof
+        );
 
-      toast.success(
-        "Cotation retournée au Programme"
-      );
+      setRequest(updatedRequest);
+      setPaymentProof(null);
 
-      router.replace(
-        "/espace-membre/finance"
-      );
+      toast.success("Preuve de paiement envoyée", {
+        description:
+          "Le Service des Programmes va vérifier le paiement et confirmer votre date.",
+      });
 
+      await loadRequest();
       router.refresh();
     } catch (error) {
+      console.error(
+        "Erreur d’envoi de la preuve de paiement :",
+        isAxiosError(error)
+          ? error.response?.data
+          : error
+      );
+
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Cotation impossible"
+        getErrorMessage(
+          error,
+          "Impossible d’envoyer la preuve de paiement."
+        )
       );
     } finally {
-      setProcessing(null);
-    }
-  };
-
-  const handleReject = async () => {
-    if (!request) {
-      return;
-    }
-
-    if (!comment.trim()) {
-      toast.error(
-        "Le motif du refus est obligatoire"
-      );
-
-      return;
-    }
-
-    if (!signature.trim()) {
-      toast.error(
-        "La signature électronique est obligatoire"
-      );
-
-      return;
-    }
-
-    try {
-      setProcessing("reject");
-
-      await spaceRequestService.reject(
-        request.id,
-        comment.trim(),
-        signature.trim()
-      );
-
-      toast.success("Demande refusée");
-
-      router.replace(
-        "/espace-membre/finance"
-      );
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Refus impossible"
-      );
-    } finally {
-      setProcessing(null);
+      setUploadingPayment(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#D1965B]" />
+
+          <p className="mt-4 text-sm text-[#5C4033]/70">
+            Chargement de la demande...
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (!request) {
+  if (
+    !Number.isInteger(requestId) ||
+    requestId <= 0
+  ) {
     return (
-      <Card>
+      <Card className="border-[#D1965B]/20 bg-white">
         <CardContent className="p-10 text-center">
-          Demande introuvable
+          <h1 className="text-xl font-bold text-[#5C4033]">
+            Identifiant invalide
+          </h1>
+
+          <Button
+            asChild
+            className="mt-6 bg-[#D1965B] text-white hover:bg-[#B97D47]"
+          >
+            <Link href="/espace-membre/membre/demandes">
+              Retour aux demandes
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     );
   }
 
-  const canProcess =
-    request.status ===
-      "finance_cotation" &&
-    (request.currentDepartment === "FINANCE" ||
-      request.assignedDepartment === "FINANCE");
+  if (!request) {
+    return (
+      <Card className="border-[#D1965B]/20 bg-white">
+        <CardContent className="p-10 text-center">
+          <FileText className="mx-auto h-12 w-12 text-[#D1965B]" />
+
+          <h1 className="mt-4 text-xl font-bold text-[#5C4033]">
+            Demande introuvable
+          </h1>
+
+          <p className="mt-2 text-sm text-[#5C4033]/70">
+            Cette demande n&apos;existe pas
+            ou vous n&apos;êtes pas autorisé
+            à la consulter.
+          </p>
+
+          <Button
+            asChild
+            className="mt-6 bg-[#D1965B] text-white hover:bg-[#B97D47]"
+          >
+            <Link href="/espace-membre/membre/demandes">
+              Retour aux demandes
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const canSubmit =
+    request.status === "draft";
+
+  const canConfirm =
+    request.status === "awaiting_member_confirmation";
+
+  const canUploadPayment =
+    request.status === "awaiting_payment_proof";
+
+  const paymentUnderReview =
+    request.status === "program_payment_review";
+
+  const processCompleted =
+    request.status === "completed";
+
+  const communicationMessage = [...history]
+    .sort(
+      (first, second) =>
+        new Date(second.performedAt).getTime() -
+        new Date(first.performedAt).getTime()
+    )
+    .find(
+      (item) =>
+        item.fromDepartment === "COMMUNICATION" &&
+        item.toDepartment === "MEMBER" &&
+        Boolean(item.comment?.trim())
+    );
+
+  const canAct = canSubmit || canConfirm;
+
+  const alreadySubmitted =
+    !canAct;
 
   return (
-    <div className="space-y-6">
-      <Button variant="ghost" asChild>
-        <Link href="/espace-membre/finance">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour
-        </Link>
-      </Button>
-
-      <section className="overflow-hidden rounded-2xl bg-[#D1965B] p-6 text-white shadow-sm sm:p-8">
-        <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-white/75">
+            <Link
+              href="/espace-membre/membre/demandes"
+              className="inline-flex items-center gap-2 text-sm font-medium text-[#D1965B] hover:text-[#B97D47]"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour aux demandes
+            </Link>
+
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-bold text-[#5C4033] sm:text-3xl">
+                {request.eventName ||
+                  request.title ||
+                  "Demande d’espace"}
+              </h1>
+
+              <RequestStatusBadge
+                status={request.status as never}
+              />
+            </div>
+
+            <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-[#D1965B]">
               {request.reference}
             </p>
-
-            <h1 className="mt-1 text-3xl font-bold">
-              {request.eventName}
-            </h1>
           </div>
 
-          <FinanceStatusPill status={request.status} />
-        </div>
-      </section>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <Card className="overflow-hidden border-[#D1965B]/15 bg-white shadow-sm">
-            <div className="border-b border-[#D1965B]/12 px-6 py-5">
-              <h2 className="text-lg font-bold text-[#5C4033]">
-                Dossier à coter
-              </h2>
-              <p className="mt-1 text-sm text-[#5C4033]/55">
-                Consultez le dossier avant d&aposétablir la cotation.
-              </p>
-            </div>
-
-            <CardContent className="space-y-5">
-              <p className="whitespace-pre-wrap rounded-xl bg-[#F8F5EF] p-5 text-sm leading-7 text-[#5C4033]/75">
-                {request.description}
-              </p>
-
-            </CardContent>
-          </Card>
-
-          <RequestDocuments
-            documents={documents}
-            title="Documents transmis aux Finances"
-            emptyMessage="Les trois documents attendus sont absents."
-          />
-
-          <Card className="overflow-hidden border-[#D1965B]/15 bg-white shadow-sm">
-            <div className="border-b border-[#D1965B]/12 px-6 py-5">
-              <h2 className="text-lg font-bold text-[#5C4033]">
-                Historique du traitement
-              </h2>
-              <p className="mt-1 text-sm text-[#5C4033]/55">
-                Décisions et transmissions du dossier.
-              </p>
-            </div>
-
-            <CardContent className="space-y-4">
-              {history.map((entry) => (
-                <div
-                  key={entry.id}
-                    className="rounded-xl border border-[#D1965B]/10 bg-[#F8F5EF] p-4"
-                >
-                  <p className="font-semibold text-[#5C4033]">
-                    {entry.fromDepartment} →{" "}
-                    {entry.toDepartment}
-                  </p>
-
-                  <p className="mt-1 text-sm text-[#5C4033]/60">
-                    {entry.comment}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="h-fit overflow-hidden border-[#D1965B]/15 bg-white shadow-sm lg:sticky lg:top-6">
-          <div className="border-b border-[#D1965B]/12 bg-[#F8F5EF] px-6 py-5">
-            <h2 className="text-lg font-bold text-[#5C4033]">
-              Cotation financière
-            </h2>
-            <p className="mt-1 text-sm text-[#5C4033]/55">
-              Montant, commentaire et signature obligatoires.
-            </p>
-          </div>
-
-          <CardContent className="space-y-5">
-            {!canProcess ? (
-              <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
-                Cette demande n&apos;est plus assignée
-                aux Finances.
-              </p>
-            ) : (
-              <>
-                <div className="space-y-3 rounded-xl border border-[#D1965B]/20 bg-[#F8F5EF] p-4">
-                  <div>
-                    <p className="font-semibold text-[#5C4033]">
-                      Document de cotation *
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-[#5C4033]/60">
-                      Ajoutez la cotation qui deviendra le quatrième document du dossier.
-                    </p>
-                  </div>
-
-                  {financeQuote || quoteUploaded ? (
-                    <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                      <p className="flex items-center gap-2 text-sm font-semibold text-green-800">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Cotation ajoutée
-                      </p>
-                      <p className="mt-1 break-words text-xs text-green-700">
-                        {financeQuote?.name || "Document de cotation enregistré"}
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <label
-                        htmlFor="financeQuoteFile"
-                        className="flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed border-[#D1965B]/30 bg-white p-5 text-center hover:border-[#D1965B]"
-                      >
-                        <Upload className="h-6 w-6 text-[#D1965B]" />
-                        <p className="mt-2 break-all text-sm font-medium text-[#5C4033]">
-                          {quoteFile ? quoteFile.name : "Choisir la cotation"}
-                        </p>
-                        <p className="mt-1 text-xs text-[#5C4033]/50">
-                          PDF, DOC ou DOCX — maximum 10 Mo
-                        </p>
-                        <input
-                          id="financeQuoteFile"
-                          type="file"
-                          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                          onChange={handleQuoteFileChange}
-                          disabled={uploadingQuote}
-                          className="sr-only"
-                        />
-                      </label>
-
-                      <Button
-                        type="button"
-                        onClick={() => void handleUploadQuote()}
-                        disabled={!quoteFile || uploadingQuote}
-                        className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
-                      >
-                        {uploadingQuote ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Upload className="mr-2 h-4 w-4" />
-                        )}
-                        {uploadingQuote ? "Ajout en cours..." : "Ajouter la cotation"}
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="amount">
-                    Montant de la cotation en USD *
-                  </Label>
-
-                  <div className="relative">
-                    <BadgeDollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
-                    <Input
-                      id="amount"
-                      type="number"
-                      min="1"
-                      step="0.01"
-                      value={amount}
-                      onChange={(event) =>
-                        setAmount(
-                          event.target.value
-                        )
-                      }
-                      className="h-11 border-[#D1965B]/25 pl-10 focus-visible:ring-[#D1965B]"
-                      placeholder="Exemple : 1500.00"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="comment">
-                    Commentaire
-                  </Label>
-
-                  <Textarea
-                    id="comment"
-                    rows={5}
-                    value={comment}
-                    onChange={(event) =>
-                      setComment(
-                        event.target.value
-                      )
-                    }
-                    placeholder="Détails de la cotation..."
-                    className="border-[#D1965B]/25 focus-visible:ring-[#D1965B]"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signature">
-                    Signature électronique *
-                  </Label>
-
-                  <Textarea
-                    id="signature"
-                    rows={3}
-                    value={signature}
-                    onChange={(event) =>
-                      setSignature(
-                        event.target.value
-                      )
-                    }
-                    placeholder="Votre nom complet"
-                    className="border-[#D1965B]/25 focus-visible:ring-[#D1965B]"
-                  />
-                </div>
-
+          {canAct && (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {canConfirm && (
                 <Button
                   type="button"
-                  className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
-                  disabled={processing !== null}
-                  onClick={handleValidate}
+                  variant="outline"
+                  onClick={() => {
+                    setRefusing(true);
+                    setSignatureModalOpen(true);
+                  }}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
                 >
-                  {processing === "validate" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                  )}
-
-                  Valider la cotation
-                  <Send className="ml-2 h-4 w-4" />
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="w-full"
-                  disabled={processing !== null}
-                  onClick={handleReject}
-                >
-                  {processing === "reject" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <XCircle className="mr-2 h-4 w-4" />
-                  )}
-
+                  <XCircle className="mr-2 h-4 w-4" />
                   Refuser
                 </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              )}
+
+              <Button
+                type="button"
+                onClick={() => {
+                  setRefusing(false);
+                  setSignatureModalOpen(true);
+                }}
+                className="bg-[#D1965B] text-white hover:bg-[#B97D47]"
+              >
+                <FileSignature className="mr-2 h-4 w-4" />
+                {canConfirm
+                  ? "Accepter les termes et conditions et signer"
+                  : "Signer et envoyer"}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {canSubmit && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start gap-3">
+              <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+
+              <div>
+                <p className="font-semibold text-amber-900">
+                  Demande non envoyée
+                </p>
+
+                <p className="mt-1 text-sm text-amber-800">
+                  Votre demande est enregistrée
+                  comme brouillon. Vous devez la
+                  signer électroniquement pour
+                  la transmettre au Service des
+                  Programmes.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {alreadySubmitted && (
+          <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-700" />
+
+              <div>
+                <p className="font-semibold text-green-900">
+                  Demande transmise
+                </p>
+
+                <p className="mt-1 text-sm text-green-800">
+                  Votre demande a été signée
+                  et transmise. Vous pouvez
+                  suivre son évolution depuis
+                  la page Mes demandes.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {communicationMessage?.comment && (
+          <section className="overflow-hidden rounded-2xl border border-amber-300 bg-white shadow-sm">
+            <div className="flex items-start gap-3 border-b border-amber-200 bg-amber-50 px-5 py-4 sm:px-6">
+              <div className="rounded-xl bg-amber-100 p-2.5">
+                <AlertTriangle className="h-6 w-6 text-amber-700" />
+              </div>
+
+              <div>
+                <p className="font-bold text-amber-950">
+                  Avertissement de Communication &amp; Marketing
+                </p>
+
+                <p className="mt-1 text-sm text-amber-800">
+                  Veuillez lire attentivement ce message avant de confirmer ou de refuser le dossier.
+                </p>
+              </div>
+            </div>
+
+            <div className="px-5 py-5 sm:px-6">
+              <p className="whitespace-pre-line text-sm leading-7 text-[#5C4033] sm:text-base">
+                {communicationMessage.comment}
+              </p>
+
+              <p className="mt-4 border-t border-[#D1965B]/15 pt-3 text-xs text-[#5C4033]/55">
+                Transmis par Communication &amp; Marketing le{" "}
+                {formatDateTime(communicationMessage.performedAt)}
+              </p>
+            </div>
+          </section>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="border-[#D1965B]/20 bg-white lg:col-span-2">
+            <CardContent className="space-y-7 p-6">
+              <div>
+                <h2 className="text-lg font-bold text-[#5C4033]">
+                  Informations de la demande
+                </h2>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl bg-[#F3EEE5]/70 p-4">
+                    <div className="flex items-center gap-2 text-sm text-[#5C4033]/60">
+                      <FileText className="h-4 w-4" />
+                      Activité
+                    </div>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {request.eventName ||
+                        request.title}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-[#F3EEE5]/70 p-4">
+                    <div className="flex items-center gap-2 text-sm text-[#5C4033]/60">
+                      <Calendar className="h-4 w-4" />
+                      Date souhaitée
+                    </div>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {formatDate(
+                        request.date ||
+                          request.desiredDate
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-[#F3EEE5]/70 p-4">
+                    <div className="flex items-center gap-2 text-sm text-[#5C4033]/60">
+                      <Clock className="h-4 w-4" />
+                      Date de création
+                    </div>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {formatDateTime(
+                        request.createdAt
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-[#F3EEE5]/70 p-4">
+                    <div className="flex items-center gap-2 text-sm text-[#5C4033]/60">
+                      <User className="h-4 w-4" />
+                      Service actuel
+                    </div>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {request.currentDepartment ||
+                        request.assignedDepartment ||
+                        "MEMBRE"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h2 className="text-lg font-bold text-[#5C4033]">
+                  Description
+                </h2>
+
+                <div className="mt-3 whitespace-pre-wrap rounded-xl border border-[#D1965B]/20 bg-[#F3EEE5]/40 p-4 text-sm leading-7 text-[#5C4033]/80">
+                  {request.description ||
+                    "Aucune description renseignée."}
+                </div>
+              </div>
+
+              {request.electronicSignature && (
+                <div>
+                  <h2 className="text-lg font-bold text-[#5C4033]">
+                    Signature électronique
+                  </h2>
+
+                  <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-4">
+                    <p className="font-serif text-xl italic text-green-900">
+                      {
+                        request.electronicSignature
+                      }
+                    </p>
+
+                    <p className="mt-2 text-xs text-green-700">
+                      Demande signée
+                      électroniquement
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="space-y-6">
+            <Card className="border-[#D1965B]/20 bg-white">
+              <CardContent className="p-6">
+                <h2 className="font-bold text-[#5C4033]">
+                  Étape actuelle
+                </h2>
+
+                <p className="mt-3 text-sm leading-6 text-[#5C4033]/70">
+                  {request.currentStep ||
+                    (canAct
+                      ? "En attente de votre signature électronique"
+                      : "Demande en cours de traitement")}
+                </p>
+
+                {request.submittedAt && (
+                  <p className="mt-3 text-xs text-[#5C4033]/60">
+                    Envoyée le{" "}
+                    {formatDateTime(
+                      request.submittedAt
+                    )}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <RequestDocuments
+          documents={documents}
+          title="Documents de la demande"
+          emptyMessage="Aucun document n'est disponible."
+        />
+
+        {canUploadPayment && (
+          <Card className="overflow-hidden border-[#D1965B]/20 bg-white shadow-sm">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="max-w-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl bg-[#D1965B]/10 p-3">
+                      <ReceiptText className="h-6 w-6 text-[#D1965B]" />
+                    </div>
+
+                    <div>
+                      <h2 className="text-lg font-bold text-[#5C4033]">
+                        Déposer la preuve de paiement
+                      </h2>
+                      <p className="mt-1 text-sm text-[#5C4033]/65">
+                        Après avoir payé la cotation, ajoutez uniquement le reçu ou la preuve de paiement.
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                    Le Programme vérifiera votre paiement avant de confirmer définitivement la date souhaitée.
+                  </p>
+                </div>
+
+                <div className="w-full max-w-md space-y-3">
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      toast.info(
+                        "Paiement par carte bientôt disponible",
+                        {
+                          description:
+                            "L’intégration du paiement Visa sera activée prochainement.",
+                        }
+                      )
+                    }
+                    className="h-12 w-full bg-[#D1965B] text-base font-semibold text-white hover:bg-[#B97D47]"
+                  >
+                    <CreditCard className="mr-2 h-5 w-5" />
+                    Payer par carte Visa
+                  </Button>
+
+                  <div className="flex items-center gap-3 py-1">
+                    <span className="h-px flex-1 bg-[#D1965B]/20" />
+                    <span className="text-xs font-medium uppercase tracking-wide text-[#5C4033]/45">
+                      Après le paiement
+                    </span>
+                    <span className="h-px flex-1 bg-[#D1965B]/20" />
+                  </div>
+
+                  <Label
+                    htmlFor="paymentProof"
+                    className="text-[#5C4033]"
+                  >
+                    Preuve de paiement (PDF, DOC ou DOCX) *
+                  </Label>
+
+                  <Input
+                    id="paymentProof"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    disabled={uploadingPayment}
+                    onChange={(event) =>
+                      setPaymentProof(
+                        event.target.files?.[0] || null
+                      )
+                    }
+                    className="border-[#D1965B]/30 file:mr-3 file:border-0 file:bg-transparent file:font-medium file:text-[#D1965B]"
+                  />
+
+                  {paymentProof && (
+                    <p className="truncate text-xs text-[#5C4033]/60">
+                      Fichier sélectionné : {paymentProof.name}
+                    </p>
+                  )}
+
+                  <Button
+                    type="button"
+                    onClick={() => void handlePaymentProofUpload()}
+                    disabled={!paymentProof || uploadingPayment}
+                    className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
+                  >
+                    {uploadingPayment ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="mr-2 h-4 w-4" />
+                    )}
+                    {uploadingPayment
+                      ? "Envoi en cours..."
+                      : "Envoyer la preuve au Programme"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {paymentUnderReview && (
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-blue-900">
+            <div className="flex items-start gap-3">
+              <Clock className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-bold">Paiement en cours de vérification</p>
+                <p className="mt-1 text-sm leading-6">
+                  Votre preuve de paiement a été transmise au Service des Programmes. Vous recevrez la confirmation définitive de votre date ici.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {processCompleted && (
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-6 text-green-900 shadow-sm">
+            <div className="flex items-start gap-4">
+              <CheckCircle2 className="mt-0.5 h-7 w-7 shrink-0 text-green-600" />
+              <div>
+                <h2 className="text-lg font-bold">
+                  Paiement et date confirmés
+                </h2>
+                <p className="mt-2 leading-7">
+                  Votre paiement a été vérifié. Votre occupation est définitivement confirmée pour le {formatDate(request.desiredDate || request.date)}.
+                </p>
+                <p className="mt-2 text-sm font-medium">
+                  Le processus de traitement de cette demande est terminé.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {canAct && (
+          <Card className="border-[#D1965B]/20 bg-[#D1965B] text-white">
+            <CardContent className="flex flex-col justify-between gap-5 p-6 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="text-lg font-bold">
+                  {canConfirm
+                    ? "Confirmer les documents reçus ?"
+                    : "Prêt à envoyer votre demande ?"}
+                </h2>
+
+                <p className="mt-1 text-sm text-white/80">
+                  {canConfirm
+                    ? "Lisez le formulaire initial et l'avis artistique, puis donnez votre décision."
+                    : "Vérifiez les informations, puis signez électroniquement votre dossier."}
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                onClick={() =>
+                  {
+                    setRefusing(false);
+                    setSignatureModalOpen(true);
+                  }
+                }
+                className="bg-white text-[#5C4033] hover:bg-[#F3EEE5]"
+              >
+                <FileSignature className="mr-2 h-4 w-4" />
+                {canConfirm
+                  ? "Accepter les termes et conditions et signer"
+                  : "Signer et envoyer"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
-    </div>
+
+      {signatureModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="signature-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            onClick={
+              closeSignatureModal
+            }
+            aria-label="Fermer la fenêtre"
+          />
+
+          <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-start justify-between border-b border-[#D1965B]/20 bg-[#F3EEE5] p-5 sm:p-6">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-[#D1965B]/15 p-3">
+                  <FileSignature className="h-6 w-6 text-[#D1965B]" />
+                </div>
+
+                <div>
+                  <h2
+                    id="signature-title"
+                    className="text-xl font-bold text-[#5C4033]"
+                  >
+                    {refusing
+                      ? "Refuser les documents"
+                      : "Signature électronique"}
+                  </h2>
+
+                  <p className="mt-1 text-sm text-[#5C4033]/70">
+                    {refusing
+                      ? "Expliquez votre refus et signez votre décision."
+                      : canConfirm
+                        ? "Confirmez les documents avant leur retour au Service Communication."
+                        : "Signez la demande avant sa transmission au Service des Programmes."}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={
+                  closeSignatureModal
+                }
+                disabled={submitting}
+                className="rounded-lg p-2 text-[#5C4033] transition hover:bg-white disabled:opacity-50"
+                aria-label="Fermer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-5 p-5 sm:p-6">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                En signant cette demande,
+                vous certifiez sur
+                l&apos;honneur que les
+                informations et le document
+                transmis sont exacts. Cette
+                signature constitue votre
+                engagement électronique.
+              </div>
+
+              {canConfirm && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="memberDecisionComment"
+                    className="text-[#5C4033]"
+                  >
+                    {refusing
+                      ? "Motif du refus *"
+                      : "Commentaire"}
+                  </Label>
+
+                  <textarea
+                    id="memberDecisionComment"
+                    value={decisionComment}
+                    onChange={(event) =>
+                      setDecisionComment(event.target.value)
+                    }
+                    rows={4}
+                    disabled={submitting}
+                    placeholder={
+                      refusing
+                        ? "Expliquez pourquoi vous refusez les documents..."
+                        : "Ajoutez une observation si nécessaire..."
+                    }
+                    className="w-full resize-none rounded-xl border border-[#D1965B]/30 bg-white px-3 py-3 text-sm text-[#5C4033] outline-none focus:border-[#D1965B] focus:ring-2 focus:ring-[#D1965B]/10"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="electronicSignature"
+                  className="text-[#5C4033]"
+                >
+                  Votre nom complet *
+                </Label>
+
+                <Input
+                  id="electronicSignature"
+                  value={signature}
+                  onChange={(event) =>
+                    setSignature(
+                      event.target.value
+                    )
+                  }
+                  placeholder="Saisissez votre nom complet"
+                  disabled={submitting}
+                  autoComplete="name"
+                  className="border-[#D1965B]/30 focus-visible:ring-[#D1965B]"
+                />
+
+                <div className="min-h-20 rounded-xl border border-dashed border-[#D1965B]/40 bg-[#F3EEE5]/50 p-4">
+                  <p className="font-serif text-2xl italic text-[#5C4033]">
+                    {signature.trim() ||
+                      "Votre signature apparaîtra ici"}
+                  </p>
+                </div>
+              </div>
+
+              {!refusing && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#D1965B]/20 p-4">
+                <input
+                  type="checkbox"
+                  checked={confirmed}
+                  onChange={(event) =>
+                    setConfirmed(
+                      event.target.checked
+                    )
+                  }
+                  disabled={submitting}
+                  className="mt-1 h-4 w-4 accent-[#D1965B]"
+                />
+
+                <span className="text-sm leading-6 text-[#5C4033]/80">
+                  J&apos;ai vérifié toutes les
+                  informations, j&apos;accepte les
+                  termes et conditions et
+                  j&apos;autorise l&apos;utilisation de
+                  mon nom comme signature
+                  électronique.
+                </span>
+              </label>
+              )}
+
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={
+                    closeSignatureModal
+                  }
+                  disabled={submitting}
+                  className="border-[#D1965B]/40 text-[#5C4033]"
+                >
+                  Annuler
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={() =>
+                    void handleSubmitRequest()
+                  }
+                  disabled={
+                    submitting ||
+                    signature.trim()
+                      .length < 3 ||
+                    (!refusing && !confirmed) ||
+                    (refusing &&
+                      decisionComment.trim().length < 5)
+                  }
+                  className={
+                    refusing
+                      ? "bg-red-600 text-white hover:bg-red-700"
+                      : "bg-[#D1965B] text-white hover:bg-[#B97D47]"
+                  }
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Envoi...
+                    </>
+                  ) : (
+                    <>
+                      {refusing ? (
+                        <XCircle className="mr-2 h-4 w-4" />
+                      ) : (
+                        <Send className="mr-2 h-4 w-4" />
+                      )}
+                      {refusing
+                        ? "Signer et refuser"
+                        : canConfirm
+                          ? "Accepter les termes et conditions et signer"
+                          : "Signer et envoyer"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
