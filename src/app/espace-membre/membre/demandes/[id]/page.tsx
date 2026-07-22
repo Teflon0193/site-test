@@ -14,9 +14,11 @@ import { isAxiosError } from "axios";
 import {
   AlertTriangle,
   ArrowLeft,
+  Banknote,
   Calendar,
   CheckCircle2,
   Clock,
+  CreditCard,
   FileSignature,
   FileText,
   Loader2,
@@ -96,6 +98,19 @@ function formatDateTime(
   });
 }
 
+function formatAmount(value?: number | null) {
+  if (value === null || value === undefined) {
+    return "Montant indiqué dans la cotation";
+  }
+
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value));
+}
+
 function getErrorMessage(
   error: unknown,
   fallback: string
@@ -167,6 +182,10 @@ export default function MemberRequestDetailPage() {
 
   const [uploadingPayment, setUploadingPayment] =
     useState(false);
+
+  const [paymentOption, setPaymentOption] = useState<
+    "online" | "receipt" | null
+  >(null);
 
   const loadRequest =
     useCallback(async () => {
@@ -467,6 +486,36 @@ export default function MemberRequestDetailPage() {
   const processCompleted =
     request.status === "completed";
 
+  const hasFinanceQuote =
+    request.paymentAmount !== null &&
+      request.paymentAmount !== undefined
+      ? true
+      : documents.some((document) => {
+          const compatibleDocument = document as
+            SpaceRequestDocument & {
+              documentType?: string;
+              document_type?: string;
+            };
+
+          const documentType = String(
+            compatibleDocument.type ||
+              compatibleDocument.documentType ||
+              compatibleDocument.document_type ||
+              ""
+          );
+
+          return documentType === "FINANCE_QUOTE";
+        });
+
+  const canChoosePayment =
+    canUploadPayment ||
+    (hasFinanceQuote &&
+      (request.currentDepartment === "MEMBER" ||
+        request.assignedDepartment === "MEMBER") &&
+      request.status !== "rejected" &&
+      !paymentUnderReview &&
+      !processCompleted);
+
   const communicationMessage = [...history]
     .sort(
       (first, second) =>
@@ -505,9 +554,19 @@ export default function MemberRequestDetailPage() {
                   "Demande d’espace"}
               </h1>
 
-              <RequestStatusBadge
-                status={request.status as never}
-              />
+              {request.status === "awaiting_payment_proof" ? (
+                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
+                  En attente de la preuve de paiement
+                </span>
+              ) : request.status === "program_payment_review" ? (
+                <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                  Paiement en cours de vérification par le Service des Programmes
+                </span>
+              ) : (
+                <RequestStatusBadge
+                  status={request.status as never}
+                />
+              )}
             </div>
 
             <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-[#D1965B]">
@@ -753,32 +812,110 @@ export default function MemberRequestDetailPage() {
           emptyMessage="Aucun document n'est disponible."
         />
 
-        {canUploadPayment && (
+        {canChoosePayment && (
           <Card className="overflow-hidden border-[#D1965B]/20 bg-white shadow-sm">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div className="max-w-2xl">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-[#D1965B]/10 p-3">
-                      <ReceiptText className="h-6 w-6 text-[#D1965B]" />
-                    </div>
-
-                    <div>
-                      <h2 className="text-lg font-bold text-[#5C4033]">
-                        Déposer la preuve de paiement
-                      </h2>
-                      <p className="mt-1 text-sm text-[#5C4033]/65">
-                        Après avoir payé la cotation, ajoutez uniquement le reçu ou la preuve de paiement.
-                      </p>
-                    </div>
-                  </div>
-
-                  <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                    Le Programme vérifiera votre paiement avant de confirmer définitivement la date souhaitée.
-                  </p>
+            <div className="border-b border-[#D1965B]/15 bg-[#F8F5EF] px-6 py-5 sm:px-8">
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-[#D1965B]/10 p-3">
+                  <ReceiptText className="h-6 w-6 text-[#D1965B]" />
                 </div>
 
-                <div className="w-full max-w-md space-y-3">
+                <div>
+                  <h2 className="text-lg font-bold text-[#5C4033]">
+                    Régler la cotation
+                  </h2>
+                  <p className="mt-1 text-sm text-[#5C4033]/65">
+                    Choisissez votre méthode de paiement.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <CardContent className="space-y-6 p-6 sm:p-8">
+              <div className="rounded-2xl border border-[#D1965B]/20 bg-[#D1965B]/5 p-5 text-center">
+                <p className="text-sm font-medium text-[#5C4033]/60">
+                  Montant à payer
+                </p>
+                <p className="mt-1 text-3xl font-bold text-[#5C4033]">
+                  {formatAmount(request.paymentAmount)}
+                </p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentOption("online")}
+                  className={`rounded-2xl border p-5 text-left transition ${
+                    paymentOption === "online"
+                      ? "border-[#D1965B] bg-[#D1965B]/10 ring-2 ring-[#D1965B]/15"
+                      : "border-[#D1965B]/20 bg-white hover:border-[#D1965B]/50"
+                  }`}
+                >
+                  <CreditCard className="h-7 w-7 text-[#D1965B]" />
+                  <p className="mt-3 font-bold text-[#5C4033]">
+                    Payer sur la plateforme
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#5C4033]/60">
+                    Payer en ligne avec une carte bancaire Visa.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentOption("receipt")}
+                  className={`rounded-2xl border p-5 text-left transition ${
+                    paymentOption === "receipt"
+                      ? "border-[#D1965B] bg-[#D1965B]/10 ring-2 ring-[#D1965B]/15"
+                      : "border-[#D1965B]/20 bg-white hover:border-[#D1965B]/50"
+                  }`}
+                >
+                  <Banknote className="h-7 w-7 text-[#D1965B]" />
+                  <p className="mt-3 font-bold text-[#5C4033]">
+                    J&apos;ai payé autrement
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#5C4033]/60">
+                    Payer hors plateforme, puis déposer le reçu de paiement.
+                  </p>
+                </button>
+              </div>
+
+              {paymentOption === "online" && (
+                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="mt-0.5 h-6 w-6 shrink-0 text-blue-700" />
+                    <div>
+                      <p className="font-bold text-blue-950">
+                        Paiement par carte Visa
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-blue-800">
+                        Cette interface est prête pour la future intégration du paiement bancaire.
+                      </p>
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          toast.info("Paiement en ligne bientôt disponible")
+                        }
+                        className="mt-4 bg-[#D1965B] text-white hover:bg-[#B97D47]"
+                      >
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Continuer vers le paiement
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {paymentOption === "receipt" && (
+                <div className="mx-auto w-full max-w-xl space-y-4 rounded-2xl border border-[#D1965B]/20 bg-[#F8F5EF] p-5">
+                  <div>
+                    <h3 className="font-bold text-[#5C4033]">
+                      Déposer le reçu de paiement
+                    </h3>
+                    <p className="mt-1 text-sm text-[#5C4033]/60">
+                      Sélectionnez le reçu obtenu après votre paiement.
+                    </p>
+                  </div>
+
                   <Label
                     htmlFor="paymentProof"
                     className="text-[#5C4033]"
@@ -821,7 +958,11 @@ export default function MemberRequestDetailPage() {
                       : "Envoyer la preuve au Programme"}
                   </Button>
                 </div>
-              </div>
+              )}
+
+              <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                Le Service des Programmes vérifiera le paiement avant de confirmer définitivement la date souhaitée.
+              </p>
             </CardContent>
           </Card>
         )}

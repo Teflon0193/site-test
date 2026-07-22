@@ -36,6 +36,13 @@ const API_ORIGIN =
     ""
   ) || "http://localhost:5000";
 
+function normalizeStatus(status?: string | null) {
+  return String(status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
 function formatDate(
   value?: string | null
 ): string {
@@ -316,11 +323,17 @@ export default function ProgrammeRequestsPage() {
                           </td>
 
                           <td className="px-5 py-4">
-                            <RequestStatusBadge
-                              status={
-                                request.status
-                              }
-                            />
+                            {normalizeStatus(request.status) ===
+                            "program_payment_review" ? (
+                              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                                <span className="h-2 w-2 rounded-full bg-current" />
+                                Paiement en cours de vérification par le Service des Programmes
+                              </span>
+                            ) : (
+                              <RequestStatusBadge
+                                status={request.status}
+                              />
+                            )}
                           </td>
 
                           <td className="px-5 py-4">

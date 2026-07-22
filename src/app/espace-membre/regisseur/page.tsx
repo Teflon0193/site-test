@@ -11,7 +11,6 @@ import {
   Calendar,
   ClipboardCheck,
   Clock,
-  Download,
   Eye,
   FileText,
   RefreshCw,
@@ -31,12 +30,6 @@ import {
   type SpaceRequest,
 } from "@/services/spaceRequestService";
 
-const API_ORIGIN =
-  process.env.NEXT_PUBLIC_API_URL?.replace(
-    /\/api\/?$/,
-    ""
-  ) || "http://localhost:5000";
-
 function formatDate(
   value?: string | null
 ): string {
@@ -55,23 +48,6 @@ function formatDate(
     month: "long",
     year: "numeric",
   });
-}
-
-function getDocumentUrl(
-  value?: string | null
-): string | null {
-  if (!value) {
-    return null;
-  }
-
-  if (
-    value.startsWith("http://") ||
-    value.startsWith("https://")
-  ) {
-    return value;
-  }
-
-  return `${API_ORIGIN}${value}`;
 }
 
 export default function RegisseurDashboardPage() {
@@ -289,7 +265,7 @@ export default function RegisseurDashboardPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[950px]">
+              <table className="w-full min-w-[800px]">
                 <thead className="bg-muted/70">
                   <tr className="border-b">
                     <th className="px-5 py-4 text-left text-xs font-semibold uppercase">
@@ -308,10 +284,6 @@ export default function RegisseurDashboardPage() {
                       Statut
                     </th>
 
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase">
-                      Document
-                    </th>
-
                     <th className="px-5 py-4 text-right text-xs font-semibold uppercase">
                       Action
                     </th>
@@ -320,11 +292,6 @@ export default function RegisseurDashboardPage() {
 
                 <tbody>
                   {requests.map((request) => {
-                    const documentUrl =
-                      getDocumentUrl(
-                        request.document?.url
-                      );
-
                     return (
                       <tr
                         key={request.id}
@@ -376,31 +343,13 @@ export default function RegisseurDashboardPage() {
                           />
                         </td>
 
-                        <td className="px-5 py-4">
-                          {documentUrl ? (
-                            <a
-                              href={documentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                            >
-                              <Download className="h-4 w-4" />
-                              Télécharger
-                            </a>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">
-                              Aucun document
-                            </span>
-                          )}
-                        </td>
-
                         <td className="px-5 py-4 text-right">
                           <Button asChild size="sm">
                             <Link
                               href={`/espace-membre/regisseur/demandes/${request.id}`}
                             >
                               <Eye className="mr-2 h-4 w-4" />
-                              Examiner
+                              Voir
                             </Link>
                           </Button>
                         </td>

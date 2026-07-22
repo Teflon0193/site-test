@@ -108,7 +108,9 @@ export default function CommunicationDashboardPage() {
       pending: requests.filter(
         (request) =>
           request.status ===
-          "communication_review"
+            "communication_review" ||
+          request.status ===
+            "communication_review_after_confirmation"
       ).length,
 
       processed: requests.filter(
@@ -335,9 +337,16 @@ export default function CommunicationDashboardPage() {
                         </td>
 
                         <td className="px-5 py-4">
-                          <RequestStatusBadge
-                            status={request.status}
-                          />
+                          {request.status ===
+                          "communication_review_after_confirmation" ? (
+                            <span className="inline-flex rounded-full border border-pink-200 bg-pink-50 px-3 py-1.5 text-xs font-semibold text-pink-700">
+                              Réexamen par le service Communication après confirmation
+                            </span>
+                          ) : (
+                            <RequestStatusBadge
+                              status={request.status}
+                            />
+                          )}
                         </td>
 
                         <td className="px-5 py-4 text-right">

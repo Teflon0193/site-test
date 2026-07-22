@@ -44,10 +44,17 @@ const statusLabels: Record<string, string> = {
   program_review_after_finance:
     "Retour des Finances",
   program_payment_review:
-    "Vérification du paiement",
+    "Paiement en cours de vérification par le Service des Programmes",
   completed: "Terminée",
   rejected: "Rejetée",
 };
+
+function normalizeStatus(status?: string | null) {
+  return String(status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
 
 function assistantName(
   assistant?: ProgrammeAssistant
@@ -329,7 +336,9 @@ export default function ProgrammeDashboardPage() {
                           request.user?.email}
                       </p>
                       <span className="mt-2 inline-flex rounded-full bg-[#D1965B]/10 px-2.5 py-1 text-xs font-semibold text-[#B97D47]">
-                        {statusLabels[request.status] ||
+                        {statusLabels[
+                          normalizeStatus(request.status)
+                        ] ||
                           request.currentStep ||
                           request.status}
                       </span>

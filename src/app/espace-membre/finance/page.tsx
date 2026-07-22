@@ -71,6 +71,43 @@ function formatAmount(
   ).format(value);
 }
 
+function getQuotationAmount(
+  request: SpaceRequest
+): number | null {
+  const compatibleRequest = request as SpaceRequest & {
+    payment_amount?: number | string | null;
+    quotationAmount?: number | string | null;
+    quotation_amount?: number | string | null;
+  };
+
+  const rawAmount =
+    compatibleRequest.paymentAmount ??
+    compatibleRequest.payment_amount ??
+    compatibleRequest.quotationAmount ??
+    compatibleRequest.quotation_amount;
+
+  if (
+    rawAmount === null ||
+    rawAmount === undefined ||
+    rawAmount === ""
+  ) {
+    return null;
+  }
+
+  const normalizedAmount =
+    typeof rawAmount === "string"
+      ? Number(
+          rawAmount
+            .replace(/\s/g, "")
+            .replace(",", ".")
+        )
+      : Number(rawAmount);
+
+  return Number.isFinite(normalizedAmount)
+    ? normalizedAmount
+    : null;
+}
+
 function FinanceStatusPill({
   status,
 }: {
@@ -124,14 +161,36 @@ export default function FinanceDashboardPage() {
           setRefreshing(true);
         }
 
-        const data =
-          await spaceRequestService.getDepartmentRequests();
+        const [currentData, historyData] =
+          await Promise.all([
+            spaceRequestService.getDepartmentRequests(),
+            spaceRequestService
+              .getDepartmentHistory()
+              .catch(() => []),
+          ]);
 
-        setRequests(
-          Array.isArray(data)
-            ? data
-            : []
+        const currentRequests = Array.isArray(currentData)
+          ? currentData
+          : [];
+
+        const historyRequests = Array.isArray(historyData)
+          ? historyData
+          : [];
+
+        /*
+         * Une demande cotée quitte le département FINANCE.
+         * On fusionne donc les demandes actuelles et l'historique
+         * pour qu'elle reste comptabilisée dans le tableau de bord.
+         */
+        const requestsById = new Map<number, SpaceRequest>();
+
+        [...historyRequests, ...currentRequests].forEach(
+          (request) => {
+            requestsById.set(request.id, request);
+          }
         );
+
+        setRequests(Array.from(requestsById.values()));
       } catch (error) {
         console.error(
           "Finance dashboard error:",
@@ -164,24 +223,28 @@ export default function FinanceDashboardPage() {
         "finance_cotation"
     ).length;
 
-    const quotedRequests =
-      requests.filter(
-        (request) =>
-          request.paymentAmount !==
-            null &&
-          request.paymentAmount !==
-            undefined
-      );
+    const statusesAfterQuotation = new Set([
+      "program_review_after_finance",
+      "awaiting_payment_proof",
+      "program_payment_review",
+      "completed",
+    ]);
 
-    const totalAmount =
-      quotedRequests.reduce(
-        (total, request) =>
-          total +
-          Number(
-            request.paymentAmount || 0
-          ),
-        0
-      );
+    const quotedRequests = requests.filter(
+      (request) =>
+        getQuotationAmount(request) !== null ||
+        statusesAfterQuotation.has(request.status)
+    );
+
+    const paidRequests = quotedRequests.filter(
+      (request) => request.status === "completed"
+    );
+
+    const totalAmount = paidRequests.reduce(
+      (total, request) =>
+        total + (getQuotationAmount(request) || 0),
+      0
+    );
 
     return {
       total: requests.length,
@@ -278,7 +341,7 @@ export default function FinanceDashboardPage() {
           <CardContent className="flex items-center justify-between gap-3 p-5">
             <div className="min-w-0">
               <p className="text-sm text-[#5C4033]/60">
-                Total des cotations
+                Total des cotations payées
               </p>
 
               <p className="mt-1 truncate text-xl font-bold text-[#5C4033]">
@@ -385,14 +448,11 @@ export default function FinanceDashboardPage() {
                         )}
                       </p>
 
-                      {request.paymentAmount !==
-                        null &&
-                        request.paymentAmount !==
-                          undefined && (
+                      {getQuotationAmount(request) !== null && (
                           <p className="mt-2 inline-flex rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                             Cotation :{" "}
                             {formatAmount(
-                              request.paymentAmount
+                              getQuotationAmount(request)
                             )}
                           </p>
                         )}

@@ -41,6 +41,13 @@ const departmentLabels: Record<
   FINANCE: "Service des Finances",
 };
 
+function normalizeStatus(status?: string | null) {
+  return String(status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
 function formatDate(
   value?: string | null
 ) {
@@ -298,9 +305,23 @@ export default function MemberRequestsPage() {
                         <p className="text-xs font-bold uppercase tracking-wide text-[#D1965B]">
                           {request.reference}
                         </p>
-                        <RequestStatusBadge
-                          status={request.status as never}
-                        />
+                        {normalizeStatus(request.status) ===
+                        "awaiting_payment_proof" ? (
+                          <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
+                            <span className="h-2 w-2 rounded-full bg-current" />
+                            En attente de la preuve de paiement
+                          </span>
+                        ) : normalizeStatus(request.status) ===
+                          "program_payment_review" ? (
+                          <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                            <span className="h-2 w-2 rounded-full bg-current" />
+                            Paiement en cours de vérification par le Service des Programmes
+                          </span>
+                        ) : (
+                          <RequestStatusBadge
+                            status={request.status as never}
+                          />
+                        )}
                       </div>
 
                       <h3 className="mt-2 truncate text-lg font-bold">
