@@ -3,7 +3,10 @@ import api from "@/lib/api";
 export type UserRole =
   | "MEMBER"
   | "ADMIN"
+  | "SUPERVISEUR"
   | "PROGRAMME"
+  | "PROGRAMME_SUPERVISEUR"
+  | "PROGRAMME_ASSISTANT"
   | "REGISSEUR_GENERAL"
   | "DIRECTION_ARTISTIQUE"
   | "COMMUNICATION"
@@ -40,6 +43,7 @@ export interface LoginResponse {
 export interface RegisterResponse {
   success: boolean;
   message: string;
+  emailSent?: boolean;
 }
 
 export interface MessageResponse {
@@ -53,7 +57,9 @@ export interface VerifyEmailResponse
 }
 
 function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+  return String(email || "")
+    .trim()
+    .toLowerCase();
 }
 
 export async function login(
@@ -94,11 +100,14 @@ export async function login(
 export async function register(
   data: RegisterData
 ): Promise<RegisterResponse> {
+  const normalizedEmail =
+    normalizeEmail(data.email);
+
   const response =
     await api.post<RegisterResponse>(
       "/auth/register",
       {
-        email: normalizeEmail(data.email),
+        email: normalizedEmail,
         password: data.password,
         first_name:
           data.first_name.trim(),
@@ -124,7 +133,7 @@ export async function forgotPassword(
 ): Promise<MessageResponse> {
   const response =
     await api.post<MessageResponse>(
-      "/auth/forgot",
+      "/auth/forgot-password",
       {
         email: normalizeEmail(email),
       }
@@ -158,10 +167,10 @@ export async function resetPassword(
 
   const response =
     await api.post<MessageResponse>(
-      "/auth/reset",
+      "/auth/reset-password",
       {
         token: token.trim(),
-        password,
+        new_password: password,
       }
     );
 

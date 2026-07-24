@@ -36,6 +36,7 @@ import {
 } from "../../components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getCcapacSpace } from "@/constants/spaces";
 import RequestDocuments from "@/components/space-requests/RequestDocuments";
 import {
   spaceRequestService,
@@ -282,6 +283,40 @@ function formatDateTime(
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function getDescriptionWithSpace(
+  request: SpaceRequest
+) {
+  const description = String(
+    request.description || ""
+  ).trim();
+
+  const alreadyContainsSpace =
+    /^(espace demandé|espace souhaité|espace sollicité)\s*:/im.test(
+      description
+    );
+
+  if (alreadyContainsSpace) {
+    return description;
+  }
+
+  const requestedSpace =
+    request.spaceId != null
+      ? getCcapacSpace(
+          Number(request.spaceId)
+        )
+      : undefined;
+
+  const spaceLabel = requestedSpace
+    ? requestedSpace.name
+    : "Non renseigné";
+
+  return [
+    description ||
+      "Aucune description.",
+    `Espace demandé : ${spaceLabel}`,
+  ].join("\n");
 }
 
 function getNextDestination(
@@ -900,8 +935,9 @@ export default function WorkflowRequestDetail({
                 </h3>
 
                 <div className="mt-3 whitespace-pre-wrap rounded-xl bg-[#F8F5EF] p-5 text-sm leading-7 text-[#5C4033]/75">
-                  {request.description ||
-                    "Aucune description."}
+                  {getDescriptionWithSpace(
+                    request
+                  )}
                 </div>
               </div>
             </CardContent>

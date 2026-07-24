@@ -28,7 +28,32 @@ import SpaceSelect from "@/components/space-requests/SpaceSelect";
 import { getCcapacSpace } from "@/constants/spaces";
 import {
   spaceRequestService,
+  type BookedCalendarEvent,
 } from "@/services/spaceRequestService";
+
+type CompatibleCalendarEvent = BookedCalendarEvent & {
+  space_id?: number | string | null;
+  space?: number | string | { id?: number | string | null } | null;
+};
+
+function getBookedSpaceId(
+  event: BookedCalendarEvent
+): number | null {
+  const compatibleEvent = event as CompatibleCalendarEvent;
+  const rawSpace =
+    compatibleEvent.spaceId ??
+    compatibleEvent.space_id ??
+    compatibleEvent.space;
+  const rawId =
+    typeof rawSpace === "object" && rawSpace !== null
+      ? rawSpace.id
+      : rawSpace;
+  const normalizedId = Number(rawId);
+
+  return Number.isInteger(normalizedId) && normalizedId > 0
+    ? normalizedId
+    : null;
+}
 
 type FormValues = {
   fullName: string;
@@ -336,6 +361,11 @@ export default function NewRequestPage() {
 
   const [values, setValues] = useState<FormValues>(initialValues);
   const [space, setSpace] = useState(0);
+  const [bookedEvents, setBookedEvents] = useState<
+    BookedCalendarEvent[]
+  >([]);
+  const [loadingAvailability, setLoadingAvailability] =
+    useState(true);
   const [selectedObjectives, setSelectedObjectives] = useState<string[]>([]);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [selectedOperationalRoles, setSelectedOperationalRoles] = useState<string[]>([]);
@@ -353,6 +383,68 @@ export default function NewRequestPage() {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadAvailability = async () => {
+      try {
+        setLoadingAvailability(true);
+        const data =
+          await spaceRequestService.getBookedCalendarEvents();
+
+        if (active) {
+          setBookedEvents(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("Availability loading error:", error);
+
+        if (active) {
+          setBookedEvents([]);
+          toast.error(
+            "Impossible de vérifier les espaces déjà réservés."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoadingAvailability(false);
+        }
+      }
+    };
+
+    void loadAvailability();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const unavailableSpaceIds = useMemo(() => {
+    if (!values.desiredDate) {
+      return [];
+    }
+
+    return Array.from(
+      new Set(
+        bookedEvents
+          .filter(
+            (event) =>
+              event.date?.slice(0, 10) === values.desiredDate
+          )
+          .map(getBookedSpaceId)
+          .filter((spaceId): spaceId is number => spaceId !== null)
+      )
+    );
+  }, [bookedEvents, values.desiredDate]);
+
+  useEffect(() => {
+    if (space && unavailableSpaceIds.includes(space)) {
+      setSpace(0);
+      toast.warning(
+        "L’espace sélectionné est déjà réservé pour cette date. Choisissez un autre espace."
+      );
+    }
+  }, [space, unavailableSpaceIds]);
 
   const setField = <K extends keyof FormValues>(
     field: K,
@@ -381,6 +473,9 @@ export default function NewRequestPage() {
     if (!values.eventDescription.trim()) return "La description de l’activité est obligatoire.";
     if (!values.desiredDate) return "La date souhaitée est obligatoire.";
     if (!space) return "Sélectionnez l’espace souhaité.";
+    if (unavailableSpaceIds.includes(space)) {
+      return "Cet espace est déjà réservé pour la date sélectionnée.";
+    }
     if (!values.participants.trim()) return "Le nombre de participants est obligatoire.";
     if (!authorizedRepresentative) return "Vous devez certifier être habilité à introduire la demande.";
     if (!acceptedDeclarations) return "Vous devez accepter les déclarations et engagements.";
@@ -719,7 +814,26 @@ export default function NewRequestPage() {
 
         <Section number="V" title="Salle / espace sollicité et public attendu">
           <div className="grid gap-5 md:grid-cols-2">
-            <SpaceSelect value={space} onChange={setSpace} />
+            <div>
+              <SpaceSelect
+                value={space}
+                onChange={setSpace}
+                disabled={!values.desiredDate || loadingAvailability}
+                unavailableSpaceIds={unavailableSpaceIds}
+              />
+
+              {!values.desiredDate && (
+                <p className="mt-2 text-xs text-[#5C4033]/60">
+                  Sélectionnez d’abord la date souhaitée pour afficher les espaces disponibles.
+                </p>
+              )}
+
+              {loadingAvailability && (
+                <p className="mt-2 text-xs font-medium text-[#D1965B]">
+                  Vérification des disponibilités…
+                </p>
+              )}
+            </div>
             <Field label="Nombre estimé de participants" type="number" value={values.participants} onChange={(value) => setField("participants", value)} required />
             <div className="md:col-span-2">
               <TextAreaField label="Profil du public" value={values.audienceProfile} onChange={(value) => setField("audienceProfile", value)} rows={3} />

@@ -32,6 +32,7 @@ import {
 } from "../../../../components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { getCcapacSpace } from "@/constants/spaces";
 import RequestDocuments from "@/components/space-requests/RequestDocuments";
 import {
   spaceRequestService,
@@ -71,6 +72,40 @@ function formatDate(
   }
 
   return date.toLocaleString("fr-FR");
+}
+
+function getDescriptionWithSpace(
+  request: SpaceRequest
+) {
+  const description = String(
+    request.description || ""
+  ).trim();
+
+  const alreadyContainsSpace =
+    /^(espace demandé|espace souhaité|espace sollicité|espace réservé)\s*:/im.test(
+      description
+    );
+
+  if (alreadyContainsSpace) {
+    return description;
+  }
+
+  const requestedSpace =
+    request.spaceId != null
+      ? getCcapacSpace(
+          Number(request.spaceId)
+        )
+      : undefined;
+
+  const spaceLabel = requestedSpace
+    ? requestedSpace.name
+    : "Non renseigné";
+
+  return [
+    description ||
+      "Aucune description.",
+    `Espace demandé : ${spaceLabel}`,
+  ].join("\n");
 }
 
 export default function LegalRequestPage() {
@@ -418,8 +453,9 @@ export default function LegalRequestPage() {
               </div>
 
               <p className="whitespace-pre-wrap rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">
-                {request.description ||
-                  "Aucune description."}
+                {getDescriptionWithSpace(
+                  request
+                )}
               </p>
 
             </CardContent>

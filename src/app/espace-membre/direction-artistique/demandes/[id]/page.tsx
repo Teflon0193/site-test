@@ -25,7 +25,9 @@ import {
   Mail,
   Palette,
   Phone,
+  RefreshCw,
   Send,
+  Sparkles,
   Upload,
   User,
   X,
@@ -40,6 +42,9 @@ import {
 } from "../../../../components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  getCcapacSpace,
+} from "@/constants/spaces";
 import {
   spaceRequestService,
   type SpaceRequest,
@@ -200,6 +205,40 @@ function formatDateTime(
   });
 }
 
+function getDescriptionWithSpace(
+  request: SpaceRequest
+) {
+  const description = String(
+    request.description || ""
+  ).trim();
+
+  const alreadyContainsSpace =
+    /^(espace demandé|espace souhaité|espace sollicité)\s*:/im.test(
+      description
+    );
+
+  if (alreadyContainsSpace) {
+    return description;
+  }
+
+  const requestedSpace =
+    request.spaceId != null
+      ? getCcapacSpace(
+          Number(request.spaceId)
+        )
+      : undefined;
+
+  const spaceLabel = requestedSpace
+    ? requestedSpace.name
+    : "Non renseigné";
+
+  return [
+    description ||
+      "Aucune description renseignée.",
+    `Espace demandé : ${spaceLabel}`,
+  ].join("\n");
+}
+
 function StatusPill({
   status,
 }: {
@@ -248,6 +287,39 @@ export default function ArtisticRequestDetailPage() {
 
   const [uploadingOpinion, setUploadingOpinion] =
     useState(false);
+
+  const [
+    generatingOrientation,
+    setGeneratingOrientation,
+  ] = useState(false);
+
+  const [
+    orientationRecommendations,
+    setOrientationRecommendations,
+  ] = useState(
+    "Le projet présente une intention artistique cohérente avec la mission du CCAPAC - Grand Tambour. Il favorise l’accès du public à une proposition culturelle lisible, structurée et respectueuse des expressions artistiques d’Afrique centrale."
+  );
+
+  const [
+    artisticDirectorName,
+    setArtisticDirectorName,
+  ] = useState("");
+
+  const [
+    orientationDecision,
+    setOrientationDecision,
+  ] = useState<
+    | "FAVORABLE"
+    | "FAVORABLE_WITH_CONDITIONS"
+    | "UNFAVORABLE"
+  >("FAVORABLE");
+
+  const [
+    orientationConditions,
+    setOrientationConditions,
+  ] = useState(
+    "Respecter la capacité d’accueil, les horaires autorisés, les consignes de sécurité, la charte visuelle du CCAPAC et soumettre les supports de communication avant leur diffusion."
+  );
 
   const [loading, setLoading] =
     useState(true);
@@ -401,6 +473,513 @@ export default function ArtisticRequestDetailPage() {
     }
   };
 
+  const handleGenerateOrientation =
+    async () => {
+      if (
+        !request ||
+        !canProcess ||
+        generatingOrientation ||
+        uploadingOpinion
+      ) {
+        return;
+      }
+
+      const recommendations =
+        orientationRecommendations.trim();
+
+      const directorName =
+        artisticDirectorName.trim();
+
+      if (directorName.length < 3) {
+        toast.error(
+          "Saisissez le nom complet du Directeur artistique."
+        );
+        return;
+      }
+
+      if (
+        recommendations.length < 10
+      ) {
+        toast.error(
+          "Ajoutez des orientations artistiques avant de générer le document."
+        );
+        return;
+      }
+
+      const decisionLabel =
+        orientationDecision ===
+        "FAVORABLE"
+          ? "Favorable"
+          : orientationDecision ===
+              "FAVORABLE_WITH_CONDITIONS"
+            ? "Favorable sous réserves"
+            : "Défavorable";
+
+      try {
+        setGeneratingOrientation(true);
+
+        const { jsPDF } =
+          await import("jspdf");
+
+        const pdf = new jsPDF({
+          unit: "mm",
+          format: "a4",
+        });
+
+        const pageWidth =
+          pdf.internal.pageSize.getWidth();
+        const pageHeight =
+          pdf.internal.pageSize.getHeight();
+        const margin = 18;
+        const contentWidth =
+          pageWidth - margin * 2;
+        let y = 18;
+
+        const ensureSpace = (
+          height = 12
+        ) => {
+          if (
+            y + height <=
+            pageHeight - 20
+          ) {
+            return;
+          }
+
+          pdf.addPage();
+          y = 18;
+        };
+
+        const addWrappedText = (
+          value: string,
+          options?: {
+            size?: number;
+            bold?: boolean;
+            color?: [
+              number,
+              number,
+              number,
+            ];
+            gap?: number;
+          }
+        ) => {
+          const size =
+            options?.size || 10;
+
+          /*
+           * La police et sa taille doivent être
+           * configurées AVANT splitTextToSize.
+           * Sinon jsPDF calcule la largeur avec
+           * l'ancienne taille de police et le texte
+           * peut dépasser la page.
+           */
+          pdf.setFontSize(size);
+          pdf.setFont(
+            "helvetica",
+            options?.bold
+              ? "bold"
+              : "normal"
+          );
+
+          const lines =
+            pdf.splitTextToSize(
+              value || "Non renseigné",
+              contentWidth
+            ) as string[];
+
+          const lineHeight =
+            size * 0.48;
+
+          const color =
+            options?.color ||
+            ([92, 64, 51] as [
+              number,
+              number,
+              number,
+            ]);
+
+          pdf.setTextColor(
+            color[0],
+            color[1],
+            color[2]
+          );
+
+          /*
+           * Écriture ligne par ligne pour permettre
+           * un saut de page au milieu d'un long
+           * paragraphe.
+           */
+          lines.forEach((line) => {
+            ensureSpace(lineHeight);
+
+            pdf.text(
+              line,
+              margin,
+              y,
+              {
+                maxWidth: contentWidth,
+              }
+            );
+
+            y += lineHeight;
+          });
+
+          y += options?.gap || 3;
+        };
+
+        const addField = (
+          label: string,
+          value?: string | null
+        ) => {
+          ensureSpace(15);
+
+          pdf.setFontSize(8);
+          pdf.setFont(
+            "helvetica",
+            "bold"
+          );
+          pdf.setTextColor(
+            209,
+            150,
+            91
+          );
+          pdf.text(
+            label.toUpperCase(),
+            margin,
+            y
+          );
+          y += 5;
+
+          addWrappedText(
+            value?.trim() ||
+              "Non renseigné",
+            {
+              size: 10,
+              gap: 5,
+            }
+          );
+        };
+
+        pdf.setFillColor(
+          209,
+          150,
+          91
+        );
+        pdf.roundedRect(
+          margin,
+          y,
+          contentWidth,
+          35,
+          4,
+          4,
+          "F"
+        );
+
+        pdf.setTextColor(
+          255,
+          255,
+          255
+        );
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+        pdf.setFontSize(18);
+        pdf.text(
+          "ORIENTATION ARTISTIQUE",
+          margin + 8,
+          y + 13
+        );
+
+        pdf.setFontSize(10);
+        pdf.setFont(
+          "helvetica",
+          "normal"
+        );
+        pdf.text(
+          "Direction artistique — CCAPAC",
+          margin + 8,
+          y + 23
+        );
+        y += 45;
+
+        addField(
+          "Référence du dossier",
+          request.reference
+        );
+
+        addField(
+          "Activité / événement",
+          request.eventName ||
+            request.title
+        );
+
+        addField(
+          "Demandeur",
+          fullName
+        );
+
+        addField(
+          "Adresse email",
+          request.user?.email
+        );
+
+        addField(
+          "Date souhaitée",
+          formatDate(
+            request.date ||
+              request.desiredDate
+          )
+        );
+
+        const requestedSpace =
+          request.spaceId
+            ? getCcapacSpace(
+                request.spaceId
+              )
+            : null;
+
+        addField(
+          "Espace sollicité",
+          requestedSpace
+            ? `${requestedSpace.name} — ${requestedSpace.capacityLabel}`
+            : "Non renseigné"
+        );
+
+        addField(
+          "Responsable artistique",
+          directorName
+        );
+
+        addField(
+          "Présentation du projet",
+          request.description
+        );
+
+        addField(
+          "Intention et ligne artistique",
+          "Le projet est invité à proposer une expérience culturelle cohérente avec la mission du CCAPAC - Grand Tambour : créer, grandir, éduquer et célébrer les expressions artistiques d’Afrique centrale. La démarche devra conjuguer exigence artistique, accessibilité des publics, respect des identités culturelles et qualité de présentation."
+        );
+
+        addField(
+          "Principes directeurs",
+          "Cohérence : relier le thème, les œuvres, la scénographie, les supports et la médiation. Ancrage : valoriser les patrimoines, les récits et les pratiques contemporaines d’Afrique centrale. Ouverture : favoriser le dialogue entre artistes, disciplines, générations et publics. Sobriété : employer des dispositifs élégants, fonctionnels, sûrs et compatibles avec le lieu."
+        );
+
+        addField(
+          "Orientations de mise en espace",
+          "Prévoir une entrée identifiable et une circulation intuitive. Privilégier une scénographie claire et modulable. Employer une lumière maîtrisée, calibrer le son au volume de la salle et conserver une identité visuelle cohérente. Les logos, crédits, partenaires et mentions du CCAPAC doivent rester lisibles."
+        );
+
+        addField(
+          "Points de vigilance",
+          "Respecter la capacité d’accueil, les horaires autorisés et les consignes de sécurité. Obtenir les autorisations relatives aux droits d’auteur, droits voisins, images, musiques et captations. Soumettre à validation tout affichage portant l’identité du CCAPAC avant diffusion."
+        );
+
+        ensureSpace(28);
+        pdf.setFillColor(
+          248,
+          245,
+          239
+        );
+
+        /*
+         * Même règle pour le bloc des
+         * recommandations : définir la police avant
+         * de calculer le retour automatique à la ligne.
+         */
+        pdf.setFontSize(10);
+        pdf.setFont(
+          "helvetica",
+          "normal"
+        );
+
+        const recommendationLines =
+          pdf.splitTextToSize(
+            recommendations,
+            contentWidth - 16
+          ) as string[];
+
+        const recommendationHeight =
+          Math.max(
+            28,
+            recommendationLines.length *
+              5 +
+              20
+          );
+
+        ensureSpace(
+          recommendationHeight
+        );
+
+        pdf.roundedRect(
+          margin,
+          y,
+          contentWidth,
+          recommendationHeight,
+          4,
+          4,
+          "F"
+        );
+
+        pdf.setFontSize(11);
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+        pdf.setTextColor(
+          92,
+          64,
+          51
+        );
+        pdf.text(
+          "ORIENTATIONS ET RECOMMANDATIONS",
+          margin + 8,
+          y + 10
+        );
+
+        pdf.setFontSize(10);
+        pdf.setFont(
+          "helvetica",
+          "normal"
+        );
+        pdf.text(
+          recommendationLines,
+          margin + 8,
+          y + 19
+        );
+        y +=
+          recommendationHeight + 8;
+
+        addField(
+          "Décision proposée",
+          decisionLabel
+        );
+
+        addField(
+          "Motivation de la décision",
+          recommendations
+        );
+
+        addField(
+          "Réserves / conditions",
+          orientationConditions.trim() ||
+            "Aucune réserve particulière."
+        );
+
+        addField(
+          "Recommandations opérationnelles - avant",
+          "Valider le plan d’implantation, les visuels, la fiche technique, le conducteur et la liste des intervenants."
+        );
+
+        addField(
+          "Recommandations opérationnelles - pendant",
+          "Veiller à la qualité d’accueil, au respect du conducteur, aux niveaux sonores et à la cohérence visuelle."
+        );
+
+        addField(
+          "Recommandations opérationnelles - après",
+          "Assurer le démontage, la remise en état, le bilan artistique et la transmission des éléments de documentation."
+        );
+
+        addWrappedText(
+          "Le porteur du projet est tenu de respecter les orientations artistiques, les conditions techniques, les règles de sécurité et les dispositions communiquées par le CCAPAC.",
+          {
+            size: 9,
+            gap: 7,
+          }
+        );
+
+        addField(
+          "Date de génération",
+          new Date().toLocaleString(
+            "fr-FR"
+          )
+        );
+
+        addField(
+          "Nom complet du Directeur artistique",
+          directorName
+        );
+
+        addField(
+          "Signature électronique",
+          directorName
+        );
+
+        const pageCount =
+          pdf.getNumberOfPages();
+
+        for (
+          let page = 1;
+          page <= pageCount;
+          page += 1
+        ) {
+          pdf.setPage(page);
+          pdf.setFontSize(8);
+          pdf.setTextColor(
+            140,
+            120,
+            110
+          );
+          pdf.text(
+            `CCAPAC — Orientation artistique — Page ${page}/${pageCount}`,
+            pageWidth / 2,
+            pageHeight - 10,
+            {
+              align: "center",
+            }
+          );
+        }
+
+        const safeReference =
+          request.reference.replace(
+            /[^a-zA-Z0-9_-]/g,
+            "_"
+          );
+
+        const generatedFile =
+          new File(
+            [pdf.output("blob")],
+            `Orientation_artistique_${safeReference}.pdf`,
+            {
+              type: "application/pdf",
+            }
+          );
+
+        await spaceRequestService.uploadDocument(
+          request.id,
+          "ARTISTIC_OPINION",
+          generatedFile
+        );
+
+        setSignature(directorName);
+
+        toast.success(
+          "Document d’orientation artistique généré et joint au dossier."
+        );
+
+        await loadRequest();
+      } catch (error) {
+        console.error(
+          "Artistic orientation generation error:",
+          isAxiosError(error)
+            ? error.response?.data
+            : error
+        );
+
+        toast.error(
+          getErrorMessage(
+            error,
+            "Impossible de générer le document d’orientation artistique."
+          )
+        );
+      } finally {
+        setGeneratingOrientation(
+          false
+        );
+      }
+    };
+
   const fullName =
     request?.user?.username ||
     [
@@ -423,7 +1002,9 @@ export default function ArtisticRequestDetailPage() {
 
   const openValidation = () => {
     setComment("");
-    setSignature("");
+    setSignature(
+      artisticDirectorName.trim()
+    );
     setDecisionMode("validate");
   };
 
@@ -752,8 +1333,9 @@ export default function ArtisticRequestDetailPage() {
                     </h3>
 
                     <div className="mt-3 whitespace-pre-wrap rounded-xl border border-[#D1965B]/10 bg-[#F8F5EF] p-5 text-sm leading-7 text-[#5C4033]/75">
-                      {request.description ||
-                        "Aucune description renseignée."}
+                      {getDescriptionWithSpace(
+                        request
+                      )}
                     </div>
                   </div>
 
@@ -953,7 +1535,7 @@ export default function ArtisticRequestDetailPage() {
                     </div>
                   </div>
 
-                  {artisticOpinion ? (
+                  {artisticOpinion && (
                     <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
                       <p className="flex items-center gap-2 text-sm font-semibold text-green-800">
                         <CheckCircle2 className="h-4 w-4" />
@@ -976,12 +1558,226 @@ export default function ArtisticRequestDetailPage() {
                           download={artisticOpinion.name}
                         >
                           <Download className="mr-2 h-4 w-4" />
-                          Consulter l&aposavis
+                          Consulter l’avis
                         </a>
                       </Button>
+
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          document
+                            .getElementById(
+                              "orientationGenerator"
+                            )
+                            ?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            });
+
+                          window.setTimeout(
+                            () => {
+                              document
+                                .getElementById(
+                                  "artisticDirectorName"
+                                )
+                                ?.focus();
+                            },
+                            450
+                          );
+                        }}
+                        className="mt-2 w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Régénérer le document
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="mt-4 space-y-3">
+                  )}
+
+                  <div className="mt-4 space-y-3">
+                      <div
+                        id="orientationGenerator"
+                        className="scroll-mt-6 rounded-xl border border-[#D1965B]/20 bg-[#F8F5EF] p-4"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="rounded-lg bg-[#D1965B]/10 p-2">
+                            <Sparkles className="h-5 w-5 text-[#D1965B]" />
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-bold text-[#5C4033]">
+                              Génération automatique
+                            </p>
+
+                            <p className="mt-1 text-xs leading-5 text-[#5C4033]/60">
+                              Le PDF sera préparé à partir des informations de la demande et joint automatiquement au dossier.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <Label
+                            htmlFor="artisticDirectorName"
+                            className="text-sm text-[#5C4033]"
+                          >
+                            Nom complet du Directeur artistique *
+                          </Label>
+
+                          <Input
+                            id="artisticDirectorName"
+                            value={
+                              artisticDirectorName
+                            }
+                            onChange={(event) =>
+                              setArtisticDirectorName(
+                                event.target.value
+                              )
+                            }
+                            disabled={
+                              generatingOrientation ||
+                              uploadingOpinion
+                            }
+                            placeholder="Nom et prénom du responsable"
+                            autoComplete="name"
+                            className="border-[#D1965B]/25 bg-white focus-visible:ring-[#D1965B]"
+                          />
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <Label
+                            htmlFor="orientationDecision"
+                            className="text-sm text-[#5C4033]"
+                          >
+                            Décision proposée *
+                          </Label>
+
+                          <select
+                            id="orientationDecision"
+                            value={
+                              orientationDecision
+                            }
+                            onChange={(event) =>
+                              setOrientationDecision(
+                                event.target.value as
+                                  | "FAVORABLE"
+                                  | "FAVORABLE_WITH_CONDITIONS"
+                                  | "UNFAVORABLE"
+                              )
+                            }
+                            disabled={
+                              generatingOrientation ||
+                              uploadingOpinion
+                            }
+                            className="h-11 w-full rounded-xl border border-[#D1965B]/25 bg-white px-3 text-sm text-[#5C4033] outline-none transition focus:border-[#D1965B] focus:ring-2 focus:ring-[#D1965B]/10 disabled:opacity-60"
+                          >
+                            <option value="FAVORABLE">
+                              Favorable
+                            </option>
+
+                            <option value="FAVORABLE_WITH_CONDITIONS">
+                              Favorable sous réserves
+                            </option>
+
+                            <option value="UNFAVORABLE">
+                              Défavorable
+                            </option>
+                          </select>
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <Label
+                            htmlFor="orientationRecommendations"
+                            className="text-sm text-[#5C4033]"
+                          >
+                            Motivation et orientations *
+                          </Label>
+
+                          <textarea
+                            id="orientationRecommendations"
+                            value={
+                              orientationRecommendations
+                            }
+                            onChange={(event) =>
+                              setOrientationRecommendations(
+                                event.target.value
+                              )
+                            }
+                            rows={6}
+                            disabled={
+                              generatingOrientation ||
+                              uploadingOpinion
+                            }
+                            placeholder="Précisez la ligne artistique, les recommandations et les conditions à respecter..."
+                            className="w-full resize-y rounded-xl border border-[#D1965B]/25 bg-white px-3 py-3 text-sm leading-6 text-[#5C4033] outline-none transition focus:border-[#D1965B] focus:ring-2 focus:ring-[#D1965B]/10 disabled:opacity-60"
+                          />
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <Label
+                            htmlFor="orientationConditions"
+                            className="text-sm text-[#5C4033]"
+                          >
+                            Réserves et conditions
+                          </Label>
+
+                          <textarea
+                            id="orientationConditions"
+                            value={
+                              orientationConditions
+                            }
+                            onChange={(event) =>
+                              setOrientationConditions(
+                                event.target.value
+                              )
+                            }
+                            rows={5}
+                            disabled={
+                              generatingOrientation ||
+                              uploadingOpinion
+                            }
+                            placeholder="Indiquez les conditions à respecter..."
+                            className="w-full resize-y rounded-xl border border-[#D1965B]/25 bg-white px-3 py-3 text-sm leading-6 text-[#5C4033] outline-none transition focus:border-[#D1965B] focus:ring-2 focus:ring-[#D1965B]/10 disabled:opacity-60"
+                          />
+                        </div>
+
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            void handleGenerateOrientation()
+                          }
+                          disabled={
+                            generatingOrientation ||
+                            uploadingOpinion ||
+                            artisticDirectorName.trim()
+                              .length < 3 ||
+                            orientationRecommendations.trim()
+                              .length < 10
+                          }
+                          className="mt-3 w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
+                        >
+                          {generatingOrientation ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="mr-2 h-4 w-4" />
+                          )}
+
+                          {generatingOrientation
+                            ? artisticOpinion
+                              ? "Régénération et remplacement..."
+                              : "Génération et ajout..."
+                            : artisticOpinion
+                              ? "Régénérer et remplacer le document"
+                              : "Générer et joindre le document"}
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center gap-3 py-1">
+                        <span className="h-px flex-1 bg-[#D1965B]/15" />
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#5C4033]/45">
+                          ou importer un document
+                        </span>
+                        <span className="h-px flex-1 bg-[#D1965B]/15" />
+                      </div>
+
                       <label
                         htmlFor="artisticOpinionFile"
                         className="flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed border-[#D1965B]/30 bg-[#F8F5EF] p-6 text-center transition hover:border-[#D1965B]"
@@ -1024,8 +1820,7 @@ export default function ArtisticRequestDetailPage() {
                           ? "Ajout en cours..."
                           : "Ajouter l'avis artistique"}
                       </Button>
-                    </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
             )}

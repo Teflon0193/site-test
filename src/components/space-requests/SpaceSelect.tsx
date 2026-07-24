@@ -8,13 +8,23 @@ type SpaceSelectProps = {
   value: number;
   onChange: (spaceId: number) => void;
   disabled?: boolean;
+  unavailableSpaceIds?: number[];
 };
 
 export default function SpaceSelect({
   value,
   onChange,
   disabled = false,
+  unavailableSpaceIds = [],
 }: SpaceSelectProps) {
+  const unavailableIds = new Set(
+    unavailableSpaceIds.map(Number)
+  );
+
+  const availableSpaces = CCAPAC_SPACES.filter(
+    (space) => !unavailableIds.has(Number(space.id))
+  );
+
   return (
     <div className="space-y-2">
       <label
@@ -39,7 +49,7 @@ export default function SpaceSelect({
           Sélectionnez un espace
         </option>
 
-        {CCAPAC_SPACES.map((space) => (
+        {availableSpaces.map((space) => (
           <option
             key={space.id}
             value={space.id}
@@ -48,6 +58,26 @@ export default function SpaceSelect({
           </option>
         ))}
       </select>
+
+      {unavailableIds.size > 0 && (
+        <p className="text-xs leading-5 text-amber-700">
+          {unavailableIds.size} espace
+          {unavailableIds.size > 1 ? "s sont" : " est"}{" "}
+          déjà réservé
+          {unavailableIds.size > 1 ? "s" : ""} pour cette date et{" "}
+          {unavailableIds.size > 1
+            ? "n’apparaissent"
+            : "n’apparaît"}{" "}
+          donc pas dans la liste.
+        </p>
+      )}
+
+      {availableSpaces.length === 0 && (
+        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
+          Tous les espaces sont occupés pour cette date.
+          Veuillez choisir une autre date.
+        </p>
+      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 import {
   BadgeDollarSign,
   Calendar,
+  ChevronDown,
   ClipboardList,
   FileClock,
   FilePlus2,
@@ -44,9 +45,14 @@ import type {
 } from "@/services/auth";
 
 type MenuItem = {
-  href: string;
+  href?: string;
   label: string;
   icon: typeof Home;
+  children?: {
+    href: string;
+    label: string;
+    icon: typeof Home;
+  }[];
 };
 
 interface DashboardLayoutClientProps {
@@ -84,19 +90,25 @@ const memberMenu: MenuItem[] = [
     icon: Calendar,
   },
   {
-    href: "/espace-membre/membre/nouvelle-demande",
-    label: "Nouvelle demande",
+    label: "Réservez un espace",
     icon: FilePlus2,
-  },
-  {
-    href: "/espace-membre/membre/demandes",
-    label: "Mes demandes",
-    icon: Files,
-  },
-  {
-    href: "/espace-membre/membre/historique",
-    label: "Historique",
-    icon: FileClock,
+    children: [
+      {
+        href: "/espace-membre/membre/nouvelle-demande",
+        label: "Réserver",
+        icon: FilePlus2,
+      },
+      {
+        href: "/espace-membre/membre/demandes",
+        label: "Mes demandes",
+        icon: Files,
+      },
+      {
+        href: "/espace-membre/membre/historique",
+        label: "Historique",
+        icon: FileClock,
+      },
+    ],
   },
   {
     href: "/espace-membre/profile",
@@ -292,8 +304,17 @@ function isActivePath(
     return true;
   }
 
+  const navigableItems = items.flatMap(
+    (item) =>
+      item.children?.length
+        ? item.children
+        : item.href
+          ? [{ href: item.href }]
+          : []
+  );
+
   const moreSpecificItemIsActive =
-    items.some(
+    navigableItems.some(
       (item) =>
         item.href !== href &&
         item.href.startsWith(
@@ -319,6 +340,8 @@ export default function DashboardLayoutClient({
     useState(false);
   const [isLoggingOut, setIsLoggingOut] =
     useState(false);
+  const [expandedMenu, setExpandedMenu] =
+    useState<string | null>(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -451,6 +474,119 @@ export default function DashboardLayoutClient({
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
+
+            if (
+              item.children &&
+              item.children.length > 0
+            ) {
+              const groupActive =
+                item.children.some(
+                  (child) =>
+                    pathname ===
+                      child.href ||
+                    pathname.startsWith(
+                      `${child.href}/`
+                    )
+                );
+
+              const groupOpen =
+                expandedMenu ===
+                  item.label ||
+                (expandedMenu === null &&
+                  groupActive);
+
+              return (
+                <div key={item.label}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedMenu(
+                        groupOpen
+                          ? ""
+                          : item.label
+                      )
+                    }
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-all duration-200",
+                      groupActive
+                        ? "bg-muted text-foreground"
+                        : "text-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                    aria-expanded={
+                      groupOpen
+                    }
+                  >
+                    <Icon size={18} />
+
+                    <span className="flex-1">
+                      {item.label}
+                    </span>
+
+                    <ChevronDown
+                      size={17}
+                      className={cn(
+                        "transition-transform duration-200",
+                        groupOpen &&
+                          "rotate-180"
+                      )}
+                    />
+                  </button>
+
+                  {groupOpen && (
+                    <div className="ml-5 mt-1 space-y-1 border-l border-foreground/20 pl-3">
+                      {item.children.map(
+                        (child) => {
+                          const ChildIcon =
+                            child.icon;
+
+                          const childActive =
+                            pathname ===
+                              child.href ||
+                            pathname.startsWith(
+                              `${child.href}/`
+                            );
+
+                          return (
+                            <Link
+                              key={
+                                child.href
+                              }
+                              href={
+                                child.href
+                              }
+                              onClick={
+                                closeMobileMenu
+                              }
+                              className={cn(
+                                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200",
+                                childActive
+                                  ? "bg-muted text-foreground"
+                                  : "text-foreground/80 hover:bg-muted hover:text-foreground"
+                              )}
+                            >
+                              <ChildIcon
+                                size={16}
+                              />
+
+                              <span>
+                                {
+                                  child.label
+                                }
+                              </span>
+                            </Link>
+                          );
+                        }
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            if (!item.href) {
+              return null;
+            }
+
             const active = isActivePath(
               pathname,
               item.href,

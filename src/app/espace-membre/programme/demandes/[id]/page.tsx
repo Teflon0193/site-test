@@ -37,6 +37,7 @@ import {
 } from "../../../../components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { getCcapacSpace } from "@/constants/spaces";
 import RequestStatusBadge from "@/components/space-requests/RequestStatusBadge";
 import RequestDocuments from "@/components/space-requests/RequestDocuments";
 import {
@@ -187,6 +188,40 @@ function formatDateTime(
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function getDescriptionWithSpace(
+  request: SpaceRequest
+) {
+  const description = String(
+    request.description || ""
+  ).trim();
+
+  const alreadyContainsSpace =
+    /^(espace demandé|espace souhaité|espace sollicité)\s*:/im.test(
+      description
+    );
+
+  if (alreadyContainsSpace) {
+    return description;
+  }
+
+  const requestedSpace =
+    request.spaceId != null
+      ? getCcapacSpace(
+          Number(request.spaceId)
+        )
+      : undefined;
+
+  const spaceLabel = requestedSpace
+    ? requestedSpace.name
+    : "Non renseigné";
+
+  return [
+    description ||
+      "Aucune description renseignée.",
+    `Espace demandé : ${spaceLabel}`,
+  ].join("\n");
 }
 
 function getNextStepLabel(
@@ -801,8 +836,9 @@ export default function ProgrammeRequestDetailPage() {
                   </h2>
 
                   <div className="mt-3 whitespace-pre-wrap rounded-xl border border-[#D1965B]/20 bg-[#F3EEE5]/40 p-4 text-sm leading-7 text-[#5C4033]/80">
-                    {request.description ||
-                      "Aucune description renseignée."}
+                    {getDescriptionWithSpace(
+                      request
+                    )}
                   </div>
                 </div>
 
