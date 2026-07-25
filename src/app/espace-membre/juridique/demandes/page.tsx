@@ -26,6 +26,7 @@ import {
 } from "../../../components/ui/card";
 import { Input } from "@/components/ui/input";
 import RequestStatusBadge from "@/components/space-requests/RequestStatusBadge";
+import { useAuth } from "@/context/AuthContext";
 import {
   spaceRequestService,
   type SpaceRequest,
@@ -75,6 +76,10 @@ function getDocumentUrl(
 }
 
 export default function LegalRequestsPage() {
+  const { user } = useAuth();
+  const isAssistant =
+    user?.role ===
+    "JURIDIQUE_ASSISTANT";
   const [requests, setRequests] = useState<
     SpaceRequest[]
   >([]);
@@ -164,7 +169,9 @@ export default function LegalRequestsPage() {
             </p>
 
             <h1 className="mt-1 text-3xl font-bold">
-              Demandes à examiner
+              {isAssistant
+                ? "Mes demandes juridiques"
+                : "Demandes à examiner"}
             </h1>
 
             <p className="mt-2 max-w-2xl text-primary-foreground/90">

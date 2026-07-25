@@ -6,23 +6,42 @@ import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/context/AuthContext";
 
-const allowedRoles = [
-  "DIRECTION_ARTISTIQUE",
+const ARTISTIC_ROLES = [
+  "DIRECTION_ARTISTIQUE_SUPERVISEUR",
+  "DIRECTION_ARTISTIQUE_ASSISTANT",
   "ADMIN",
 ];
 
-const destinations: Record<string, string> = {
-  MEMBER: "/espace-membre/membre",
-  PROGRAMME: "/espace-membre/programme",
+const roleDestinations: Record<
+  string,
+  string
+> = {
+  MEMBER:
+    "/espace-membre/membre",
+
+  PROGRAMME_SUPERVISEUR:
+    "/espace-membre/programme",
+
+  PROGRAMME_ASSISTANT:
+    "/espace-membre/programme",
+
   REGISSEUR_GENERAL:
     "/espace-membre/regisseur",
-  DIRECTION_ARTISTIQUE:
-    "/espace-membre/direction-artistique",
+
   COMMUNICATION:
     "/espace-membre/communication",
-  JURIDIQUE: "/espace-membre/juridique",
-  FINANCE: "/espace-membre/finance",
-  ADMIN: "/espace-membre/admin",
+
+  JURIDIQUE:
+    "/espace-membre/juridique",
+
+  FINANCE:
+    "/espace-membre/finance",
+
+  SUPERVISEUR:
+    "/espace-membre/superviseur",
+
+  ADMIN:
+    "/espace-membre/admin",
 };
 
 export default function ArtisticDirectionLayout({
@@ -34,35 +53,66 @@ export default function ArtisticDirectionLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (loading || !user) {
+    if (loading) {
       return;
     }
 
-    if (!allowedRoles.includes(user.role)) {
+    if (!user) {
       router.replace(
-        destinations[user.role] ||
-          "/espace-membre"
+        "/auth/login?redirectUrl=/espace-membre/direction-artistique"
+      );
+
+      return;
+    }
+
+    const normalizedRole = String(
+      user.role || ""
+    )
+      .trim()
+      .toUpperCase();
+
+    if (
+      !ARTISTIC_ROLES.includes(
+        normalizedRole
+      )
+    ) {
+      router.replace(
+        roleDestinations[
+          normalizedRole
+        ] || "/espace-membre"
       );
     }
   }, [loading, user, router]);
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
+      <div className="flex min-h-[500px] items-center justify-center bg-[#F3EEE5]">
         <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#D1965B] border-t-transparent" />
 
-          <p className="mt-4 text-sm text-muted-foreground">
-            Chargement de la Direction artistique...
+          <p className="mt-4 text-sm text-[#5C4033]/70">
+            Chargement de la Direction
+            artistique...
           </p>
         </div>
       </div>
     );
   }
 
+  if (!user) {
+    return null;
+  }
+
+  const normalizedRole = String(
+    user.role || ""
+  )
+    .trim()
+    .toUpperCase();
+
   if (
-    !user ||
-    !allowedRoles.includes(user.role)
+    !ARTISTIC_ROLES.includes(
+      normalizedRole
+    )
   ) {
     return null;
   }

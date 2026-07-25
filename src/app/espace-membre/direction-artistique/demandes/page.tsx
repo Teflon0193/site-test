@@ -30,6 +30,7 @@ import {
 } from "../../../components/ui/card";
 import { Input } from "@/components/ui/input";
 import RequestStatusBadge from "@/components/space-requests/RequestStatusBadge";
+import { useAuth } from "@/context/AuthContext";
 import {
   spaceRequestService,
   type SpaceRequest,
@@ -147,6 +148,10 @@ function formatDateTime(
 }
 
 export default function ArtisticRequestsPage() {
+  const { user } = useAuth();
+  const isAssistant =
+    user?.role ===
+    "DIRECTION_ARTISTIQUE_ASSISTANT";
   const [requests, setRequests] =
     useState<SpaceRequest[]>([]);
 
@@ -299,7 +304,9 @@ export default function ArtisticRequestsPage() {
 
             <div>
               <h1 className="text-2xl font-bold text-[#5C4033] sm:text-3xl">
-                Demandes artistiques
+                {isAssistant
+                  ? "Mes demandes artistiques"
+                  : "Demandes artistiques"}
               </h1>
 
               <p className="mt-1 text-sm text-[#5C4033]/70">

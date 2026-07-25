@@ -40,18 +40,48 @@ const roleDestinations: Record<
   string,
   string
 > = {
- MEMBER: "/espace-membre/membre",
-  PROGRAMME: "/espace-membre/programme",
-  PROGRAMME_SUPERVISEUR: "/espace-membre/programme",
-  PROGRAMME_ASSISTANT: "/espace-membre/programme",
-  REGISSEUR_GENERAL: "/espace-membre/regisseur",
-  DIRECTION_ARTISTIQUE: "/espace-membre/direction-artistique",
-  COMMUNICATION: "/espace-membre/communication",
-  JURIDIQUE: "/espace-membre/juridique",
-  FINANCE: "/espace-membre/finance",
-  SUPERVISEUR: "/espace-membre/superviseur",
-  ADMIN: "/espace-membre/admin",
+  MEMBER:
+    "/espace-membre/membre",
 
+  PROGRAMME_SUPERVISEUR:
+    "/espace-membre/programme",
+
+  PROGRAMME_ASSISTANT:
+    "/espace-membre/programme",
+
+  REGISSEUR_GENERAL:
+    "/espace-membre/regisseur",
+
+  DIRECTION_ARTISTIQUE_SUPERVISEUR:
+    "/espace-membre/direction-artistique",
+
+  DIRECTION_ARTISTIQUE_ASSISTANT:
+    "/espace-membre/direction-artistique",
+
+  COMMUNICATION:
+    "/espace-membre/communication",
+
+  /*
+   * Ancien rôle conservé temporairement
+   * pour les comptes déjà enregistrés.
+   */
+  JURIDIQUE:
+    "/espace-membre/juridique",
+
+  JURIDIQUE_SUPERVISEUR:
+    "/espace-membre/juridique",
+
+  JURIDIQUE_ASSISTANT:
+    "/espace-membre/juridique",
+
+  FINANCE:
+    "/espace-membre/finance",
+
+  SUPERVISEUR:
+    "/espace-membre/superviseur",
+
+  ADMIN:
+    "/espace-membre/admin",
 };
 
 function LoginContent() {

@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import {
   Card,
   CardContent,
@@ -111,6 +112,7 @@ function getDescriptionWithSpace(
 export default function LegalRequestPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
 
   const requestId = Number(params.id);
 
@@ -210,15 +212,32 @@ export default function LegalRequestPage() {
     try {
       setProcessing("validate");
 
-      await spaceRequestService.validate(
-        request.id,
-        comment.trim() ||
-          "Avis juridique favorable",
-        signature.trim()
-      );
+      if (
+        user?.role ===
+        "JURIDIQUE_ASSISTANT"
+      ) {
+        await spaceRequestService
+          .legalAssistantReview(
+            request.id,
+            "VALIDATED",
+            comment.trim() ||
+              "Avis juridique favorable et document vérifié.",
+            signature.trim()
+          );
+      } else {
+        await spaceRequestService.validate(
+          request.id,
+          comment.trim() ||
+            "Avis juridique favorable",
+          signature.trim()
+        );
+      }
 
       toast.success(
-        "Demande retournée au Programme"
+        user?.role ===
+          "JURIDIQUE_ASSISTANT"
+          ? "Avis transmis au superviseur juridique"
+          : "Demande retournée au Programme"
       );
 
       router.replace(
@@ -301,9 +320,9 @@ export default function LegalRequestPage() {
       return;
     }
 
-    if (!comment.trim()) {
+    if (comment.trim().length < 5) {
       toast.error(
-        "Le motif du refus est obligatoire"
+        "Le motif du refus doit contenir au moins 5 caractères"
       );
 
       return;
@@ -320,13 +339,31 @@ export default function LegalRequestPage() {
     try {
       setProcessing("reject");
 
-      await spaceRequestService.reject(
-        request.id,
-        comment.trim(),
-        signature.trim()
-      );
+      if (
+        user?.role ===
+        "JURIDIQUE_ASSISTANT"
+      ) {
+        await spaceRequestService
+          .legalAssistantReview(
+            request.id,
+            "REJECTED",
+            comment.trim(),
+            signature.trim()
+          );
+      } else {
+        await spaceRequestService.reject(
+          request.id,
+          comment.trim(),
+          signature.trim()
+        );
+      }
 
-      toast.success("Demande refusée");
+      toast.success(
+        user?.role ===
+          "JURIDIQUE_ASSISTANT"
+          ? "Rejet recommandé au superviseur juridique"
+          : "Demande refusée"
+      );
 
       router.replace(
         "/espace-membre/juridique"
@@ -362,10 +399,25 @@ export default function LegalRequestPage() {
     );
   }
 
+  const isLegalAssistant =
+    user?.role ===
+    "JURIDIQUE_ASSISTANT";
+
+  const isLegalSupervisor = [
+    "ADMIN",
+    "JURIDIQUE",
+    "JURIDIQUE_SUPERVISEUR",
+  ].includes(user?.role || "");
+
   const canProcess =
     request.status === "legal_review" &&
     (request.currentDepartment === "JURIDIQUE" ||
-      request.assignedDepartment === "JURIDIQUE");
+      request.assignedDepartment === "JURIDIQUE") &&
+    (isLegalSupervisor ||
+      (isLegalAssistant &&
+        Number(
+          request.legalAssignedToUserId
+        ) === Number(user?.id)));
 
   const legalDocument = documents.find(
     (document) =>
@@ -533,6 +585,47 @@ export default function LegalRequestPage() {
               </div>
             ) : (
               <>
+                {isLegalSupervisor &&
+                  [
+                    "assistant_validated",
+                    "assistant_rejected",
+                  ].includes(
+                    request.legalReviewState ||
+                      ""
+                  ) && (
+                    <div
+                      className={`rounded-xl border p-4 ${
+                        request.legalReviewState ===
+                        "assistant_validated"
+                          ? "border-green-200 bg-green-50 text-green-900"
+                          : "border-red-200 bg-red-50 text-red-900"
+                      }`}
+                    >
+                      <p className="font-semibold">
+                        {request.legalReviewState ===
+                        "assistant_validated"
+                          ? "Avis favorable reçu de l’assistant"
+                          : "Rejet recommandé par l’assistant"}
+                      </p>
+
+                      {request.legalAssistantComment && (
+                        <p className="mt-2 text-sm leading-6">
+                          {
+                            request.legalAssistantComment
+                          }
+                        </p>
+                      )}
+
+                      {request.legalAssistantSignature && (
+                        <p className="mt-3 border-t border-current/15 pt-3 font-serif text-lg italic">
+                          {
+                            request.legalAssistantSignature
+                          }
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                 <div className="space-y-3 rounded-xl border border-[#D1965B]/20 bg-[#F8F5EF] p-4">
                   <div>
                     <p className="font-semibold text-[#5C4033]">
@@ -651,7 +744,9 @@ export default function LegalRequestPage() {
                     <CheckCircle2 className="mr-2 h-4 w-4" />
                   )}
 
-                  Valider et retourner au Programme
+                  {isLegalAssistant
+                    ? "Signer et transmettre au superviseur"
+                    : "Valider et retourner au Programme"}
                   <Send className="ml-2 h-4 w-4" />
                 </Button>
 
@@ -668,7 +763,9 @@ export default function LegalRequestPage() {
                     <XCircle className="mr-2 h-4 w-4" />
                   )}
 
-                  Refuser
+                  {isLegalAssistant
+                    ? "Recommander le rejet"
+                    : "Refuser"}
                 </Button>
               </>
             )}

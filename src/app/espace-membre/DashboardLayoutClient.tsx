@@ -73,8 +73,16 @@ const roleLabels: Record<string, string> = {
     "Régisseur général",
   DIRECTION_ARTISTIQUE:
     "Direction artistique",
+  DIRECTION_ARTISTIQUE_SUPERVISEUR:
+    "Superviseur Direction artistique",
+  DIRECTION_ARTISTIQUE_ASSISTANT:
+    "Assistant Direction artistique",
   COMMUNICATION: "Communication",
   JURIDIQUE: "Service juridique",
+  JURIDIQUE_SUPERVISEUR:
+    "Superviseur juridique",
+  JURIDIQUE_ASSISTANT:
+    "Assistant juridique",
   FINANCE: "Service des Finances",
 };
 
@@ -163,6 +171,98 @@ const programmeAssistantMenu: MenuItem[] = [
   },
   {
     href: "/espace-membre/programme/historique",
+    label: "Historique",
+    icon: FileClock,
+  },
+  {
+    href: "/espace-membre/profile",
+    label: "Mon profil",
+    icon: User,
+  },
+];
+
+const artisticSupervisorMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/direction-artistique",
+    label: "Tableau de bord",
+    icon: Palette,
+  },
+  {
+    href: "/espace-membre/direction-artistique/demandes",
+    label: "Demandes à affecter",
+    icon: ClipboardList,
+  },
+  {
+    href: "/espace-membre/direction-artistique/historique",
+    label: "Historique",
+    icon: FileClock,
+  },
+  {
+    href: "/espace-membre/profile",
+    label: "Mon profil",
+    icon: User,
+  },
+];
+
+const artisticAssistantMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/direction-artistique",
+    label: "Tableau de bord",
+    icon: Palette,
+  },
+  {
+    href: "/espace-membre/direction-artistique/demandes",
+    label: "Mes demandes",
+    icon: ClipboardList,
+  },
+  {
+    href: "/espace-membre/direction-artistique/historique",
+    label: "Historique",
+    icon: FileClock,
+  },
+  {
+    href: "/espace-membre/profile",
+    label: "Mon profil",
+    icon: User,
+  },
+];
+
+const legalSupervisorMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/juridique",
+    label: "Tableau de bord",
+    icon: Gavel,
+  },
+  {
+    href: "/espace-membre/juridique/demandes",
+    label: "Demandes à affecter",
+    icon: ClipboardList,
+  },
+  {
+    href: "/espace-membre/juridique/historique",
+    label: "Historique",
+    icon: FileClock,
+  },
+  {
+    href: "/espace-membre/profile",
+    label: "Mon profil",
+    icon: User,
+  },
+];
+
+const legalAssistantMenu: MenuItem[] = [
+  {
+    href: "/espace-membre/juridique",
+    label: "Tableau de bord",
+    icon: Gavel,
+  },
+  {
+    href: "/espace-membre/juridique/demandes",
+    label: "Mes demandes",
+    icon: ClipboardList,
+  },
+  {
+    href: "/espace-membre/juridique/historique",
     label: "Historique",
     icon: FileClock,
   },
@@ -265,11 +365,12 @@ function getMenuItems(
         Wrench
       );
 
+    case "DIRECTION_ARTISTIQUE_ASSISTANT":
+      return artisticAssistantMenu;
+
     case "DIRECTION_ARTISTIQUE":
-      return departmentMenu(
-        "/espace-membre/direction-artistique",
-        Palette
-      );
+    case "DIRECTION_ARTISTIQUE_SUPERVISEUR":
+      return artisticSupervisorMenu;
 
     case "COMMUNICATION":
       return departmentMenu(
@@ -277,11 +378,12 @@ function getMenuItems(
         Megaphone
       );
 
+    case "JURIDIQUE_ASSISTANT":
+      return legalAssistantMenu;
+
     case "JURIDIQUE":
-      return departmentMenu(
-        "/espace-membre/juridique",
-        Gavel
-      );
+    case "JURIDIQUE_SUPERVISEUR":
+      return legalSupervisorMenu;
 
     case "FINANCE":
       return departmentMenu(

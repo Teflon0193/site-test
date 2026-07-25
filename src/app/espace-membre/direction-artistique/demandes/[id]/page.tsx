@@ -45,8 +45,10 @@ import { Label } from "@/components/ui/label";
 import {
   getCcapacSpace,
 } from "@/constants/spaces";
+import { useAuth } from "@/context/AuthContext";
 import {
   spaceRequestService,
+  type DepartmentAssistant,
   type SpaceRequest,
   type SpaceRequestDocument,
   type ValidationHistory,
@@ -270,11 +272,28 @@ export default function ArtisticRequestDetailPage() {
   }>();
 
   const router = useRouter();
+  const { user } = useAuth();
 
   const requestId = Number(params.id);
 
   const [request, setRequest] =
     useState<SpaceRequest | null>(null);
+
+  const [assistants, setAssistants] =
+    useState<DepartmentAssistant[]>([]);
+
+  const [
+    selectedAssistantId,
+    setSelectedAssistantId,
+  ] = useState("");
+
+  const [
+    assignmentComment,
+    setAssignmentComment,
+  ] = useState("");
+
+  const [assigning, setAssigning] =
+    useState(false);
 
   const [history, setHistory] =
     useState<ValidationHistory[]>([]);
@@ -395,11 +414,57 @@ export default function ArtisticRequestDetailPage() {
     void loadRequest();
   }, [loadRequest]);
 
+  const isArtisticAssistant =
+    user?.role ===
+    "DIRECTION_ARTISTIQUE_ASSISTANT";
+
+  const isArtisticSupervisor = [
+    "DIRECTION_ARTISTIQUE",
+    "DIRECTION_ARTISTIQUE_SUPERVISEUR",
+    "ADMIN",
+  ].includes(user?.role || "");
+
+  const isAssignedAssistant =
+    isArtisticAssistant &&
+    Number(
+      request?.artisticAssignedToUserId
+    ) === Number(user?.id);
+
   const canProcess =
     request?.status ===
       "artistic_review" &&
     request.assignedDepartment ===
-      "DIRECTION_ARTISTIQUE";
+      "DIRECTION_ARTISTIQUE" &&
+    (isArtisticSupervisor ||
+      isAssignedAssistant);
+
+  useEffect(() => {
+    if (!isArtisticSupervisor) {
+      setAssistants([]);
+      return;
+    }
+
+    void spaceRequestService
+      .getArtisticAssistants()
+      .then((data) =>
+        setAssistants(
+          Array.isArray(data) ? data : []
+        )
+      )
+      .catch((error) => {
+        console.error(
+          "Artistic assistants error:",
+          error
+        );
+
+        toast.error(
+          getErrorMessage(
+            error,
+            "Impossible de charger les assistants."
+          )
+        );
+      });
+  }, [isArtisticSupervisor]);
 
   const documentUrl =
     getDocumentUrl(
@@ -990,6 +1055,59 @@ export default function ArtisticRequestDetailPage() {
       .join(" ") ||
     "Demandeur";
 
+  const handleAssignAssistant =
+    async () => {
+      if (
+        !request ||
+        !isArtisticSupervisor ||
+        assigning
+      ) {
+        return;
+      }
+
+      const assistantId = Number(
+        selectedAssistantId
+      );
+
+      if (
+        !Number.isInteger(assistantId) ||
+        assistantId <= 0
+      ) {
+        toast.error(
+          "Sélectionnez un assistant."
+        );
+        return;
+      }
+
+      try {
+        setAssigning(true);
+
+        await spaceRequestService
+          .assignArtisticAssistant(
+            request.id,
+            assistantId,
+            assignmentComment
+          );
+
+        toast.success(
+          "Demande affectée à l’assistant."
+        );
+
+        setSelectedAssistantId("");
+        setAssignmentComment("");
+        await loadRequest();
+      } catch (error) {
+        toast.error(
+          getErrorMessage(
+            error,
+            "Impossible d’affecter la demande."
+          )
+        );
+      } finally {
+        setAssigning(false);
+      }
+    };
+
   const resetDecision = () => {
     if (processing) {
       return;
@@ -1043,18 +1161,33 @@ export default function ArtisticRequestDetailPage() {
     try {
       setProcessing(true);
 
-      await spaceRequestService.validate(
-        request.id,
-        comment.trim() ||
-          "Avis artistique favorable",
-        cleanSignature
-      );
+      if (isArtisticAssistant) {
+        await spaceRequestService
+          .artisticAssistantReview(
+            request.id,
+            "VALIDATED",
+            comment.trim() ||
+              "Dossier examiné et avis artistique préparé.",
+            cleanSignature
+          );
+      } else {
+        await spaceRequestService.validate(
+          request.id,
+          comment.trim() ||
+            "Avis artistique favorable",
+          cleanSignature
+        );
+      }
 
       toast.success(
-        "Avis artistique validé",
+        isArtisticAssistant
+          ? "Avis transmis au superviseur"
+          : "Avis artistique validé",
         {
           description:
-            "Le dossier a été transmis au Service Communication.",
+            isArtisticAssistant
+              ? "Le superviseur artistique peut maintenant rendre la décision finale."
+              : "Le dossier a été transmis au Service Communication.",
         }
       );
 
@@ -1112,17 +1245,31 @@ export default function ArtisticRequestDetailPage() {
     try {
       setProcessing(true);
 
-      await spaceRequestService.reject(
-        request.id,
-        reason,
-        cleanSignature
-      );
+      if (isArtisticAssistant) {
+        await spaceRequestService
+          .artisticAssistantReview(
+            request.id,
+            "REJECTED",
+            reason,
+            cleanSignature
+          );
+      } else {
+        await spaceRequestService.reject(
+          request.id,
+          reason,
+          cleanSignature
+        );
+      }
 
       toast.success(
-        "Demande rejetée",
+        isArtisticAssistant
+          ? "Recommandation transmise"
+          : "Demande rejetée",
         {
           description:
-            "Le demandeur pourra consulter le motif.",
+            isArtisticAssistant
+              ? "Le superviseur artistique décidera de la suite."
+              : "Le demandeur pourra consulter le motif.",
         }
       );
 
@@ -1516,6 +1663,157 @@ export default function ArtisticRequestDetailPage() {
           </div>
 
           <aside className="space-y-4 xl:sticky xl:top-6">
+            {isArtisticSupervisor &&
+              request.status ===
+                "artistic_review" && (
+                <Card className="overflow-hidden border-[#D1965B]/15 bg-white shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-[#D1965B]/10 p-2.5">
+                        <User className="h-5 w-5 text-[#D1965B]" />
+                      </div>
+
+                      <div>
+                        <h2 className="font-bold text-[#5C4033]">
+                          Affectation artistique
+                        </h2>
+
+                        <p className="text-xs text-[#5C4033]/55">
+                          Facultatif : le superviseur peut aussi traiter directement.
+                        </p>
+                      </div>
+                    </div>
+
+                    {request.artisticAssignedTo && (
+                      <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                        Affectée à{" "}
+                        <strong>
+                          {
+                            request
+                              .artisticAssignedTo
+                              .username
+                          }
+                        </strong>
+                      </div>
+                    )}
+
+                    {request.artisticReviewState ===
+                      "assistant_validated" ||
+                    request.artisticReviewState ===
+                      "assistant_rejected" ? (
+                      <div
+                        className={`mt-4 rounded-xl border p-4 ${
+                          request.artisticReviewState ===
+                          "assistant_validated"
+                            ? "border-green-200 bg-green-50 text-green-900"
+                            : "border-red-200 bg-red-50 text-red-900"
+                        }`}
+                      >
+                        <p className="font-semibold">
+                          {request.artisticReviewState ===
+                          "assistant_validated"
+                            ? "Traitement favorable de l’assistant"
+                            : "Rejet recommandé par l’assistant"}
+                        </p>
+
+                        {request.artisticAssistantComment && (
+                          <p className="mt-2 text-sm leading-6">
+                            {
+                              request.artisticAssistantComment
+                            }
+                          </p>
+                        )}
+
+                        {request.artisticAssistantSignature && (
+                          <p className="mt-3 border-t border-current/15 pt-3 font-serif text-lg italic">
+                            {
+                              request.artisticAssistantSignature
+                            }
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-4 space-y-3">
+                        <select
+                          value={
+                            selectedAssistantId
+                          }
+                          onChange={(event) =>
+                            setSelectedAssistantId(
+                              event.target.value
+                            )
+                          }
+                          disabled={assigning}
+                          className="h-11 w-full rounded-xl border border-[#D1965B]/25 bg-white px-3 text-sm text-[#5C4033] outline-none focus:border-[#D1965B]"
+                        >
+                          <option value="">
+                            Sélectionner un assistant
+                          </option>
+
+                          {assistants.map(
+                            (assistant) => (
+                              <option
+                                key={
+                                  assistant.id
+                                }
+                                value={
+                                  assistant.id
+                                }
+                              >
+                                {[
+                                  assistant.firstName,
+                                  assistant.lastName,
+                                ]
+                                  .filter(
+                                    Boolean
+                                  )
+                                  .join(
+                                    " "
+                                  ) ||
+                                  assistant.email}{" "}
+                                ({assistant.activeRequests} en cours)
+                              </option>
+                            )
+                          )}
+                        </select>
+
+                        <textarea
+                          value={
+                            assignmentComment
+                          }
+                          onChange={(event) =>
+                            setAssignmentComment(
+                              event.target.value
+                            )
+                          }
+                          disabled={assigning}
+                          rows={3}
+                          placeholder="Consigne pour l’assistant (facultatif)"
+                          className="w-full resize-none rounded-xl border border-[#D1965B]/25 bg-white px-3 py-3 text-sm text-[#5C4033] outline-none focus:border-[#D1965B]"
+                        />
+
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            void handleAssignAssistant()
+                          }
+                          disabled={
+                            assigning ||
+                            !selectedAssistantId
+                          }
+                          className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
+                        >
+                          {assigning && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Affecter à l’assistant
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
             {canProcess && (
               <Card className="overflow-hidden border-[#D1965B]/15 bg-white shadow-sm">
                 <CardContent className="p-5">
@@ -1855,10 +2153,9 @@ export default function ArtisticRequestDetailPage() {
                           </p>
 
                           <p className="mt-1 text-sm leading-6 text-amber-800">
-                            Examinez le dossier,
-                            puis choisissez de le
-                            valider ou de le
-                            rejeter.
+                            {isArtisticAssistant
+                              ? "Examinez le dossier, préparez l’avis, puis transmettez votre recommandation au superviseur."
+                              : "Examinez le dossier, puis rendez la décision finale ou affectez-le à un assistant."}
                           </p>
                         </div>
 
@@ -1868,7 +2165,9 @@ export default function ArtisticRequestDetailPage() {
                           className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
                         >
                           <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Donner un avis favorable
+                          {isArtisticAssistant
+                            ? "Transmettre un avis favorable"
+                            : "Donner un avis favorable"}
                         </Button>
 
                         <Button
@@ -1878,7 +2177,9 @@ export default function ArtisticRequestDetailPage() {
                           className="w-full border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
                         >
                           <XCircle className="mr-2 h-4 w-4" />
-                          Rejeter la demande
+                          {isArtisticAssistant
+                            ? "Recommander le rejet"
+                            : "Rejeter la demande"}
                         </Button>
                       </div>
                     ) : (
@@ -1903,8 +2204,12 @@ export default function ArtisticRequestDetailPage() {
                               <p className="mt-1 text-xs leading-5 opacity-80">
                                 {decisionMode ===
                                 "validate"
-                                  ? "Le dossier sera transmis à la Communication."
-                                  : "Le traitement du dossier sera arrêté."}
+                                  ? isArtisticAssistant
+                                    ? "Votre avis sera transmis au superviseur artistique."
+                                    : "Le dossier sera transmis à la Communication."
+                                  : isArtisticAssistant
+                                    ? "Votre recommandation de rejet sera transmise au superviseur."
+                                    : "Le traitement du dossier sera arrêté."}
                               </p>
                             </div>
 
@@ -2026,12 +2331,16 @@ export default function ArtisticRequestDetailPage() {
                               "validate" ? (
                               <>
                                 <FileSignature className="mr-2 h-4 w-4" />
-                                Signer et transmettre
+                                {isArtisticAssistant
+                                  ? "Signer et notifier le superviseur"
+                                  : "Signer et transmettre"}
                               </>
                             ) : (
                               <>
                                 <XCircle className="mr-2 h-4 w-4" />
-                                Signer et rejeter
+                                {isArtisticAssistant
+                                  ? "Signer et recommander le rejet"
+                                  : "Signer et rejeter"}
                               </>
                             )}
                           </Button>

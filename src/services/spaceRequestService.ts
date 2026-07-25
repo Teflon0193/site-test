@@ -52,6 +52,16 @@ export interface SpaceRequestUser {
   phone?: string | null;
 }
 
+export interface DepartmentAssistant {
+  id: number;
+  firstName?: string | null;
+  lastName?: string | null;
+  email: string;
+  phone?: string | null;
+  role: string;
+  activeRequests: number;
+}
+
 export interface BookedCalendarEvent {
   id: number;
   reference: string;
@@ -124,6 +134,44 @@ export interface SpaceRequest {
   assistantComment?: string | null;
   assistantSignature?: string | null;
   assistantReviewedAt?: string | null;
+
+  artisticAssignedToUserId?: number | null;
+  artisticAssignedTo?: {
+    id: number;
+    username: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+  } | null;
+
+  artisticReviewState?:
+    | "unassigned"
+    | "assigned"
+    | "assistant_validated"
+    | "assistant_rejected"
+    | null;
+  artisticAssistantComment?: string | null;
+  artisticAssistantSignature?: string | null;
+  artisticAssistantReviewedAt?: string | null;
+
+  legalAssignedToUserId?: number | null;
+  legalAssignedTo?: {
+    id: number;
+    username: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+  } | null;
+
+  legalReviewState?:
+    | "unassigned"
+    | "assigned"
+    | "assistant_validated"
+    | "assistant_rejected"
+    | null;
+  legalAssistantComment?: string | null;
+  legalAssistantSignature?: string | null;
+  legalAssistantReviewedAt?: string | null;
 
   currentStep?: string | null;
 
@@ -356,6 +404,129 @@ export const spaceRequestService = {
     const response = await api.get<
       ApiResponse<SpaceRequest[]>
     >("/space-requests/department");
+
+    return response.data.data;
+  },
+
+  async getProgrammeAssistants(): Promise<
+    DepartmentAssistant[]
+  > {
+    const response = await api.get<
+      ApiResponse<DepartmentAssistant[]>
+    >("/space-requests/programme/assistants");
+
+    return Array.isArray(response.data.data)
+      ? response.data.data
+      : [];
+  },
+
+  async assignProgrammeAssistant(
+    id: number,
+    assistantId: number,
+    comment = ""
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+
+    if (
+      !Number.isInteger(assistantId) ||
+      assistantId <= 0
+    ) {
+      throw new Error(
+        "Assistant Programme invalide."
+      );
+    }
+
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(
+      `/space-requests/${id}/assign-programme-assistant`,
+      {
+        assistantId,
+        comment: comment.trim(),
+      }
+    );
+
+    return response.data.data;
+  },
+
+  async getArtisticAssistants(): Promise<
+    DepartmentAssistant[]
+  > {
+    const response = await api.get<
+      ApiResponse<DepartmentAssistant[]>
+    >("/space-requests/artistic/assistants");
+
+    return Array.isArray(response.data.data)
+      ? response.data.data
+      : [];
+  },
+
+  async assignArtisticAssistant(
+    id: number,
+    assistantId: number,
+    comment = ""
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+
+    if (
+      !Number.isInteger(assistantId) ||
+      assistantId <= 0
+    ) {
+      throw new Error(
+        "Assistant de la Direction artistique invalide."
+      );
+    }
+
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(
+      `/space-requests/${id}/assign-artistic-assistant`,
+      {
+        assistantId,
+        comment: comment.trim(),
+      }
+    );
+
+    return response.data.data;
+  },
+
+  async getLegalAssistants(): Promise<
+    DepartmentAssistant[]
+  > {
+    const response = await api.get<
+      ApiResponse<DepartmentAssistant[]>
+    >("/space-requests/legal/assistants");
+
+    return Array.isArray(response.data.data)
+      ? response.data.data
+      : [];
+  },
+
+  async assignLegalAssistant(
+    id: number,
+    assistantId: number,
+    comment = ""
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+
+    if (
+      !Number.isInteger(assistantId) ||
+      assistantId <= 0
+    ) {
+      throw new Error(
+        "Assistant juridique invalide."
+      );
+    }
+
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(
+      `/space-requests/${id}/assign-legal-assistant`,
+      {
+        assistantId,
+        comment: comment.trim(),
+      }
+    );
 
     return response.data.data;
   },
@@ -619,6 +790,74 @@ export const spaceRequestService = {
       comment: cleanComment,
       electronicSignature: signature,
     });
+
+    return response.data.data;
+  },
+
+  async artisticAssistantReview(
+    id: number,
+    decision: "VALIDATED" | "REJECTED",
+    comment: string,
+    electronicSignature: string
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+
+    const cleanComment = comment.trim();
+
+    if (cleanComment.length < 5) {
+      throw new Error(
+        "Le commentaire doit contenir au moins 5 caractères."
+      );
+    }
+
+    const signature = requireSignature(
+      electronicSignature
+    );
+
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(
+      `/space-requests/${id}/artistic-assistant-review`,
+      {
+        decision,
+        comment: cleanComment,
+        electronicSignature: signature,
+      }
+    );
+
+    return response.data.data;
+  },
+
+  async legalAssistantReview(
+    id: number,
+    decision: "VALIDATED" | "REJECTED",
+    comment: string,
+    electronicSignature: string
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+
+    const cleanComment = comment.trim();
+
+    if (cleanComment.length < 5) {
+      throw new Error(
+        "Le commentaire doit contenir au moins 5 caractères."
+      );
+    }
+
+    const signature = requireSignature(
+      electronicSignature
+    );
+
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(
+      `/space-requests/${id}/legal-assistant-review`,
+      {
+        decision,
+        comment: cleanComment,
+        electronicSignature: signature,
+      }
+    );
 
     return response.data.data;
   },

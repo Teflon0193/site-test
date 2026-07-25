@@ -1,337 +1,419 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Link from "next/link";
 import {
-  ArrowRight,
-  CalendarDays,
-  ClipboardCheck,
-  Clock,
-  FileText,
+  CheckCircle2,
+  ClipboardList,
   Gavel,
-  Loader2,
   RefreshCw,
-  UserRound,
+  Search,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import RequestStatusBadge from "@/components/space-requests/RequestStatusBadge";
+import { useAuth } from "@/context/AuthContext";
 import {
   spaceRequestService,
+  type DepartmentAssistant,
   type SpaceRequest,
 } from "@/services/spaceRequestService";
 
-function formatDate(value?: string | null): string {
-  if (!value) {
-    return "Date inconnue";
-  }
+const SUPERVISOR_ROLES = [
+  "ADMIN",
+  "JURIDIQUE",
+  "JURIDIQUE_SUPERVISEUR",
+];
 
-  const date = new Date(value);
+const statusLabels: Record<string, string> = {
+  legal_review:
+    "Examen par le Service juridique",
+  program_review_after_legal:
+    "Retournée au Programme",
+  completed: "Terminée",
+  rejected: "Rejetée",
+};
 
-  if (Number.isNaN(date.getTime())) {
-    return "Date inconnue";
-  }
+function normalizeStatus(status?: string | null) {
+  return String(status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
 
-  return date.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+function assistantName(
+  assistant?: DepartmentAssistant
+) {
+  if (!assistant) return "";
+
+  return (
+    `${assistant.firstName || ""} ${
+      assistant.lastName || ""
+    }`.trim() || assistant.email
+  );
 }
 
 export default function LegalDashboardPage() {
-  const [requests, setRequests] = useState<SpaceRequest[]>([]);
+  const { user } = useAuth();
+
+  const isSupervisor = SUPERVISOR_ROLES.includes(
+    user?.role || ""
+  );
+
+  const [requests, setRequests] = useState<
+    SpaceRequest[]
+  >([]);
+  const [assistants, setAssistants] = useState<
+    DepartmentAssistant[]
+  >([]);
+  const [selectedAssistants, setSelectedAssistants] =
+    useState<Record<number, string>>({});
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [assigningId, setAssigningId] = useState<
+    number | null
+  >(null);
 
-  const loadRequests = useCallback(async (showLoader = true) => {
-    try {
-      if (showLoader) {
-        setLoading(true);
-      } else {
-        setRefreshing(true);
+  const loadData = useCallback(
+    async (initial = false) => {
+      try {
+        if (initial) setLoading(true);
+        else setRefreshing(true);
+
+        const [requestData, assistantData] =
+          await Promise.all([
+            spaceRequestService.getDepartmentRequests(),
+            isSupervisor
+              ? spaceRequestService.getLegalAssistants()
+              : Promise.resolve([]),
+          ]);
+
+        setRequests(
+          Array.isArray(requestData) ? requestData : []
+        );
+        setAssistants(assistantData);
+
+        setSelectedAssistants((current) => {
+          const next = { ...current };
+
+          for (const request of requestData) {
+            if (request.legalAssignedToUserId) {
+              next[request.id] = String(
+                request.legalAssignedToUserId
+              );
+            }
+          }
+
+          return next;
+        });
+      } catch (error) {
+        console.error("Legal dashboard error:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Impossible de charger le tableau de bord"
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
+    },
+    [isSupervisor]
+  );
 
-      const data =
-        await spaceRequestService.getDepartmentRequests();
+  useEffect(() => {
+    void loadData(true);
+  }, [loadData]);
 
-      setRequests(Array.isArray(data) ? data : []);
+  const filteredRequests = useMemo(() => {
+    const value = search.trim().toLowerCase();
+
+    if (!value) return requests;
+
+    return requests.filter((request) =>
+      [
+        request.reference,
+        request.eventName,
+        request.user?.username,
+        request.user?.email,
+        request.legalAssignedTo?.username,
+      ].some((field) =>
+        String(field || "")
+          .toLowerCase()
+          .includes(value)
+      )
+    );
+  }, [requests, search]);
+
+  const unassigned = requests.filter(
+    (request) => !request.legalAssignedToUserId
+  ).length;
+
+  const handleAssign = async (requestId: number) => {
+    const assistantId = Number(
+      selectedAssistants[requestId]
+    );
+
+    if (!assistantId) {
+      toast.error("Sélectionnez un assistant juridique.");
+      return;
+    }
+
+    try {
+      setAssigningId(requestId);
+
+      const updated =
+        await spaceRequestService.assignLegalAssistant(
+          requestId,
+          assistantId
+        );
+
+      setRequests((current) =>
+        current.map((request) =>
+          request.id === requestId ? updated : request
+        )
+      );
+
+      const assistant = assistants.find(
+        (item) => item.id === assistantId
+      );
+
+      toast.success(
+        `Demande affectée à ${assistantName(assistant)}`
+      );
+
+      await loadData(false);
     } catch (error) {
-      console.error("Legal dashboard error:", error);
-
+      console.error("Legal assignment error:", error);
       toast.error(
         error instanceof Error
           ? error.message
-          : "Impossible de charger les demandes"
+          : "Impossible d'affecter la demande"
       );
-
-      setRequests([]);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setAssigningId(null);
     }
-  }, []);
-
-  useEffect(() => {
-    void loadRequests();
-  }, [loadRequests]);
-
-  const statistics = useMemo(() => {
-    const pending = requests.filter(
-      (request) => request.status === "legal_review"
-    ).length;
-
-    const processed = requests.filter(
-      (request) =>
-        request.currentDepartment !== "JURIDIQUE" ||
-        request.status !== "legal_review"
-    ).length;
-
-    return {
-      total: requests.length,
-      pending,
-      processed,
-    };
-  }, [requests]);
-
-  const recentRequests = useMemo(
-    () => requests.slice(0, 5),
-    [requests]
-  );
-
-  const statisticCards = [
-    {
-      title: "Total assigné",
-      value: statistics.total,
-      description: "Tous les dossiers reçus",
-      icon: FileText,
-      iconClassName: "bg-[#D1965B]/15 text-[#9B5D26]",
-    },
-    {
-      title: "En attente",
-      value: statistics.pending,
-      description: "Dossiers à examiner",
-      icon: Clock,
-      iconClassName: "bg-amber-100 text-amber-700",
-    },
-    {
-      title: "Traitées",
-      value: statistics.processed,
-      description: "Dossiers déjà examinés",
-      icon: ClipboardCheck,
-      iconClassName: "bg-emerald-100 text-emerald-700",
-    },
-  ];
+  };
 
   return (
-    <div className="min-h-screen space-y-7 bg-[#F5F1E9] p-4 sm:p-6 lg:p-8">
-      {/* En-tête */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#9B5D26] to-[#D1965B] px-6 py-8 text-white shadow-lg sm:px-8 lg:px-10">
-        <div className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/10" />
-        <div className="absolute -bottom-20 right-24 h-44 w-44 rounded-full bg-white/5" />
+    <div className="space-y-6 text-[#5C4033]">
+      <section className="rounded-2xl bg-[#D1965B] p-6 text-white shadow-sm sm:p-8">
+        <p className="text-sm font-semibold uppercase tracking-wider text-white/80">
+          Service juridique
+        </p>
 
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15 shadow-inner backdrop-blur-sm">
-            <Gavel className="h-8 w-8" />
-          </div>
+        <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
+          {isSupervisor
+            ? "Supervision et affectation juridique"
+            : "Mes demandes juridiques assignées"}
+        </h1>
 
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">
-              Service juridique
-            </p>
-
-            <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              Tableau de bord
-            </h1>
-
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/85 sm:text-base">
-              Examinez la conformité juridique des demandes
-              d&apos;occupation d&apos;espace transmises par le
-              Service des Programmes.
-            </p>
-          </div>
-        </div>
+        <p className="mt-2 max-w-3xl text-white/90">
+          {isSupervisor
+            ? "Répartissez les demandes entre les assistants et suivez leur charge de travail."
+            : "Traitez uniquement les dossiers qui vous ont été confiés par votre superviseur."}
+        </p>
       </section>
 
-      {/* Statistiques */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {statisticCards.map((statistic) => {
-          const Icon = statistic.icon;
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label="Demandes visibles"
+          value={requests.length}
+          icon={ClipboardList}
+        />
+        <Stat
+          label={
+            isSupervisor
+              ? "Non affectées"
+              : "À traiter"
+          }
+          value={isSupervisor ? unassigned : requests.length}
+          icon={Gavel}
+        />
+        <Stat
+          label="Assistants actifs"
+          value={isSupervisor ? assistants.length : 1}
+          icon={Users}
+        />
+        <Stat
+          label="Affectées"
+          value={
+            isSupervisor
+              ? requests.length - unassigned
+              : requests.length
+          }
+          icon={UserCheck}
+        />
+      </section>
 
-          return (
-            <Card
-              key={statistic.title}
-              className="overflow-hidden rounded-2xl border border-[#E8DED1] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+      <section className="rounded-2xl border border-[#D1965B]/15 bg-white shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-[#D1965B]/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold">
+              {isSupervisor
+                ? "File des demandes juridiques"
+                : "Mes dossiers"}
+            </h2>
+            <p className="mt-1 text-sm text-[#5C4033]/60">
+              {filteredRequests.length} dossier
+              {filteredRequests.length > 1 ? "s" : ""}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <label className="relative block">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5C4033]/45" />
+              <input
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Référence, activité, demandeur..."
+                className="h-10 w-full rounded-lg border border-[#D1965B]/25 bg-white pl-9 pr-3 text-sm outline-none focus:border-[#D1965B] sm:w-72"
+              />
+            </label>
+
+            <Button
+              type="button"
+              variant="outline"
+              disabled={refreshing}
+              onClick={() => void loadData(false)}
+              className="border-[#D1965B]/30"
             >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-[#7A6A5D]">
-                      {statistic.title}
-                    </p>
-
-                    <p className="mt-2 text-4xl font-bold text-[#4D2C17]">
-                      {statistic.value}
-                    </p>
-
-                    <p className="mt-1 text-xs text-[#9A8B7E]">
-                      {statistic.description}
-                    </p>
-                  </div>
-
-                  <div
-                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${statistic.iconClassName}`}
-                  >
-                    <Icon className="h-7 w-7" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </section>
-
-      {/* Titre et actualisation */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#B8753D]">
-            Suivi juridique
-          </p>
-
-          <h2 className="mt-1 text-2xl font-bold text-[#4D2C17]">
-            Demandes récentes
-          </h2>
-
-          <p className="mt-1 text-sm text-[#7A6A5D]">
-            Dossiers actuellement assignés au Service juridique.
-          </p>
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${
+                  refreshing ? "animate-spin" : ""
+                }`}
+              />
+              Actualiser
+            </Button>
+          </div>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          disabled={refreshing}
-          onClick={() => void loadRequests(false)}
-          className="h-10 rounded-xl border-[#D9C8B7] bg-white text-[#6F3D1C] hover:bg-[#F4E9DD] hover:text-[#4D2C17]"
-        >
-          {refreshing ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="mr-2 h-4 w-4" />
-          )}
-
-          {refreshing ? "Actualisation..." : "Actualiser"}
-        </Button>
-      </section>
-
-      {/* Liste des dossiers */}
-      <Card className="overflow-hidden rounded-2xl border border-[#E6DDD3] bg-white shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-[#EEE6DD] px-5 py-5 sm:px-7">
-          <div>
-            <CardTitle className="text-xl font-bold text-[#633817]">
-              Dossiers à examiner
-            </CardTitle>
-
-            <p className="mt-1 text-sm text-[#8A796B]">
-              Consultez et examinez les demandes transmises.
-            </p>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="shrink-0 rounded-lg text-[#8B4513] hover:bg-[#F4E9DD] hover:text-[#633817]"
-          >
-            <Link href="/espace-membre/juridique/demandes">
-              <span className="hidden sm:inline">Tout afficher</span>
-              <ArrowRight className="h-4 w-4 sm:ml-2" />
-            </Link>
-          </Button>
-        </CardHeader>
-
-        <CardContent className="p-0">
+        <div className="p-5">
           {loading ? (
-            <div className="flex min-h-64 flex-col items-center justify-center px-6 py-14">
-              <Loader2 className="h-10 w-10 animate-spin text-[#D1965B]" />
-
-              <p className="mt-4 text-sm text-[#7A6A5D]">
-                Chargement des demandes...
-              </p>
+            <div className="py-14 text-center">
+              Chargement...
             </div>
-          ) : recentRequests.length === 0 ? (
-            <div className="flex min-h-64 flex-col items-center justify-center px-6 py-14 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F5EBDD]">
-                <Gavel className="h-8 w-8 text-[#B8753D]" />
-              </div>
-
-              <h3 className="mt-4 text-lg font-semibold text-[#4D2C17]">
-                Aucune demande en attente
-              </h3>
-
-              <p className="mt-2 max-w-md text-sm leading-6 text-[#7A6A5D]">
-                Les demandes transmises au Service juridique
-                apparaîtront automatiquement ici.
-              </p>
+          ) : filteredRequests.length === 0 ? (
+            <div className="py-14 text-center text-[#5C4033]/60">
+              <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-[#D1965B]/45" />
+              Aucune demande disponible.
             </div>
           ) : (
-            <div className="divide-y divide-[#EEE6DD]">
-              {recentRequests.map((request) => (
+            <div className="space-y-3">
+              {filteredRequests.map((request) => (
                 <article
                   key={request.id}
-                  className="group px-5 py-6 transition-colors hover:bg-[#FCF9F5] sm:px-7"
+                  className="rounded-xl border border-[#D1965B]/15 bg-[#FBF9F5] p-4"
                 >
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                    {/* Informations */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-[#F5EBDD] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[#B8753D]">
-                          {request.reference ||
-                            `Demande #${request.id}`}
-                        </span>
-                      </div>
-
-                      <h3 className="mt-3 text-lg font-bold text-[#633817] transition-colors group-hover:text-[#9B5D26] sm:text-xl">
-                        {request.eventName || "Demande d’espace"}
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-wide text-[#D1965B]">
+                        {request.reference}
+                      </p>
+                      <h3 className="mt-1 truncate text-lg font-bold">
+                        {request.eventName}
                       </h3>
+                      <p className="mt-1 text-sm text-[#5C4033]/60">
+                        {request.user?.username ||
+                          request.user?.email}
+                      </p>
+                      <span className="mt-2 inline-flex rounded-full bg-[#D1965B]/10 px-2.5 py-1 text-xs font-semibold text-[#B97D47]">
+                        {statusLabels[
+                          normalizeStatus(request.status)
+                        ] ||
+                          request.currentStep ||
+                          request.status}
+                      </span>
 
-                      <div className="mt-3 flex flex-col gap-2 text-sm text-[#7A6A5D] sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5">
-                        <span className="flex items-center gap-2">
-                          <UserRound className="h-4 w-4 shrink-0 text-[#B8753D]" />
-                          {request.user?.username || "Membre"}
-                        </span>
+                      {isSupervisor &&
+                        request.legalReviewState ===
+                          "assistant_validated" && (
+                          <span className="ml-2 mt-2 inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">
+                            Avis favorable reçu — décision requise
+                          </span>
+                        )}
 
-                        <span className="flex items-center gap-2">
-                          <CalendarDays className="h-4 w-4 shrink-0 text-[#B8753D]" />
-                          {formatDate(
-                            request.submittedAt || request.createdAt
-                          )}
-                        </span>
-                      </div>
+                      {isSupervisor &&
+                        request.legalReviewState ===
+                          "assistant_rejected" && (
+                          <span className="ml-2 mt-2 inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
+                            Rejet recommandé — décision requise
+                          </span>
+                        )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:shrink-0">
-                      <div className="max-w-full overflow-hidden">
-                        <RequestStatusBadge status={request.status} />
-                      </div>
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                      {isSupervisor &&
+                        ![
+                          "assistant_validated",
+                          "assistant_rejected",
+                        ].includes(
+                          request.legalReviewState || ""
+                        ) && (
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <select
+                            value={
+                              selectedAssistants[request.id] || ""
+                            }
+                            onChange={(event) =>
+                              setSelectedAssistants((current) => ({
+                                ...current,
+                                [request.id]: event.target.value,
+                              }))
+                            }
+                            className="h-10 min-w-60 rounded-lg border border-[#D1965B]/25 bg-white px-3 text-sm"
+                          >
+                            <option value="">
+                              Sélectionner un assistant
+                            </option>
+                            {assistants.map((assistant) => (
+                              <option
+                                key={assistant.id}
+                                value={assistant.id}
+                              >
+                                {assistantName(assistant)} - {assistant.activeRequests} dossier(s)
+                              </option>
+                            ))}
+                          </select>
+
+                          <Button
+                            type="button"
+                            disabled={assigningId === request.id}
+                            onClick={() =>
+                              void handleAssign(request.id)
+                            }
+                            className="bg-[#D1965B] text-white hover:bg-[#B97D47]"
+                          >
+                            {assigningId === request.id
+                              ? "Affectation..."
+                              : request.legalAssignedToUserId
+                                ? "Réaffecter"
+                                : "Affecter"}
+                          </Button>
+                        </div>
+                      )}
 
                       <Button
                         asChild
-                        className="h-10 rounded-xl bg-[#D1965B] px-5 font-semibold text-white shadow-sm hover:bg-[#B8753D]"
+                        variant="outline"
+                        className="border-[#D1965B]/30"
                       >
                         <Link
                           href={`/espace-membre/juridique/demandes/${request.id}`}
                         >
-                          Examiner
-                          <ArrowRight className="ml-2 h-4 w-4" />
+                          {isSupervisor
+                            ? "Consulter"
+                            : "Traiter"}
                         </Link>
                       </Button>
                     </div>
@@ -340,8 +422,36 @@ export default function LegalDashboardPage() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
+  icon: typeof ClipboardList;
+}) {
+  return (
+    <div className="rounded-2xl border border-[#D1965B]/15 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-[#5C4033]/60">
+            {label}
+          </p>
+          <p className="mt-1 text-3xl font-bold">
+            {value}
+          </p>
+        </div>
+        <div className="rounded-xl bg-[#D1965B]/10 p-3">
+          <Icon className="h-6 w-6 text-[#D1965B]" />
+        </div>
+      </div>
     </div>
   );
 }
