@@ -414,15 +414,21 @@ export default function ArtisticRequestDetailPage() {
     void loadRequest();
   }, [loadRequest]);
 
+  const normalizedRole = String(
+    user?.role || ""
+  )
+    .trim()
+    .toUpperCase();
+
   const isArtisticAssistant =
-    user?.role ===
+    normalizedRole ===
     "DIRECTION_ARTISTIQUE_ASSISTANT";
 
   const isArtisticSupervisor = [
     "DIRECTION_ARTISTIQUE",
     "DIRECTION_ARTISTIQUE_SUPERVISEUR",
     "ADMIN",
-  ].includes(user?.role || "");
+  ].includes(normalizedRole);
 
   const isAssignedAssistant =
     isArtisticAssistant &&
@@ -430,13 +436,24 @@ export default function ArtisticRequestDetailPage() {
       request?.artisticAssignedToUserId
     ) === Number(user?.id);
 
+  /*
+   * Le statut artistic_review indique déjà que
+   * la demande se trouve à la Direction artistique.
+   *
+   * Le superviseur peut donc traiter ou générer
+   * directement, même si assignedDepartment est
+   * absent ou utilise un ancien libellé.
+   *
+   * L’assistant reste limité aux demandes qui lui
+   * ont été personnellement affectées.
+   */
   const canProcess =
     request?.status ===
       "artistic_review" &&
-    request.assignedDepartment ===
-      "DIRECTION_ARTISTIQUE" &&
-    (isArtisticSupervisor ||
-      isAssignedAssistant);
+    (
+      isArtisticSupervisor ||
+      isAssignedAssistant
+    );
 
   useEffect(() => {
     if (!isArtisticSupervisor) {
@@ -1349,7 +1366,7 @@ export default function ArtisticRequestDetailPage() {
     <>
       <div className="mx-auto w-full max-w-[1500px] space-y-6">
         <Link
-          href="/espace-membre/direction-artistique/demandes"
+          href="/espace-membre/direction-artistique"
           className="inline-flex items-center gap-2 text-sm font-medium text-[#D1965B] transition hover:text-[#B97D47]"
         >
           <ArrowLeft className="h-4 w-4" />

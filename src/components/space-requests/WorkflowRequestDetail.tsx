@@ -22,6 +22,9 @@ import {
   FileText,
   History,
   Loader2,
+  Mail,
+  MapPin,
+  Phone,
   Send,
   Upload,
   User,
@@ -577,6 +580,25 @@ export default function WorkflowRequestDetail({
       .join(" ") ||
     "Demandeur";
 
+  const requestedSpace =
+    request?.spaceId != null
+      ? getCcapacSpace(
+          Number(request.spaceId)
+        )
+      : undefined;
+
+  const requestedSpaceName =
+    requestedSpace?.name ||
+    "Non renseigné";
+
+  const requesterPhone =
+    request?.user?.phone ||
+    "Non renseigné";
+
+  const requesterEmail =
+    request?.user?.email ||
+    "Non renseigné";
+
   const handleFileChange = (
     event: ChangeEvent<HTMLInputElement>
   ) => {
@@ -943,9 +965,107 @@ export default function WorkflowRequestDetail({
             </CardContent>
           </Card>
 
-          <RequestDocuments
-            documents={documents}
-          />
+          {role ===
+          "REGISSEUR_GENERAL" ? (
+            <Card className="border-[#D1965B]/15 bg-white shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-[#D1965B]" />
+
+                  <div>
+                    <h2 className="font-bold text-[#5C4033]">
+                      Informations de la
+                      demande
+                    </h2>
+
+                    <p className="mt-1 text-sm text-[#5C4033]/55">
+                      Informations extraites
+                      automatiquement du
+                      formulaire envoyé par
+                      le demandeur.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-xl border border-[#D1965B]/10 bg-[#F8F5EF] p-4">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                      <User className="h-4 w-4 text-[#D1965B]" />
+                      Nom du demandeur
+                    </p>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {fullName}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#D1965B]/10 bg-[#F8F5EF] p-4">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                      <Phone className="h-4 w-4 text-[#D1965B]" />
+                      Numéro de téléphone
+                    </p>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {requesterPhone}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#D1965B]/10 bg-[#F8F5EF] p-4">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                      <Mail className="h-4 w-4 text-[#D1965B]" />
+                      Adresse email
+                    </p>
+
+                    <p className="mt-2 break-all font-semibold text-[#5C4033]">
+                      {requesterEmail}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#D1965B]/10 bg-[#F8F5EF] p-4">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                      <FileSignature className="h-4 w-4 text-[#D1965B]" />
+                      Titre de l’événement
+                    </p>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {request.eventName ||
+                        request.title ||
+                        "Non renseigné"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#D1965B]/10 bg-[#F8F5EF] p-4">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                      <MapPin className="h-4 w-4 text-[#D1965B]" />
+                      Espace demandé
+                    </p>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {requestedSpaceName}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#D1965B]/10 bg-[#F8F5EF] p-4">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                      <CalendarDays className="h-4 w-4 text-[#D1965B]" />
+                      Date souhaitée
+                    </p>
+
+                    <p className="mt-2 font-semibold text-[#5C4033]">
+                      {formatDate(
+                        request.date ||
+                          request.desiredDate
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <RequestDocuments
+              documents={documents}
+            />
+          )}
 
           <Card className="border-[#D1965B]/15 bg-white shadow-sm">
             <CardContent className="p-6">

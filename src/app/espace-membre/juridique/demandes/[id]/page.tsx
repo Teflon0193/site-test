@@ -461,40 +461,40 @@ export default function LegalRequestPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <Card className="overflow-hidden border-[#D1965B]/15 bg-white shadow-sm">
-            <div className="border-b border-[#D1965B]/12 px-6 py-5">
+          <Card className="overflow-hidden rounded-2xl border border-[#D1965B]/15 bg-white shadow-[0_8px_28px_rgba(92,64,51,0.08)]">
+            <div className="border-b border-[#D1965B]/10 px-6 py-6 sm:px-7">
               <h2 className="text-lg font-bold text-[#5C4033]">
                 Informations du dossier
               </h2>
-              <p className="mt-1 text-sm text-[#5C4033]/55">
+              <p className="mt-1.5 text-sm text-[#5C4033]/55">
                 Coordonnées et informations de la demande.
               </p>
             </div>
 
-            <CardContent className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl bg-muted/50 p-4">
-                  <p className="text-xs uppercase text-muted-foreground">
+            <CardContent className="space-y-6 p-6 sm:p-7">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="min-h-[120px] rounded-2xl border border-[#D1965B]/10 bg-[#F8F5EF] p-5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#5C4033]/55">
                     Demandeur
                   </p>
 
-                  <p className="mt-1 flex items-center gap-2 font-semibold">
-                    <User className="h-4 w-4 text-primary" />
+                  <p className="mt-2 flex items-center gap-2 font-semibold text-[#5C4033]">
+                    <User className="h-4 w-4 shrink-0 text-[#D1965B]" />
                     {request.user?.username}
                   </p>
 
-                  <p className="text-sm text-muted-foreground">
+                  <p className="mt-1 break-all pl-6 text-sm leading-6 text-[#5C4033]/65">
                     {request.user?.email}
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-muted/50 p-4">
-                  <p className="text-xs uppercase text-muted-foreground">
+                <div className="min-h-[120px] rounded-2xl border border-[#D1965B]/10 bg-[#F8F5EF] p-5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#5C4033]/55">
                     Transmission
                   </p>
 
-                  <p className="mt-1 flex items-center gap-2 font-semibold">
-                    <Calendar className="h-4 w-4 text-primary" />
+                  <p className="mt-2 flex items-center gap-2 font-semibold text-[#5C4033]">
+                    <Calendar className="h-4 w-4 shrink-0 text-[#D1965B]" />
 
                     {formatDate(
                       request.submittedAt ||
@@ -504,11 +504,13 @@ export default function LegalRequestPage() {
                 </div>
               </div>
 
-              <p className="whitespace-pre-wrap rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">
-                {getDescriptionWithSpace(
-                  request
-                )}
-              </p>
+              <div className="rounded-2xl border border-[#D1965B]/10 bg-[#F8F5EF] p-5 sm:p-6">
+                <p className="whitespace-pre-wrap text-sm leading-7 text-[#5C4033]/75">
+                  {getDescriptionWithSpace(
+                    request
+                  )}
+                </p>
+              </div>
 
             </CardContent>
           </Card>

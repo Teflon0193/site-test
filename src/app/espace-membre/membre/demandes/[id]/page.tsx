@@ -562,6 +562,11 @@ export default function MemberRequestDetailPage() {
                 <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
                   Paiement en cours de vérification par le Service des Programmes
                 </span>
+              ) : request.status ===
+                "communication_review_after_confirmation" ? (
+                <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-700">
+                  Vérification par la Communication après confirmation
+                </span>
               ) : (
                 <RequestStatusBadge
                   status={request.status as never}
