@@ -721,6 +721,32 @@ export const spaceRequestService = {
   },
 
   /*
+   * Renvoi signé d'une demande après correction par le membre.
+   * Cette action est utilisée lorsque le dossier a été retourné
+   * au demandeur afin qu'il apporte les corrections demandées.
+   */
+  async resubmitCorrection(
+    id: number,
+    electronicSignature: string,
+    comment = ""
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+
+    const signature = requireSignature(
+      electronicSignature
+    );
+
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(`/space-requests/${id}/resubmit-correction`, {
+      electronicSignature: signature,
+      comment: comment.trim(),
+    });
+
+    return response.data.data;
+  },
+
+  /*
    * Confirmation des deux documents :
    * formulaire initial + avis artistique.
    *
