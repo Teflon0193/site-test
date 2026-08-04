@@ -683,6 +683,44 @@ export const spaceRequestService = {
   },
 
   /*
+   * Décision signée du membre après réception
+   * des documents de la Direction artistique.
+   */
+  async memberDecision(
+    id: number,
+    decision: "ACCEPTED" | "REFUSED",
+    electronicSignature: string,
+    comment = ""
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+
+    const signature = requireSignature(
+      electronicSignature
+    );
+
+    const cleanComment = comment.trim();
+
+    if (
+      decision === "REFUSED" &&
+      cleanComment.length < 5
+    ) {
+      throw new Error(
+        "Le motif du refus doit contenir au moins 5 caractères."
+      );
+    }
+
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(`/space-requests/${id}/member-decision`, {
+      decision,
+      electronicSignature: signature,
+      comment: cleanComment,
+    });
+
+    return response.data.data;
+  },
+
+  /*
    * Confirmation des deux documents :
    * formulaire initial + avis artistique.
    *
