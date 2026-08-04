@@ -10,10 +10,15 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BadgeDollarSign,
+  CalendarDays,
   CheckCircle2,
   Loader2,
+  Mail,
+  MapPin,
+  Phone,
   Send,
   Upload,
+  UserRound,
   XCircle,
 } from "lucide-react";
 import {
@@ -43,6 +48,49 @@ type CompatibleDocument = SpaceRequestDocument & {
   documentType?: SpaceRequestDocumentType;
   document_type?: SpaceRequestDocumentType;
 };
+
+const SPACE_NAMES: Record<number, string> = {
+  1: "Grand théâtre",
+  2: "Petit théâtre",
+  3: "Salle de danse",
+  4: "Hall",
+  5: "Atrium",
+  6: "Cafétéria",
+  7: "Salle de musique 1",
+  8: "Salle de musique 2",
+  9: "Parking",
+  10: "Esplanade principale",
+  11: "Esplanade secondaire / côté INA",
+  12: "Esplanade secondaire / côté parking",
+};
+
+function getRequestedSpace(request: SpaceRequest) {
+  if (request.spaceId && SPACE_NAMES[request.spaceId]) {
+    return SPACE_NAMES[request.spaceId];
+  }
+
+  const match = request.description?.match(
+    /Espace\s+(?:demandé|souhaité)\s*:\s*([^\n\r]+)/i
+  );
+
+  return match?.[1]?.trim() || "Espace non renseigné";
+}
+
+function formatRequestDate(value?: string | null) {
+  if (!value) return "Date non renseignée";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value.slice(0, 10);
+  }
+
+  return date.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 function getDocumentType(
   document: CompatibleDocument
@@ -376,6 +424,22 @@ export default function FinanceRequestPage() {
   const canProcess =
     request.status === "finance_cotation";
 
+  const requesterName =
+    request.user?.username ||
+    [
+      request.user?.firstName,
+      request.user?.lastName,
+    ]
+      .filter(Boolean)
+      .join(" ") ||
+    "Demandeur non renseigné";
+
+  const requestedSpace =
+    getRequestedSpace(request);
+
+  const requestedDate =
+    request.desiredDate || request.date;
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" asChild>
@@ -387,12 +451,12 @@ export default function FinanceRequestPage() {
 
       <section className="overflow-hidden rounded-2xl bg-[#D1965B] p-6 text-white shadow-sm sm:p-8">
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-wide text-white/75">
               {request.reference}
             </p>
 
-            <h1 className="mt-1 text-3xl font-bold">
+            <h1 className="mt-1 break-words text-2xl font-bold sm:text-3xl">
               {request.eventName}
             </h1>
           </div>
@@ -409,15 +473,89 @@ export default function FinanceRequestPage() {
                 Dossier à coter
               </h2>
               <p className="mt-1 text-sm text-[#5C4033]/55">
-                Consultez le dossier avant d&aposétablir la cotation.
+                Consultez le dossier avant d&apos;établir la cotation.
               </p>
             </div>
 
-            <CardContent className="space-y-5">
-              <p className="whitespace-pre-wrap rounded-xl bg-[#F8F5EF] p-5 text-sm leading-7 text-[#5C4033]/75">
-                {request.description}
-              </p>
+            <CardContent className="space-y-6 p-5 sm:p-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="min-w-0 rounded-2xl border border-[#D1965B]/15 bg-[#F8F5EF] p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 rounded-xl bg-white p-2.5 text-[#D1965B] shadow-sm">
+                      <UserRound className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                        Demandeur
+                      </p>
+                      <p className="mt-1 break-words font-semibold text-[#5C4033]">
+                        {requesterName}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
+                <div className="min-w-0 rounded-2xl border border-[#D1965B]/15 bg-[#F8F5EF] p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 rounded-xl bg-white p-2.5 text-[#D1965B] shadow-sm">
+                      <MapPin className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                        Espace demandé
+                      </p>
+                      <p className="mt-1 break-words font-semibold text-[#5C4033]">
+                        {requestedSpace}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-w-0 rounded-2xl border border-[#D1965B]/15 bg-[#F8F5EF] p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 rounded-xl bg-white p-2.5 text-[#D1965B] shadow-sm">
+                      <CalendarDays className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                        Date souhaitée
+                      </p>
+                      <p className="mt-1 break-words font-semibold text-[#5C4033]">
+                        {formatRequestDate(requestedDate)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-w-0 rounded-2xl border border-[#D1965B]/15 bg-[#F8F5EF] p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 rounded-xl bg-white p-2.5 text-[#D1965B] shadow-sm">
+                      <Mail className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#5C4033]/50">
+                        Coordonnées
+                      </p>
+                      <p className="mt-1 break-all text-sm font-medium text-[#5C4033]">
+                        {request.user?.email || "Email non renseigné"}
+                      </p>
+                      <p className="mt-2 flex items-center gap-2 break-words text-sm text-[#5C4033]/65">
+                        <Phone className="h-3.5 w-3.5 shrink-0" />
+                        {request.user?.phone || "Téléphone non renseigné"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-[#5C4033]">
+                  Description de la demande
+                </h3>
+                <p className="mt-2 whitespace-pre-wrap break-words rounded-2xl border border-[#D1965B]/10 bg-[#F8F5EF] p-4 text-sm leading-7 text-[#5C4033]/75 sm:p-5">
+                  {request.description || "Aucune description fournie."}
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -437,7 +575,7 @@ export default function FinanceRequestPage() {
               </p>
             </div>
 
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-5 sm:p-6">
               {history.map((entry) => (
                 <div
                   key={entry.id}
@@ -467,7 +605,7 @@ export default function FinanceRequestPage() {
             </p>
           </div>
 
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-5 p-5 sm:p-6">
             {!canProcess ? (
               <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
                 Cette demande n&apos;est plus assignée
@@ -614,21 +752,6 @@ export default function FinanceRequestPage() {
                   <Send className="ml-2 h-4 w-4" />
                 </Button>
 
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="w-full"
-                  disabled={processing !== null}
-                  onClick={handleReject}
-                >
-                  {processing === "reject" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <XCircle className="mr-2 h-4 w-4" />
-                  )}
-
-                  Refuser
-                </Button>
               </>
             )}
           </CardContent>

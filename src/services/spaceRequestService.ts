@@ -173,6 +173,25 @@ export interface SpaceRequest {
   legalAssistantSignature?: string | null;
   legalAssistantReviewedAt?: string | null;
 
+  communicationValidationState?:
+    | "pending"
+    | "validated"
+    | null;
+  communicationComment?: string | null;
+  communicationSignature?: string | null;
+  communicationValidatedBy?: number | null;
+  communicationValidatedAt?: string | null;
+
+  regisseurValidationState?:
+    | "pending"
+    | "validated"
+    | "refused"
+    | null;
+  regisseurComment?: string | null;
+  regisseurSignature?: string | null;
+  regisseurValidatedBy?: number | null;
+  regisseurValidatedAt?: string | null;
+
   currentStep?: string | null;
 
   electronicSignature?: string | null;
@@ -710,10 +729,20 @@ export const spaceRequestService = {
    */
   async uploadPaymentProof(
     id: number,
-    document: File
+    document: File,
+    electronicSignature: string
   ): Promise<SpaceRequest> {
     validateRequestId(id);
     requireDocument(document);
+
+    const signature =
+      electronicSignature.trim();
+
+    if (signature.length < 3) {
+      throw new Error(
+        "La signature électronique est obligatoire."
+      );
+    }
 
     const formData = new FormData();
 
@@ -721,6 +750,11 @@ export const spaceRequestService = {
       "document",
       document,
       document.name
+    );
+
+    formData.append(
+      "electronicSignature",
+      signature
     );
 
     const response = await api.post<

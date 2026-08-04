@@ -105,6 +105,18 @@ const statusLabels: Record<
   draft: "Brouillon",
   program_review:
     "Examen par les Programmes",
+  artistic_initial_review:
+    "Préparation de l’avis artistique",
+  program_review_after_artistic:
+    "Avis artistique retourné au Programme",
+  artistic_final_review:
+    "Validation artistique finale",
+  parallel_communication_regisseur_review:
+    "Validation Communication et Régisseur",
+  program_review_after_parallel:
+    "Retour au Programme après les validations",
+  program_review_after_regisseur_rejection:
+    "Refus du Régisseur retourné au Programme",
   general_review:
     "Examen par le Régisseur général",
   artistic_review:
@@ -123,6 +135,15 @@ const statusLabels: Record<
     "Cotation financière",
   program_review_after_finance:
     "Retour des Finances",
+  awaiting_payment_proof:
+    "En attente de la preuve de paiement",
+  program_payment_review:
+    "Vérification du paiement",
+  correction_requested:
+    "Correction requise sous 5 jours",
+  expired: "Délai de correction expiré",
+  stopped_by_member:
+    "Processus arrêté par le membre",
   completed: "Terminée",
   rejected: "Rejetée",
 };
@@ -143,21 +164,29 @@ const expectedStatuses: Record<
      */
     "submitted",
     "program_review",
+    "program_review_after_artistic",
     "program_review_after_confirmation",
+    "program_review_after_parallel",
+    "program_review_after_regisseur_rejection",
     "program_review_after_legal",
     "program_review_after_finance",
+    "program_payment_review",
   ],
 
   REGISSEUR_GENERAL: [
     "general_review",
+    "parallel_communication_regisseur_review",
   ],
 
   DIRECTION_ARTISTIQUE: [
     "artistic_review",
+    "artistic_initial_review",
+    "artistic_final_review",
   ],
 
   COMMUNICATION: [
     "communication_review",
+    "parallel_communication_regisseur_review",
   ],
 
   JURIDIQUE: [
@@ -330,27 +359,30 @@ function getNextDestination(
       return "Service des Programmes";
 
     case "program_review":
-      return "Régisseur général";
-
-    case "general_review":
       return "Direction artistique";
 
-    case "artistic_review":
-      return "Service Communication";
+    case "artistic_initial_review":
+      return "Service des Programmes";
 
-    case "communication_review":
-      return "Demandeur";
+    case "program_review_after_artistic":
+      return "Membre";
 
     case "awaiting_member_confirmation":
       return "Service des Programmes";
 
     case "program_review_after_confirmation":
+      return "Direction artistique";
+
+    case "artistic_final_review":
+      return "Communication et Régisseur général";
+
+    case "parallel_communication_regisseur_review":
+      return "Service des Programmes";
+
+    case "program_review_after_parallel":
       return "Service juridique";
 
     case "legal_review":
-      return "Service des Programmes";
-
-    case "program_review_after_legal":
       return "Service des Finances";
 
     case "finance_cotation":
@@ -358,6 +390,9 @@ function getNextDestination(
 
     case "program_review_after_finance":
       return "Demandeur";
+
+    case "program_payment_review":
+      return "Confirmation définitive au membre";
 
     default:
       return "étape suivante";
@@ -369,9 +404,12 @@ function getDefaultComment(
 ) {
   switch (status) {
     case "artistic_review":
+    case "artistic_initial_review":
+    case "artistic_final_review":
       return "Avis artistique favorable";
 
     case "communication_review":
+    case "parallel_communication_regisseur_review":
       return "Éléments de communication vérifiés";
 
     case "legal_review":
@@ -537,6 +575,23 @@ export default function WorkflowRequestDetail({
       return false;
     }
 
+    const parallelReviewIsOpen = ![
+      "program_review_after_regisseur_rejection",
+      "correction_requested",
+      "stopped_by_member",
+      "expired",
+    ].includes(normalizedStatus);
+
+    const hasPendingRegisseurReview =
+      role === "REGISSEUR_GENERAL" &&
+      request.regisseurValidationState === "pending" &&
+      request.communicationValidationState != null &&
+      parallelReviewIsOpen;
+
+    if (hasPendingRegisseurReview) {
+      return true;
+    }
+
     const statusAllowed =
       expectedStatuses[role].includes(
         normalizedStatus
@@ -550,6 +605,17 @@ export default function WorkflowRequestDetail({
       return true;
     }
 
+    if (
+      normalizedStatus ===
+        "parallel_communication_regisseur_review" &&
+      [
+        "COMMUNICATION",
+        "REGISSEUR_GENERAL",
+      ].includes(role)
+    ) {
+      return true;
+    }
+
     return normalizedDepartment === role;
   }, [
     request,
@@ -557,6 +623,11 @@ export default function WorkflowRequestDetail({
     normalizedStatus,
     normalizedDepartment,
   ]);
+
+  const canReject =
+    role === "MEMBER" ||
+    role === "PROGRAMME" ||
+    role === "REGISSEUR_GENERAL";
 
   const uploadConfiguration =
     requiredUpload[role];
@@ -705,6 +776,16 @@ export default function WorkflowRequestDetail({
     if (cleanSignature.length < 3) {
       toast.error(
         "La signature électronique est obligatoire."
+      );
+      return;
+    }
+
+    if (
+      rejectionMode &&
+      !canReject
+    ) {
+      toast.error(
+        "Ce service ne peut pas refuser une demande."
       );
       return;
     }
@@ -918,52 +999,7 @@ export default function WorkflowRequestDetail({
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="space-y-6">
-          <Card className="border-[#D1965B]/15 bg-white shadow-sm">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-bold text-[#5C4033]">
-                {title}
-              </h2>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl bg-[#F8F5EF] p-4">
-                  <p className="flex items-center gap-2 text-xs uppercase text-[#5C4033]/50">
-                    <User className="h-4 w-4 text-[#D1965B]" />
-                    Demandeur
-                  </p>
-
-                  <p className="mt-2 font-semibold text-[#5C4033]">
-                    {fullName}
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-[#F8F5EF] p-4">
-                  <p className="flex items-center gap-2 text-xs uppercase text-[#5C4033]/50">
-                    <CalendarDays className="h-4 w-4 text-[#D1965B]" />
-                    Date souhaitée
-                  </p>
-
-                  <p className="mt-2 font-semibold text-[#5C4033]">
-                    {formatDate(
-                      request.date ||
-                        request.desiredDate
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <h3 className="font-semibold text-[#5C4033]">
-                  Description
-                </h3>
-
-                <div className="mt-3 whitespace-pre-wrap rounded-xl bg-[#F8F5EF] p-5 text-sm leading-7 text-[#5C4033]/75">
-                  {getDescriptionWithSpace(
-                    request
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
 
           {role ===
           "REGISSEUR_GENERAL" ? (
@@ -1371,12 +1407,15 @@ export default function WorkflowRequestDetail({
                       ? "Traitement..."
                       : rejectionMode
                         ? "Signer et rejeter"
-                        : `Signer et transmettre à ${getNextDestination(
-                            request.status
-                          )}`}
+                        : role === "REGISSEUR_GENERAL"
+                          ? "Signer et envoyer"
+                          : `Signer et transmettre à ${getNextDestination(
+                              request.status
+                            )}`}
                   </Button>
 
-                  {role !== "MEMBER" && (
+                  {canReject &&
+                    role !== "MEMBER" && (
                     <Button
                       type="button"
                       variant="outline"

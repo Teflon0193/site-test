@@ -752,23 +752,6 @@ export default function LegalRequestPage() {
                   <Send className="ml-2 h-4 w-4" />
                 </Button>
 
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleReject}
-                  disabled={processing !== null}
-                  className="w-full"
-                >
-                  {processing === "reject" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <XCircle className="mr-2 h-4 w-4" />
-                  )}
-
-                  {isLegalAssistant
-                    ? "Recommander le rejet"
-                    : "Refuser"}
-                </Button>
               </>
             )}
           </CardContent>

@@ -378,6 +378,53 @@ export default function NewRequestPage() {
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
 
+  /*
+   * Synchronisation avec le calendrier des événements.
+   *
+   * Exemple d’URL reçue :
+   * /espace-membre/membre/nouvelle-demande?date=2026-08-14&space=2
+   */
+  useEffect(() => {
+    const query = new URLSearchParams(
+      window.location.search
+    );
+
+    const requestedDate = String(
+      query.get("date") || ""
+    ).trim();
+
+    const requestedSpaceId = Number(
+      query.get("space")
+    );
+
+    const validDate =
+      /^\d{4}-\d{2}-\d{2}$/.test(
+        requestedDate
+      ) && requestedDate >= minimumDate;
+
+    const validSpace =
+      Number.isInteger(
+        requestedSpaceId
+      ) &&
+      requestedSpaceId > 0 &&
+      Boolean(
+        getCcapacSpace(
+          requestedSpaceId
+        )
+      );
+
+    if (validDate) {
+      setValues((current) => ({
+        ...current,
+        desiredDate: requestedDate,
+      }));
+    }
+
+    if (validDate && validSpace) {
+      setSpace(requestedSpaceId);
+    }
+  }, [minimumDate]);
+
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);

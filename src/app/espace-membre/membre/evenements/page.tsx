@@ -571,48 +571,6 @@ export default function MemberEventsCalendarPage() {
                       : "Aucune occupation confirmée n’est enregistrée pour cette date."}
                 </p>
 
-                {selectedEvents.length > 0 && (
-                  <div className="mt-5 border-t border-[#D1965B]/15 pt-5">
-                    <h3 className="font-bold">
-                      Événements programmés
-                    </h3>
-
-                    <div className="mt-3 space-y-2">
-                      {selectedEvents.map(
-                        (event) => {
-                          const occupiedSpace =
-                            spaces.find(
-                              (space) =>
-                                space.id ===
-                                event.spaceId
-                            );
-
-                          return (
-                            <div
-                              key={event.id}
-                              className={`rounded-xl border p-3 ${
-                                selectedDateIsFull
-                                  ? "border-red-100 bg-red-50"
-                                  : "border-orange-100 bg-orange-50"
-                              }`}
-                            >
-                              <p className="text-sm font-semibold">
-                                {event.title}
-                              </p>
-                              <p className="mt-1 text-xs text-[#5C4033]/65">
-                                {occupiedSpace?.name ||
-                                  "Espace non renseigné"}
-                                {" · "}
-                                {event.reference}
-                              </p>
-                            </div>
-                          );
-                        }
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 {!selectedDateIsFull && (
                   <div className="mt-6 border-t border-[#D1965B]/15 pt-5">
                   <div className="flex items-center gap-2">
@@ -668,6 +626,75 @@ export default function MemberEventsCalendarPage() {
           </section>
         </aside>
       </div>
+
+      {selectedDate &&
+        !selectedIsPast &&
+        selectedEvents.length > 0 && (
+          <section className="overflow-hidden rounded-3xl border border-[#D1965B]/20 bg-white shadow-sm">
+            <div className="border-b border-[#D1965B]/15 bg-[#F8F5EF] px-5 py-5 sm:px-7 sm:py-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#D1965B]">
+                    Programme de la date sélectionnée
+                  </p>
+                  <h2 className="mt-1 text-2xl font-bold text-[#5C4033] sm:text-3xl">
+                    Événements programmés
+                  </h2>
+                </div>
+
+                <p className="w-fit rounded-full border border-[#D1965B]/20 bg-white px-4 py-2 text-sm font-semibold capitalize text-[#5C4033]">
+                  {formatLongDate(selectedDate)}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 p-5 sm:p-7 lg:grid-cols-2">
+              {selectedEvents.map((event) => {
+                const occupiedSpace = spaces.find(
+                  (space) => space.id === event.spaceId
+                );
+
+                return (
+                  <article
+                    key={event.id}
+                    className={`min-w-0 rounded-2xl border p-5 transition sm:p-6 ${
+                      selectedDateIsFull
+                        ? "border-red-200 bg-red-50/70"
+                        : "border-orange-200 bg-orange-50/70"
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                          selectedDateIsFull
+                            ? "bg-red-100 text-red-600"
+                            : "bg-orange-100 text-orange-600"
+                        }`}
+                      >
+                        <CalendarCheck2 className="h-6 w-6" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h3 className="break-words text-xl font-bold leading-snug text-[#5C4033] sm:text-2xl">
+                          {event.title}
+                        </h3>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 text-base font-medium text-[#5C4033]/70">
+                          <span className="break-words">
+                            Espace : {occupiedSpace?.name ||
+                              "Espace non renseigné"}
+                          </span>
+                          
+                          
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
     </div>
   );
 }

@@ -91,6 +91,8 @@ const statusLabels: Record<
     "Confirmation du demandeur",
   communication_review_after_confirmation:
     "Confirmation à vérifier par la Communication",
+  parallel_communication_regisseur_review:
+    "Validation parallèle Communication et Régisseur",
   program_review_after_confirmation:
     "Retour aux Programmes",
   legal_review:
@@ -104,9 +106,6 @@ const statusLabels: Record<
   completed: "Terminée",
   rejected: "Rejetée",
 };
-
-const LEGAL_WARNING_MESSAGE =
-  "AVERTISSEMENT JURIDIQUE : L’avis artistique, les prescriptions de communication et les conditions d’utilisation transmises avec ce dossier doivent être strictement respectés. Tout manquement, toute modification non autorisée ou toute utilisation non conforme peut entraîner le retrait de l’autorisation, la suspension de l’activité et engager la responsabilité civile du demandeur ainsi que, le cas échéant, donner lieu aux poursuites prévues par la législation applicable.";
 
 function getErrorMessage(
   error: unknown,
@@ -331,13 +330,27 @@ export default function CommunicationRequestDetailPage() {
     void loadRequest();
   }, [loadRequest]);
 
+  const parallelReviewIsOpen = ![
+    "program_review_after_regisseur_rejection",
+    "correction_requested",
+    "stopped_by_member",
+    "expired",
+  ].includes(request?.status || "");
+
+  const hasPendingCommunicationReview =
+    request?.communicationValidationState === "pending" &&
+    request?.regisseurValidationState != null &&
+    parallelReviewIsOpen;
+
   const canProcess =
-    (request?.status ===
-      "communication_review" ||
+    request?.status ===
+      "parallel_communication_regisseur_review" ||
+    hasPendingCommunicationReview ||
+    ((request?.status === "communication_review" ||
       request?.status ===
         "communication_review_after_confirmation") &&
-    request.assignedDepartment ===
-      "COMMUNICATION";
+      request.assignedDepartment ===
+        "COMMUNICATION");
 
   const isConfirmationReturn =
     request?.status ===
@@ -412,25 +425,12 @@ export default function CommunicationRequestDetailPage() {
       const communicationComment =
         comment.trim();
 
-      const additionalObservation =
-        communicationComment
-          .replace(
-            LEGAL_WARNING_MESSAGE,
-            ""
-          )
-          .trim();
-
       const validationMessage =
         isConfirmationReturn
           ? communicationComment ||
             "Confirmation signée du demandeur vérifiée par la Communication"
-          : [
-              additionalObservation ||
-                null,
-              LEGAL_WARNING_MESSAGE,
-            ]
-              .filter(Boolean)
-              .join("\n\n");
+          : communicationComment ||
+            "Dossier vérifié et transmis au demandeur pour confirmation.";
 
       await spaceRequestService.validate(
         request.id,
@@ -895,26 +895,9 @@ export default function CommunicationRequestDetailPage() {
                         className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
                       >
                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                        {isConfirmationReturn
-                          ? "Signer et transmettre au Programme"
-                          : "Valider et transmettre au demandeur"}
+                        Signer la validation Communication
                       </Button>
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setComment("");
-                          setSignature("");
-                          setDecisionMode(
-                            "reject"
-                          );
-                        }}
-                        className="w-full border-red-200 text-red-700 hover:bg-red-50"
-                      >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Rejeter la demande
-                      </Button>
                     </div>
                   ) : (
                     <div className="space-y-5">
@@ -962,24 +945,6 @@ export default function CommunicationRequestDetailPage() {
                       </div>
 
                       <div className="space-y-2">
-                        {decisionMode ===
-                          "validate" &&
-                          !isConfirmationReturn && (
-                            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
-                              <p className="text-sm font-bold text-amber-950">
-                                Avertissement juridique obligatoire
-                              </p>
-
-                              <p className="mt-2 text-xs leading-5 text-amber-900">
-                                {LEGAL_WARNING_MESSAGE}
-                              </p>
-
-                              <p className="mt-3 text-xs font-semibold text-amber-950">
-                                Ce texte sera automatiquement ajouté au message transmis au membre.
-                              </p>
-                            </div>
-                          )}
-
                         <Label
                           htmlFor="communicationComment"
                           className="text-[#5C4033]"
@@ -989,7 +954,7 @@ export default function CommunicationRequestDetailPage() {
                             ? "Motif du rejet *"
                             : isConfirmationReturn
                               ? "Commentaire"
-                              : "Message et avertissement au demandeur"}
+                              : "Message au demandeur"}
                         </Label>
 
                         <textarea
@@ -1009,7 +974,7 @@ export default function CommunicationRequestDetailPage() {
                               ? "Expliquez le motif du rejet..."
                               : isConfirmationReturn
                                 ? "Observations sur la confirmation..."
-                                : "Ajoutez vos observations avant l’avertissement juridique..."
+                                : "Ajoutez vos observations pour le demandeur..."
                           }
                           className="w-full resize-none rounded-xl border border-[#D1965B]/25 bg-white px-3 py-3 text-sm text-[#5C4033] outline-none focus:border-[#D1965B] focus:ring-2 focus:ring-[#D1965B]/10"
                         />

@@ -7,7 +7,8 @@ export default function RegisseurRequestDetailPage() {
     <WorkflowRequestDetail
       role="REGISSEUR_GENERAL"
       title="Examen du Régisseur général"
-      subtitle="Examinez les informations de la demande, ajoutez vos observations et signez avant la transmission à la Direction artistique."
+      subtitle="Examinez les informations de la demande. Vous pouvez signer la validation ou refuser avec un motif signé ; 
+      tout refus retourne d’abord au Programme."
       backHref="/espace-membre/regisseur/demandes"
     />
   );

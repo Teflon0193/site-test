@@ -179,6 +179,8 @@ export default function MemberRequestDetailPage() {
 
   const [paymentProof, setPaymentProof] =
     useState<File | null>(null);
+  const [paymentSignature, setPaymentSignature] =
+    useState("");
 
   const [uploadingPayment, setUploadingPayment] =
     useState(false);
@@ -306,20 +308,32 @@ export default function MemberRequestDetailPage() {
             return;
           }
 
-          updatedRequest = await spaceRequestService.reject(
+          updatedRequest = await spaceRequestService.memberDecision(
             request.id,
-            decisionComment.trim(),
-            cleanSignature
+            "REFUSED",
+            cleanSignature,
+            decisionComment.trim()
           );
         } else if (
           request.status === "awaiting_member_confirmation"
         ) {
-          updatedRequest = await spaceRequestService.confirmMember(
+          updatedRequest = await spaceRequestService.memberDecision(
             request.id,
+            "ACCEPTED",
             cleanSignature,
             decisionComment.trim() ||
               "Les deux documents ont été lus et confirmés."
           );
+        } else if (
+          request.status === "correction_requested"
+        ) {
+          updatedRequest =
+            await spaceRequestService.resubmitCorrection(
+              request.id,
+              cleanSignature,
+              decisionComment.trim() ||
+                "Demande corrigée et renvoyée au Programme."
+            );
         } else {
           updatedRequest = await spaceRequestService.submit(
             request.id,
@@ -335,7 +349,9 @@ export default function MemberRequestDetailPage() {
             ? "Demande refusée"
             : request.status ===
                 "awaiting_member_confirmation"
-              ? "Documents confirmés et retournés à la Communication"
+              ? "Avis accepté et retourné au Programme"
+              : request.status === "correction_requested"
+                ? "Demande corrigée et retournée au Programme"
               : "Demande signée et transmise au Programme"
         );
 
@@ -372,11 +388,13 @@ export default function MemberRequestDetailPage() {
       const updatedRequest =
         await spaceRequestService.uploadPaymentProof(
           request.id,
-          paymentProof
+          paymentProof,
+          paymentSignature.trim()
         );
 
       setRequest(updatedRequest);
       setPaymentProof(null);
+      setPaymentSignature("");
 
       toast.success("Preuve de paiement envoyée", {
         description:
@@ -477,6 +495,9 @@ export default function MemberRequestDetailPage() {
   const canConfirm =
     request.status === "awaiting_member_confirmation";
 
+  const canCorrect =
+    request.status === "correction_requested";
+
   const canUploadPayment =
     request.status === "awaiting_payment_proof";
 
@@ -529,7 +550,7 @@ export default function MemberRequestDetailPage() {
         Boolean(item.comment?.trim())
     );
 
-  const canAct = canSubmit || canConfirm;
+  const canAct = canSubmit || canConfirm || canCorrect;
 
   const alreadySubmitted =
     !canAct;
@@ -947,10 +968,32 @@ export default function MemberRequestDetailPage() {
                     </p>
                   )}
 
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="paymentSignature"
+                      className="text-[#5C4033]"
+                    >
+                      Signature électronique *
+                    </Label>
+                    <Input
+                      id="paymentSignature"
+                      value={paymentSignature}
+                      onChange={(event) =>
+                        setPaymentSignature(event.target.value)
+                      }
+                      placeholder="Votre nom complet"
+                      disabled={uploadingPayment}
+                    />
+                  </div>
+
                   <Button
                     type="button"
                     onClick={() => void handlePaymentProofUpload()}
-                    disabled={!paymentProof || uploadingPayment}
+                    disabled={
+                      !paymentProof ||
+                      paymentSignature.trim().length < 3 ||
+                      uploadingPayment
+                    }
                     className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47]"
                   >
                     {uploadingPayment ? (

@@ -56,7 +56,10 @@ type ApiErrorResponse = {
 
 const PROGRAMME_STATUSES = [
   "program_review",
+  "program_review_after_artistic",
   "program_review_after_confirmation",
+  "program_review_after_parallel",
+  "program_review_after_regisseur_rejection",
   "program_review_after_legal",
   "program_review_after_finance",
   "program_payment_review",
@@ -70,6 +73,18 @@ const statusLabels: Record<
   submitted: "Demande envoyée",
   program_review:
     "Examen par les Programmes",
+  artistic_initial_review:
+    "Préparation de la Direction artistique",
+  program_review_after_artistic:
+    "Avis artistique retourné au Programme",
+  artistic_final_review:
+    "Validation artistique finale",
+  parallel_communication_regisseur_review:
+    "Validation Communication et Régisseur",
+  program_review_after_parallel:
+    "Validations retournées au Programme",
+  program_review_after_regisseur_rejection:
+    "Refus du Régisseur retourné au Programme",
   general_review:
     "Examen par le Régisseur général",
   artistic_review:
@@ -93,6 +108,11 @@ const statusLabels: Record<
   program_payment_review:
     "Paiement en cours de vérification par le Service des Programmes",
   completed: "Traitement terminé",
+  correction_requested:
+    "Correction demandée sous 5 jours",
+  expired: "Délai de correction expiré",
+  stopped_by_member:
+    "Processus arrêté par le membre",
   rejected: "Demande rejetée",
 };
 
@@ -253,13 +273,19 @@ function getNextDepartment(
 ) {
   switch (status) {
     case "program_review":
-      return "Régisseur général";
+      return "Direction artistique";
+
+    case "program_review_after_artistic":
+      return "Membre";
 
     case "program_review_after_confirmation":
+      return "Direction artistique";
+
+    case "program_review_after_parallel":
       return "Service juridique";
 
-    case "program_review_after_legal":
-      return "Service des Finances";
+    case "program_review_after_regisseur_rejection":
+      return "Membre pour correction";
 
     case "program_review_after_finance":
       return "Demandeur";
@@ -401,7 +427,9 @@ export default function ProgrammeRequestDetailPage() {
     }
 
     switch (request.status) {
+      case "program_review_after_artistic":
       case "program_review_after_confirmation":
+      case "program_review_after_parallel":
         return [
           "INITIAL_REQUEST",
           "ARTISTIC_OPINION",
