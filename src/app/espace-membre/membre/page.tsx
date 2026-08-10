@@ -561,7 +561,7 @@ export default function MemberHomePage() {
                 variant="outline"
                 className="h-11 border-white/25 bg-white/5 px-5 text-white hover:bg-white/15 hover:text-white"
               >
-                <Link href="/espace-membre/membre/">
+                <Link href="/espace-membre/membre/proposer-projet">
                   <FilePlus2 className="mr-2 h-4 w-4" />
                   Proposer un projet
                 </Link>
