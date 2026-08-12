@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type ChangeEvent,
   type FormEvent,
   type ReactNode,
 } from "react";
@@ -13,6 +14,7 @@ import { isAxiosError } from "axios";
 import {
   ArrowLeft,
   CheckCircle2,
+  FileUp,
   Eye,
   FileText,
   Loader2,
@@ -26,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import SpaceSelect from "@/components/space-requests/SpaceSelect";
 import { getCcapacSpace } from "@/constants/spaces";
+import api from "@/lib/api";
 import {
   spaceRequestService,
   type BookedCalendarEvent,
@@ -377,6 +380,41 @@ export default function NewRequestPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
+  const [requestLetter, setRequestLetter] =
+    useState<File | null>(null);
+
+  /*
+   * Le layout membre possède déjà son propre conteneur
+   * de défilement. On masque donc le scroll externe du
+   * navigateur pendant l'affichage de cette page afin
+   * de ne conserver qu'une seule barre de défilement.
+   */
+  useEffect(() => {
+    const pageDocument = globalThis.document;
+
+    if (!pageDocument) {
+      return;
+    }
+
+    const htmlElement =
+      pageDocument.documentElement;
+    const bodyElement = pageDocument.body;
+
+    const previousHtmlOverflow =
+      htmlElement.style.overflow;
+    const previousBodyOverflow =
+      bodyElement.style.overflow;
+
+    htmlElement.style.overflow = "hidden";
+    bodyElement.style.overflow = "hidden";
+
+    return () => {
+      htmlElement.style.overflow =
+        previousHtmlOverflow;
+      bodyElement.style.overflow =
+        previousBodyOverflow;
+    };
+  }, []);
 
   /*
    * Synchronisation avec le calendrier des événements.
@@ -526,162 +564,900 @@ export default function NewRequestPage() {
     if (!values.participants.trim()) return "Le nombre de participants est obligatoire.";
     if (!authorizedRepresentative) return "Vous devez certifier être habilité à introduire la demande.";
     if (!acceptedDeclarations) return "Vous devez accepter les déclarations et engagements.";
+    if (!requestLetter) {
+      return "La lettre de demande en format Word est obligatoire.";
+    }
     return null;
   };
 
-  const generatePdf = async (electronicSignature = "") => {
+  const handleRequestLetter = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0] || null;
+
+    if (!file) {
+      setRequestLetter(null);
+      return;
+    }
+
+    const lowerName = file.name.toLowerCase();
+    const isWordDocument =
+      lowerName.endsWith(".doc") ||
+      lowerName.endsWith(".docx");
+
+    if (!isWordDocument) {
+      event.target.value = "";
+      setRequestLetter(null);
+      toast.error(
+        "La lettre de demande doit être un fichier Word DOC ou DOCX."
+      );
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      event.target.value = "";
+      setRequestLetter(null);
+      toast.error(
+        "La lettre de demande ne doit pas dépasser 10 Mo."
+      );
+      return;
+    }
+
+    setRequestLetter(file);
+  };
+
+  const generateCleanPdf = async (
+    electronicSignature = ""
+  ) => {
     const { jsPDF } = await import("jspdf");
-    const pdf = new jsPDF({ unit: "mm", format: "a4" });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+    const pdf = new jsPDF({
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait",
+      compress: true,
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
     const margin = 16;
     const contentWidth = pageWidth - margin * 2;
-    let y = 18;
+    let pageNumber = 1;
+    let y = 42;
 
-    const ensureSpace = (height = 12) => {
-      if (y + height <= pageHeight - 18) return;
-      pdf.addPage();
-      y = 18;
+    const drawHeader = () => {
+      pdf.setFillColor(92, 64, 51);
+      pdf.rect(0, 0, pageWidth, 31, "F");
+      pdf.setFillColor(209, 150, 91);
+      pdf.rect(0, 31, pageWidth, 2, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(16);
+      pdf.text(
+        "CCAPAC - GRAND TAMBOUR",
+        pageWidth / 2,
+        13,
+        { align: "center" }
+      );
+      pdf.setFontSize(9.5);
+      pdf.text(
+        "FORMULAIRE DE DEMANDE D'UTILISATION DES SALLES ET ESPACES",
+        pageWidth / 2,
+        23,
+        { align: "center" }
+      );
+      pdf.setTextColor(92, 64, 51);
     };
 
-    const addWrapped = (
+    const drawFooter = () => {
+      pdf.setDrawColor(220, 210, 202);
+      pdf.line(margin, 286, pageWidth - margin, 286);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(125, 110, 102);
+      pdf.text(
+        `CCAPAC - Grand Tambour | Page ${pageNumber}`,
+        pageWidth / 2,
+        291,
+        { align: "center" }
+      );
+    };
+
+    const newPage = () => {
+      drawFooter();
+      pdf.addPage("a4", "portrait");
+      pageNumber += 1;
+      drawHeader();
+      y = 42;
+    };
+
+    const ensureSpace = (height: number) => {
+      if (y + height > 282) {
+        newPage();
+      }
+    };
+
+    const wrappedLines = (
       text: string,
-      options?: { bold?: boolean; size?: number; color?: [number, number, number] }
-    ) => {
-      const size = options?.size || 9.5;
-      pdf.setFont("helvetica", options?.bold ? "bold" : "normal");
+      width = contentWidth,
+      size = 9
+    ): string[] => {
       pdf.setFontSize(size);
-      const color = options?.color || [92, 64, 51];
-      pdf.setTextColor(color[0], color[1], color[2]);
-      const lines = pdf.splitTextToSize(text || "Non renseigné", contentWidth);
-      ensureSpace(lines.length * 5 + 2);
-      pdf.text(lines, margin, y);
-      y += lines.length * 5 + 2;
+      return pdf.splitTextToSize(
+        String(text || "Non renseigné"),
+        width
+      );
     };
 
     const section = (title: string) => {
-      ensureSpace(14);
-      y += 2;
+      ensureSpace(15);
+      if (y > 44) y += 3;
       pdf.setFillColor(209, 150, 91);
-      pdf.roundedRect(margin, y - 5, contentWidth, 9, 1.5, 1.5, "F");
+      pdf.roundedRect(
+        margin,
+        y,
+        contentWidth,
+        10,
+        2,
+        2,
+        "F"
+      );
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(10);
       pdf.setTextColor(255, 255, 255);
-      pdf.text(title, margin + 3, y + 1);
-      y += 9;
+      pdf.text(title, margin + 4, y + 6.4);
+      pdf.setTextColor(92, 64, 51);
+      y += 14;
     };
 
-    const field = (label: string, value: string) => {
-      addWrapped(`${label} : ${value || "Non renseigné"}`);
+    const field = (
+      label: string,
+      value: string,
+      options?: { compact?: boolean }
+    ) => {
+      const answer = String(value || "Non renseigné").trim();
+      const answerLines = wrappedLines(
+        answer || "Non renseigné",
+        contentWidth - 8,
+        8.5
+      );
+      const boxHeight = Math.max(
+        options?.compact ? 7 : 9,
+        answerLines.length * 4.2 + 4
+      );
+      const totalHeight = 5 + boxHeight + 3;
+      ensureSpace(totalHeight);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(70, 52, 43);
+      pdf.text(label, margin, y + 3.2);
+      y += 5;
+
+      pdf.setFillColor(249, 246, 242);
+      pdf.setDrawColor(224, 214, 206);
+      pdf.roundedRect(
+        margin,
+        y,
+        contentWidth,
+        boxHeight,
+        1.5,
+        1.5,
+        "FD"
+      );
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(45, 45, 45);
+      pdf.text(answerLines, margin + 4, y + 5);
+      y += boxHeight + 3;
     };
 
-    pdf.setFillColor(209, 150, 91);
-    pdf.rect(0, 0, pageWidth, 38, "F");
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(17);
-    pdf.text("CCAPAC – GRAND TAMBOUR", margin, 16);
-    pdf.setFontSize(11);
-    pdf.text("FORMULAIRE DE DEMANDE D’UTILISATION DES SALLES ET ESPACES", margin, 27);
-    y = 47;
+    const optionsField = (
+      label: string,
+      options: string[],
+      selected: string[]
+    ) => {
+      const optionLines = options.map(
+        (option) =>
+          `${selected.includes(option) ? "[X]" : "[ ]"} ${option}`
+      );
+      field(label, optionLines.join("\n"));
+    };
 
-    addWrapped(
-      "IMPORTANT : Le présent formulaire constitue un document précontractuel et un engagement sur l’honneur. Toute autorisation est soumise à la validation du CCAPAC–Grand Tambour et à la signature d’un accord d’occupation temporaire.",
-      { bold: true, size: 9, color: [120, 70, 25] }
+    const yesNo = (
+      label: string,
+      value: "" | "yes" | "no"
+    ) => {
+      field(
+        label,
+        value === "yes"
+          ? "[X] Oui     [ ] Non"
+          : value === "no"
+            ? "[ ] Oui     [X] Non"
+            : "[ ] Oui     [ ] Non"
+      );
+    };
+
+    const paragraph = (
+      text: string,
+      options?: {
+        bold?: boolean;
+        italic?: boolean;
+        background?: boolean;
+      }
+    ) => {
+      const lines = wrappedLines(text, contentWidth - 8, 8.5);
+      const height = lines.length * 4.2 + 7;
+      ensureSpace(height);
+
+      if (options?.background) {
+        pdf.setFillColor(255, 248, 235);
+        pdf.setDrawColor(235, 204, 158);
+        pdf.roundedRect(
+          margin,
+          y,
+          contentWidth,
+          height,
+          2,
+          2,
+          "FD"
+        );
+      }
+
+      pdf.setFont(
+        "helvetica",
+        options?.bold
+          ? "bold"
+          : options?.italic
+            ? "italic"
+            : "normal"
+      );
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(80, 63, 53);
+      pdf.text(lines, margin + 4, y + 5);
+      y += height + 3;
+    };
+
+    drawHeader();
+
+    paragraph(
+      "IMPORTANT : Le présent formulaire constitue un document pré-contractuel et un engagement sur l'honneur. Toute autorisation d'utilisation est subordonnée à sa validation par le CCAPAC - Grand Tambour et à la signature d'un accord ou contrat d'occupation temporaire annexé.",
+      { bold: true, background: true }
     );
 
     section("I. IDENTIFICATION DU SOLLICITANT");
-    field("Nom complet", values.fullName);
-    field("Adresse", values.address);
-    field("Téléphone", values.phone);
-    field("Email", values.email);
+    field("Noms, post-nom et prénom", values.fullName);
+    field("Adresse complète", values.address);
+    field("Téléphone", values.phone, { compact: true });
+    field("E-mail", values.email, { compact: true });
     field("Fonction / qualité", values.applicantRole);
-    field("Habilité à engager le sollicitant", authorizedRepresentative ? "Oui" : "Non");
+    field(
+      "Habilitation du signataire",
+      authorizedRepresentative
+        ? "[X] Le signataire certifie être habilité à engager juridiquement la personne physique ou morale."
+        : "[ ] Non certifié"
+    );
 
-    section("II. IDENTITÉ ET STATUT JURIDIQUE DE L’ORGANISATION");
+    section(
+      "II. IDENTITÉ ET STATUT JURIDIQUE DE L'ORGANISATION"
+    );
     field("Dénomination sociale", values.organizationName);
     field("Statut juridique", values.legalStatus);
     field("Adresse du siège", values.organizationAddress);
     field("Téléphone", values.organizationPhone);
-    field("Email", values.organizationEmail);
-    field("Dirigeant statutaire", values.statutoryDirector);
-    field("Numéro d’enregistrement / RCCM", values.registrationNumber);
+    field("E-mail", values.organizationEmail);
+    field(
+      "Nom et adresse du dirigeant statutaire",
+      values.statutoryDirector
+    );
+    field(
+      "Numéro d'enregistrement / RCCM",
+      values.registrationNumber
+    );
 
     section("III. OBJET DE LA DEMANDE");
-    field("Intitulé", values.eventName);
-    field("Description", values.eventDescription);
-    field("Objectifs", [...selectedObjectives, values.otherObjective].filter(Boolean).join(", "));
+    field("Intitulé de l'activité / événement", values.eventName);
+    field(
+      "Description synthétique de l'activité",
+      values.eventDescription
+    );
+    optionsField(
+      "Objectifs principaux",
+      objectives,
+      selectedObjectives
+    );
+    field("Autre objectif / précision", values.otherObjective);
 
-    section("IV. CALENDRIER PRÉVISIONNEL");
-    field("Date souhaitée", formatDate(values.desiredDate));
-    field("Montage", `${formatDate(values.setupStart)} au ${formatDate(values.setupEnd)}`);
-    field("Activités", `${formatDate(values.activityStart)} au ${formatDate(values.activityEnd)}`);
-    field("Démontage", `${formatDate(values.teardownStart)} au ${formatDate(values.teardownEnd)}`);
-    field("Nombre total de jours", values.totalDays);
+    section("IV. CALENDRIER PRÉVISIONNEL D'OCCUPATION");
+    field(
+      "Montage",
+      `Du ${formatDate(values.setupStart)} au ${formatDate(values.setupEnd)}`
+    );
+    field(
+      "Activités",
+      `Du ${formatDate(values.activityStart || values.desiredDate)} au ${formatDate(values.activityEnd || values.desiredDate)}`
+    );
+    field(
+      "Démontage / remise en état",
+      `Du ${formatDate(values.teardownStart)} au ${formatDate(values.teardownEnd)}`
+    );
+    field(
+      "Nombre total de jours d'occupation",
+      values.totalDays
+    );
+    paragraph(
+      "Tout changement de dates doit faire l'objet d'une demande écrite et d'une autorisation préalable du CCAPAC - Grand Tambour.",
+      { italic: true }
+    );
 
-    section("V. ESPACE ET PUBLIC ATTENDU");
+    section("V. SALLES / ESPACES SOLLICITÉS ET PUBLIC ATTENDU");
     field(
       "Espace sollicité",
       getCcapacSpace(space)?.name || String(space)
     );
-    field("Participants estimés", values.participants);
+    field(
+      "Nombre estimé de participants / public",
+      values.participants
+    );
     field("Profil du public", values.audienceProfile);
 
-    section("VI. RESPONSABLE OPÉRATIONNEL");
-    field("Nom", values.operationalName);
+    section("VI. RESPONSABLE OPÉRATIONNEL DE L'ACTIVITÉ");
+    field("Noms, post-nom et prénom", values.operationalName);
     field("Téléphone", values.operationalPhone);
-    field("Email", values.operationalEmail);
-    field("Fonction", [...selectedOperationalRoles, values.operationalOtherRole].filter(Boolean).join(", "));
+    field("E-mail", values.operationalEmail);
+    optionsField(
+      "Fonction dans le projet",
+      operationalRoles,
+      selectedOperationalRoles
+    );
+    field("Autre fonction", values.operationalOtherRole);
 
-    section("VII. FICHE TECHNIQUE");
-    field("Équipements techniques", values.technicalEquipment === "yes" ? "Oui" : "Non");
-    field("Besoins", values.technicalNeeds);
-    field("Fiche technique", values.technicalSheet === "attached" ? "Jointe" : values.technicalSheet === "later" ? "À fournir" : "Non renseigné");
+    section("VII. FICHE TECHNIQUE - BESOINS MATÉRIELS");
+    yesNo(
+      "Utilisation d'équipements techniques",
+      values.technicalEquipment
+    );
+    field("Besoins techniques", values.technicalNeeds);
+    field(
+      "Fiche technique détaillée",
+      values.technicalSheet === "attached"
+        ? "[X] Jointe     [ ] À fournir avant validation"
+        : values.technicalSheet === "later"
+          ? "[ ] Jointe     [X] À fournir avant validation"
+          : "Non renseigné"
+    );
     field("Intervenants techniques", values.technicalStaff);
 
     section("VIII. SÉCURITÉ, ORGANISATION ET FLUX");
-    field("Agents de sécurité", values.securityAgents);
-    field("Salariés / bénévoles", values.publicStaff);
-    field("Gestion des flux et urgences", values.emergencyPlan);
-
-    section("IX. ASSURANCES");
-    field("Assurance souscrite", values.insuranceSubscribed === "yes" ? "Oui" : "Non");
-    field("Type", values.insuranceType);
-    field("Compagnie", values.insuranceCompany);
-    field("Numéro de police", values.insurancePolicyNumber);
-    field("Validité", `${formatDate(values.insuranceStart)} au ${formatDate(values.insuranceEnd)}`);
-
-    section("X. ANTÉCÉDENTS AVEC LE CCAPAC");
-    field("Autorisation antérieure", values.previousAuthorization === "yes" ? "Oui" : "Non");
-    field("Détails", values.previousAuthorizationDetails);
-
-    section("XI À XVII. DÉCLARATIONS, COMMUNICATION ET DISCIPLINES");
-    field("Disciplines", selectedDisciplines.join(", "));
-    field("Traiteur", values.catererUsed === "yes" ? `Oui – ${values.catererName}` : "Non");
-    field("Vente de nourriture / boissons", values.foodSales === "yes" ? "Oui" : "Non");
-    field("Vente de produits", values.productSales === "yes" ? "Oui" : "Non");
-    field("Autres services", values.otherServices);
-    addWrapped(
-      "Le sollicitant reconnaît les règles relatives à la propriété intellectuelle, au droit à l’image, à la communication, aux droits du CCAPAC–Grand Tambour, à la responsabilité civile et au droit congolais. Il certifie l’exactitude des informations et s’engage à respecter le règlement intérieur et les normes de sécurité.",
-      { size: 9 }
+    field(
+      "Nombre d'agents de sécurité prévus",
+      values.securityAgents
+    );
+    field(
+      "Nombre de salariés / bénévoles encadrant le public",
+      values.publicStaff
+    );
+    field(
+      "Dispositif de gestion des flux et d'urgence",
+      values.emergencyPlan
     );
 
-    section("XVIII. SIGNATURE ÉLECTRONIQUE");
-    field("Mention", "Lu et approuvé");
-    field("Nom du sollicitant", electronicSignature || "Signature à confirmer avant l’envoi");
-    field("Date", new Date().toLocaleDateString("fr-FR"));
+    section("IX. ASSURANCES (OBLIGATOIRE)");
+    yesNo(
+      "Police d'assurance responsabilité civile souscrite",
+      values.insuranceSubscribed
+    );
+    field("Type d'assurance", values.insuranceType);
+    field("Compagnie d'assurance", values.insuranceCompany);
+    field("Numéro de police", values.insurancePolicyNumber);
+    field(
+      "Période de validité",
+      `Du ${formatDate(values.insuranceStart)} au ${formatDate(values.insuranceEnd)}`
+    );
+    paragraph(
+      "La production d'une attestation d'assurance valide est une condition essentielle à l'autorisation.",
+      { bold: true, background: true }
+    );
 
-    const pages = pdf.getNumberOfPages();
-    for (let index = 1; index <= pages; index += 1) {
-      pdf.setPage(index);
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
-      pdf.setTextColor(140, 120, 110);
-      pdf.text(`CCAPAC – Formulaire d’occupation · Page ${index}/${pages}`, margin, pageHeight - 8);
+    section("X. ANTÉCÉDENTS AVEC LE CCAPAC - GRAND TAMBOUR");
+    yesNo(
+      "Autorisation antérieure d'utilisation des espaces",
+      values.previousAuthorization
+    );
+    field(
+      "Date, type d'événement et espaces précédemment utilisés",
+      values.previousAuthorizationDetails
+    );
+
+    section("XI. PROPRIÉTÉ INTELLECTUELLE ET DROIT À L'IMAGE");
+    paragraph(
+      "Les œuvres, prestations et contenus artistiques demeurent la propriété de leurs auteurs. Toute captation audiovisuelle, retransmission, diffusion en direct ou différé et toute utilisation de l'image des espaces, bâtiments, logos ou marques du CCAPAC - Grand Tambour à des fins commerciales, promotionnelles ou médiatiques est soumise à une autorisation écrite préalable du Centre. Toute violation peut entraîner le retrait immédiat de l'autorisation, sans préjudice des poursuites et demandes de réparation."
+    );
+
+    section("XII. COMMUNICATION ET VISIBILITÉ");
+    paragraph(
+      "Le logo du CCAPAC - Grand Tambour et les mentions du Centre Culturel et Artistique pour les Pays de l'Afrique Centrale, 6-8 Boulevard Triomphal, Kasa-Vubu, Kinshasa, doivent figurer sur les supports relatifs à l'activité autorisée. Tout support comportant le nom, le logo ou l'image du Centre doit être soumis à validation préalable."
+    );
+
+    section("XIII. DISCIPLINES CULTURELLES CONCERNÉES");
+    optionsField(
+      "Disciplines sélectionnées",
+      disciplines,
+      selectedDisciplines
+    );
+
+    section("XIV. PRESTATIONS ANNEXES - TRAITEURS, VENTES, SERVICES");
+    yesNo(
+      "Utilisation d'un traiteur / prestataire",
+      values.catererUsed
+    );
+    field("Nom du traiteur", values.catererName);
+    yesNo(
+      "Vente de boissons ou nourriture",
+      values.foodSales
+    );
+    yesNo(
+      "Vente de produits ou marchandises",
+      values.productSales
+    );
+    field("Autres services", values.otherServices);
+
+    section("XV. DROITS DU CCAPAC - GRAND TAMBOUR");
+    paragraph(
+      "Le CCAPAC - Grand Tambour conserve la priorité d'utilisation de ses espaces pour ses programmes et obligations de service public. Il peut refuser, suspendre ou annuler une demande en cas de non-conformité, de risque pour la sécurité ou d'atteinte à l'image de l'institution. Il n'accorde aucune remise sur les frais d'utilisation, sauf décision explicite de l'autorité compétente."
+    );
+
+    section("XVI. RESPONSABILITÉ - DÉCLARATIONS ET ENGAGEMENTS");
+    paragraph(
+      "Le sollicitant déclare sur l'honneur que toutes les informations fournies sont exactes et sincères; qu'il assume l'entière responsabilité civile de tout dommage causé aux personnes, aux biens ou aux installations; qu'il se conformera au règlement intérieur, aux normes de sécurité, aux consignes des services du Centre et au contrat d'occupation temporaire; et qu'il informera sans délai le Centre de tout changement significatif. Toute omission, fausse déclaration ou modification non autorisée pourra entraîner la nullité de l'accord et la mise en cause de sa responsabilité."
+    );
+
+    section("XVII. DROIT APPLICABLE ET COMPÉTENCE");
+    paragraph(
+      "Le présent formulaire et l'accord subséquent sont régis par le droit congolais. Tout litige relève des juridictions compétentes de la République Démocratique du Congo."
+    );
+
+    section("XVIII. SIGNATURE");
+    field("Mention", "Lu et approuvé");
+    field("Fait à", "Kinshasa");
+    field(
+      "Date",
+      new Date().toLocaleDateString("fr-FR")
+    );
+    field(
+      "Nom du sollicitant",
+      electronicSignature || values.fullName
+    );
+    field(
+      "Signature électronique",
+      electronicSignature || "À confirmer avant l'envoi"
+    );
+
+    paragraph(
+      acceptedDeclarations
+        ? "[X] Le sollicitant certifie l'exactitude des informations et accepte l'ensemble des déclarations, responsabilités et engagements."
+        : "[ ] Déclarations non encore acceptées.",
+      { bold: true, background: true }
+    );
+
+    drawFooter();
+    return pdf.output("blob");
+  };
+
+  const generateLegacyPdf = async (
+    electronicSignature = ""
+  ) => {
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait",
+      compress: true,
+    });
+
+    const templateBase =
+      "/documents/ccapac-form-template";
+
+    const loadTemplatePage = async (
+      pageNumber: number
+    ): Promise<string> => {
+      const response = await fetch(
+        `${templateBase}/page-${pageNumber}.png`
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Page ${pageNumber} du modèle PDF introuvable.`
+        );
+      }
+
+      const blob = await response.blob();
+
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () =>
+          resolve(String(reader.result));
+        reader.onerror = () =>
+          reject(
+            new Error(
+              "Impossible de lire le modèle officiel."
+            )
+          );
+        reader.readAsDataURL(blob);
+      });
+    };
+
+    const templatePages = await Promise.all(
+      Array.from({ length: 6 }, (_, index) =>
+        loadTemplatePage(index + 1)
+      )
+    );
+
+    templatePages.forEach((pageImage, index) => {
+      if (index > 0) {
+        pdf.addPage("a4", "portrait");
+      }
+
+      pdf.setPage(index + 1);
+      pdf.addImage(
+        pageImage,
+        "PNG",
+        0,
+        0,
+        210,
+        297,
+        `official-page-${index + 1}`,
+        "FAST"
+      );
+    });
+
+    type TextOptions = {
+      size?: number;
+      minSize?: number;
+      bold?: boolean;
+      maxLines?: number;
+      align?: "left" | "center" | "right";
+    };
+
+    const writeValue = (
+      page: number,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      value: string,
+      options: TextOptions = {}
+    ) => {
+      const cleanValue = String(value || "").trim();
+
+      if (!cleanValue) return;
+
+      pdf.setPage(page);
+      pdf.setFont(
+        "helvetica",
+        options.bold ? "bold" : "normal"
+      );
+      pdf.setTextColor(25, 25, 25);
+
+      const horizontalPadding = 1.5;
+      const verticalPadding = 1;
+      const maximumLines = Math.max(
+        1,
+        options.maxLines || 4
+      );
+      const minimumSize = options.minSize || 5.5;
+      let fontSize = options.size || 8.5;
+      let lines: string[] = [];
+
+      /*
+       * La taille diminue jusqu'à ce que la réponse
+       * entre entièrement dans la zone qui lui est réservée.
+       * Aucun rectangle blanc n'est dessiné : les questions et
+       * les bordures du formulaire officiel restent donc intactes.
+       */
+      while (fontSize >= minimumSize) {
+        pdf.setFontSize(fontSize);
+        const candidateLines = pdf.splitTextToSize(
+          cleanValue,
+          width - horizontalPadding * 2
+        ) as string[];
+        const lineHeight = fontSize * 0.3528 * 1.12;
+        const fitsHeight =
+          candidateLines.length * lineHeight <=
+          height - verticalPadding * 2;
+
+        if (
+          candidateLines.length <= maximumLines &&
+          fitsHeight
+        ) {
+          lines = candidateLines;
+          break;
+        }
+
+        fontSize -= 0.25;
+      }
+
+      pdf.setFontSize(Math.max(fontSize, minimumSize));
+
+      if (lines.length === 0) {
+        lines = (
+          pdf.splitTextToSize(
+            cleanValue,
+            width - horizontalPadding * 2
+          ) as string[]
+        ).slice(0, maximumLines);
+
+        const completeLineCount = (
+          pdf.splitTextToSize(
+            cleanValue,
+            width - horizontalPadding * 2
+          ) as string[]
+        ).length;
+
+        if (
+          completeLineCount > maximumLines &&
+          lines.length > 0
+        ) {
+          const lastIndex = lines.length - 1;
+          lines[lastIndex] = `${lines[lastIndex]
+            .replace(/\s+$/, "")
+            .replace(/[.,;:!?-]*$/, "")}…`;
+        }
+      }
+
+      const lineHeight =
+        Math.max(fontSize, minimumSize) * 0.3528 * 1.12;
+      const textHeight = lines.length * lineHeight;
+      const textY =
+        y +
+        Math.max(
+          verticalPadding + lineHeight * 0.8,
+          (height - textHeight) / 2 + lineHeight * 0.8
+        );
+
+      pdf.text(
+        lines,
+        options.align === "center"
+          ? x + width / 2
+          : options.align === "right"
+            ? x + width - horizontalPadding
+            : x + horizontalPadding,
+        textY,
+        {
+          align: options.align || "left",
+          baseline: "alphabetic",
+          lineHeightFactor: 1.12,
+        }
+      );
+    };
+
+    const mark = (
+      page: number,
+      x: number,
+      y: number,
+      checked: boolean
+    ) => {
+      if (!checked) return;
+      pdf.setPage(page);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(10);
+      pdf.setTextColor(20, 20, 20);
+      pdf.text("X", x, y);
+    };
+
+    const formatShortDate = (value: string) => {
+      if (!value) return "";
+      const [year, month, day] = value.split("-");
+      return day && month && year
+        ? `${day}/${month}/${year}`
+        : value;
+    };
+
+    /* Page 1 — identification et organisation. */
+    writeValue(1, 29, 106, 153, 5, values.fullName);
+    writeValue(1, 29, 118, 153, 10, values.address, {
+      maxLines: 2,
+    });
+    writeValue(1, 29, 135, 153, 5, values.phone);
+    writeValue(1, 29, 146, 153, 5, values.email);
+    writeValue(1, 29, 158, 153, 5, values.applicantRole);
+    mark(1, 30.3, 166.2, authorizedRepresentative);
+
+    writeValue(1, 29, 193, 153, 5, values.organizationName);
+    writeValue(1, 29, 204, 153, 5, values.legalStatus);
+    writeValue(1, 29, 216, 153, 10, values.organizationAddress, {
+      maxLines: 2,
+    });
+    writeValue(1, 29, 233, 153, 5, values.organizationPhone);
+    writeValue(1, 29, 244, 153, 5, values.organizationEmail);
+    writeValue(1, 29, 256, 153, 10, values.statutoryDirector, {
+      maxLines: 2,
+    });
+    writeValue(1, 29, 274, 153, 5, values.registrationNumber);
+
+    /* Page 2 — projet, calendrier, espace et public. */
+    writeValue(2, 29, 11, 153, 6, values.eventName, {
+      bold: true,
+    });
+    writeValue(2, 29, 22, 153, 20, values.eventDescription, {
+      size: 8,
+      maxLines: 4,
+    });
+
+    mark(2, 30.2, 53.2, selectedObjectives.includes("Culturel / artistique"));
+    mark(2, 82.5, 53.2, selectedObjectives.includes("Éducatif / pédagogique"));
+    mark(2, 139.5, 53.2, selectedObjectives.includes("Institutionnel"));
+    mark(2, 30.2, 59.2, selectedObjectives.includes("Citoyen / mémoriel"));
+    mark(2, 101.2, 59.2, selectedObjectives.includes("Professionnel / corporatif"));
+    writeValue(2, 43, 62, 139, 6, values.otherObjective);
+
+    writeValue(
+      2,
+      29,
+      79,
+      153,
+      5,
+      `Du : ${formatShortDate(values.setupStart)}   Au : ${formatShortDate(values.setupEnd)}`
+    );
+    writeValue(
+      2,
+      29,
+      91,
+      153,
+      5,
+      `Du : ${formatShortDate(values.activityStart || values.desiredDate)}   Au : ${formatShortDate(values.activityEnd || values.desiredDate)}`
+    );
+    writeValue(
+      2,
+      29,
+      103,
+      153,
+      5,
+      `Du : ${formatShortDate(values.teardownStart)}   Au : ${formatShortDate(values.teardownEnd)}`
+    );
+    writeValue(2, 125, 112, 25, 5, values.totalDays, {
+      align: "center",
+    });
+
+    const selectedSpace =
+      getCcapacSpace(space)?.name || "";
+    const normalizedSpace = selectedSpace
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+    mark(2, 30.2, 137.8, normalizedSpace.includes("grand"));
+    mark(2, 86.2, 137.8, normalizedSpace.includes("petit"));
+    mark(2, 30.2, 149.4, normalizedSpace.includes("hall"));
+    mark(2, 81.6, 149.4, normalizedSpace.includes("atrium"));
+    mark(2, 30.2, 155.4, normalizedSpace.includes("caf"));
+    mark(2, 81.6, 155.4, normalizedSpace.includes("danse"));
+    mark(2, 30.2, 161.2, normalizedSpace.includes("musique"));
+
+    const knownSpace = [
+      "grand",
+      "petit",
+      "hall",
+      "atrium",
+      "caf",
+      "danse",
+      "musique",
+    ].some((name) => normalizedSpace.includes(name));
+
+    if (!knownSpace) {
+      mark(2, 30.2, 167.1, Boolean(selectedSpace));
+      writeValue(2, 56, 163, 126, 6, selectedSpace);
     }
+
+    writeValue(2, 78, 174, 104, 6, values.participants);
+    writeValue(2, 29, 187, 153, 11, values.audienceProfile, {
+      maxLines: 2,
+    });
+    writeValue(2, 82, 207, 100, 6, values.operationalName);
+
+    /* Page 3 — responsable, technique et sécurité. */
+    writeValue(3, 29, 66, 153, 6, values.operationalPhone);
+    writeValue(3, 29, 78, 153, 6, values.operationalEmail);
+    mark(3, 29.3, 94.8, selectedOperationalRoles.includes("Coordinateur général"));
+    mark(3, 81.3, 94.8, selectedOperationalRoles.includes("Responsable technique"));
+    mark(3, 29.3, 100.8, selectedOperationalRoles.includes("Responsable sécurité / flux"));
+    writeValue(3, 108, 96.5, 58, 6, values.operationalOtherRole);
+
+    mark(3, 30.1, 174.5, values.technicalEquipment === "yes");
+    mark(3, 48.2, 174.5, values.technicalEquipment === "no");
+    writeValue(3, 29, 181, 153, 12, values.technicalNeeds, {
+      maxLines: 2,
+    });
+    mark(3, 30.1, 204.2, values.technicalSheet === "attached");
+    mark(3, 53.1, 204.2, values.technicalSheet === "later");
+    writeValue(3, 29, 214, 153, 12, values.technicalStaff, {
+      maxLines: 2,
+    });
+    writeValue(3, 29, 246, 153, 6, values.securityAgents);
+    writeValue(3, 29, 258, 153, 6, values.publicStaff);
+    writeValue(3, 29, 270, 153, 15, values.emergencyPlan, {
+      size: 8,
+      maxLines: 3,
+    });
+
+    /* Page 4 — assurances et antécédents. */
+    mark(4, 30.1, 23.8, values.insuranceSubscribed === "yes");
+    mark(4, 48.2, 23.8, values.insuranceSubscribed === "no");
+    writeValue(4, 29, 30, 153, 6, values.insuranceType);
+    writeValue(4, 29, 42, 153, 6, values.insuranceCompany);
+    writeValue(4, 29, 54, 153, 6, values.insurancePolicyNumber);
+    writeValue(
+      4,
+      29,
+      66,
+      153,
+      6,
+      `Date d’effet : ${formatShortDate(values.insuranceStart)}    Date d’échéance : ${formatShortDate(values.insuranceEnd)}`
+    );
+    mark(4, 30.1, 105.6, values.previousAuthorization === "yes");
+    mark(4, 48.2, 105.6, values.previousAuthorization === "no");
+    writeValue(4, 29, 117, 153, 13, values.previousAuthorizationDetails, {
+      maxLines: 2,
+    });
+
+    /* Page 5 — disciplines et prestations annexes. */
+    const disciplineCoordinates: Record<
+      string,
+      [number, number]
+    > = {};
+
+    disciplines.forEach((discipline, index) => {
+      disciplineCoordinates[discipline] = [
+        30.2,
+        107.2 + index * 5.85,
+      ];
+    });
+
+    selectedDisciplines.forEach((discipline) => {
+      const coordinate =
+        disciplineCoordinates[discipline];
+      if (coordinate) {
+        mark(5, coordinate[0], coordinate[1], true);
+      }
+    });
+
+    mark(5, 29.3, 224.8, values.catererUsed === "yes");
+    mark(5, 47.2, 224.8, values.catererUsed === "no");
+    writeValue(5, 29, 230, 153, 6, values.catererName);
+    mark(5, 112.5, 259.8, values.foodSales === "yes");
+    mark(5, 130.3, 259.8, values.foodSales === "no");
+    mark(5, 119.1, 266.0, values.productSales === "yes");
+    mark(5, 136.9, 266.0, values.productSales === "no");
+    writeValue(5, 56, 269, 126, 6, values.otherServices);
+
+    /* Page 6 — signature. */
+    const signatureName =
+      electronicSignature || values.fullName;
+    const currentDate = new Date().toLocaleDateString(
+      "fr-FR"
+    );
+
+    writeValue(6, 110, 244, 45, 7, "Kinshasa", {
+      align: "center",
+    });
+    writeValue(6, 164, 244, 22, 7, currentDate, {
+      align: "center",
+    });
+    writeValue(6, 43, 274, 110, 7, signatureName, {
+      bold: true,
+    });
+    writeValue(6, 43, 287, 110, 7, signatureName, {
+      size: 11,
+    });
 
     return pdf.output("blob");
   };
+
+  /*
+   * L'ancien générateur utilisant les images avec pointillés
+   * reste disponible uniquement comme secours, mais il n'est plus
+   * utilisé pour l'aperçu ni pour le document envoyé.
+   */
+  void generateLegacyPdf;
 
   const handlePreview = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -693,7 +1469,7 @@ export default function NewRequestPage() {
 
     try {
       setGenerating(true);
-      const blob = await generatePdf();
+      const blob = await generateCleanPdf();
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(URL.createObjectURL(blob));
       setSignature(values.fullName.trim());
@@ -717,10 +1493,18 @@ export default function NewRequestPage() {
       toast.error("Confirmez l’exactitude des informations.");
       return;
     }
+    if (!requestLetter) {
+      toast.error(
+        "Ajoutez la lettre de demande en format Word avant l’envoi."
+      );
+      return;
+    }
 
     try {
       setSending(true);
-      const signedBlob = await generatePdf(cleanSignature);
+      const signedBlob = await generateCleanPdf(
+        cleanSignature
+      );
       const pdfFile = new File(
         [signedBlob],
         `Fiche-demande-CCAPAC-${Date.now()}.pdf`,
@@ -746,9 +1530,23 @@ export default function NewRequestPage() {
         pdfFile
       );
 
+      const letterFormData = new FormData();
+      letterFormData.append(
+        "document",
+        requestLetter,
+        requestLetter.name
+      );
+
+      await api.post(
+        `/space-requests/${request.id}/documents/request-letter`,
+        letterFormData
+      );
+
       await spaceRequestService.submit(request.id, cleanSignature);
 
-      toast.success("Demande signée et transmise au Service des Programmes.");
+      toast.success(
+        "Le formulaire PDF et la lettre Word ont été transmis au Service des Programmes."
+      );
       router.replace(`/espace-membre/membre/demandes/${request.id}`);
     } catch (error) {
       console.error("Request submission error:", error);
@@ -970,6 +1768,91 @@ export default function NewRequestPage() {
           </label>
         </Section>
 
+        <Section number="XVIII" title="Documents obligatoires à transmettre">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-white p-2.5 text-emerald-700 shadow-sm">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-emerald-900">
+                    Formulaire de réservation
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-emerald-800/75">
+                    Il sera automatiquement généré en PDF à partir des informations remplies sur cette page.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-emerald-800">
+                <CheckCircle2 className="h-4 w-4" />
+                Génération automatique en PDF
+              </div>
+            </div>
+
+            <div
+              className={`rounded-2xl border p-5 transition ${
+                requestLetter
+                  ? "border-blue-200 bg-blue-50"
+                  : "border-amber-300 bg-amber-50"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-white p-2.5 text-blue-700 shadow-sm">
+                  <FileUp className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-[#5C4033]">
+                    Lettre de demande Word *
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#5C4033]/65">
+                    Ajoutez votre lettre adressée à la Direction du CCAPAC – Grand Tambour. Formats acceptés : DOC ou DOCX, maximum 10 Mo.
+                  </p>
+                </div>
+              </div>
+
+              {requestLetter ? (
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-blue-200 bg-white p-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#5C4033]">
+                      {requestLetter.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-[#5C4033]/55">
+                      {(requestLetter.size / 1024 / 1024).toFixed(2)} Mo
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setRequestLetter(null)}
+                    className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                    aria-label="Retirer la lettre de demande"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-amber-400 bg-white px-4 py-4 text-sm font-semibold text-[#9A5D2F] transition hover:bg-amber-50">
+                  <FileUp className="h-5 w-5" />
+                  Choisir la lettre Word
+                  <input
+                    type="file"
+                    accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={handleRequestLetter}
+                    className="sr-only"
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-xl border border-[#D1965B]/20 bg-[#FBF9F5] p-4 text-sm leading-6 text-[#5C4033]/75">
+            <strong className="text-[#5C4033]">Envoi groupé :</strong>{" "}
+            la demande ne sera transmise au Service des Programmes qu’après la création du formulaire PDF et l’ajout de la lettre Word.
+          </div>
+        </Section>
+
         <div className="sticky bottom-4 z-20 rounded-2xl border border-[#D1965B]/20 bg-white/95 p-4 shadow-xl backdrop-blur sm:flex sm:items-center sm:justify-between">
           <div className="mb-3 flex items-center gap-3 sm:mb-0">
             <FileText className="h-6 w-6 text-[#D1965B]" />
@@ -978,9 +1861,13 @@ export default function NewRequestPage() {
               <p className="text-xs text-[#5C4033]/60">Vous pourrez le vérifier avant l’envoi.</p>
             </div>
           </div>
-          <Button type="submit" disabled={generating} className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47] sm:w-auto">
+          <Button type="submit" disabled={generating || !requestLetter} className="w-full bg-[#D1965B] text-white hover:bg-[#B97D47] sm:w-auto">
             {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
-            {generating ? "Génération..." : "Générer et voir le PDF"}
+            {generating
+              ? "Génération..."
+              : requestLetter
+                ? "Générer et voir le PDF"
+                : "Ajoutez d’abord la lettre Word"}
           </Button>
         </div>
       </form>
@@ -1001,7 +1888,7 @@ export default function NewRequestPage() {
 
               <aside className="overflow-y-auto border-t border-[#D1965B]/15 p-5 lg:border-l lg:border-t-0">
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                  En signant, vous certifiez sur l’honneur que les informations du PDF sont exactes.
+                  En signant, vous certifiez sur l’honneur que les informations du PDF sont exactes. La demande sera envoyée avec le formulaire PDF et la lettre Word « {requestLetter?.name} ».
                 </div>
 
                 <div className="mt-5 space-y-2">
@@ -1017,7 +1904,7 @@ export default function NewRequestPage() {
 
                 <Button type="button" onClick={handleSignAndSend} disabled={sending} className="mt-5 w-full bg-[#D1965B] text-white hover:bg-[#B97D47]">
                   {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                  {sending ? "Envoi en cours..." : "Signer et envoyer"}
+                  {sending ? "Envoi des deux documents..." : "Signer et envoyer les deux documents"}
                 </Button>
 
                 <Button type="button" variant="outline" onClick={() => setPreviewOpen(false)} disabled={sending} className="mt-3 w-full border-[#D1965B]/30">

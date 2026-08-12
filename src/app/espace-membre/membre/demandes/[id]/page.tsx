@@ -23,6 +23,7 @@ import {
   FileText,
   Loader2,
   ReceiptText,
+  RefreshCcw,
   Send,
   Upload,
   User,
@@ -324,16 +325,6 @@ export default function MemberRequestDetailPage() {
             decisionComment.trim() ||
               "Les deux documents ont été lus et confirmés."
           );
-        } else if (
-          request.status === "correction_requested"
-        ) {
-          updatedRequest =
-            await spaceRequestService.resubmitCorrection(
-              request.id,
-              cleanSignature,
-              decisionComment.trim() ||
-                "Demande corrigée et renvoyée au Programme."
-            );
         } else {
           updatedRequest = await spaceRequestService.submit(
             request.id,
@@ -350,8 +341,6 @@ export default function MemberRequestDetailPage() {
             : request.status ===
                 "awaiting_member_confirmation"
               ? "Avis accepté et retourné au Programme"
-              : request.status === "correction_requested"
-                ? "Demande corrigée et retournée au Programme"
               : "Demande signée et transmise au Programme"
         );
 
@@ -507,6 +496,40 @@ export default function MemberRequestDetailPage() {
   const processCompleted =
     request.status === "completed";
 
+  const requestRejected = [
+    "rejected",
+    "stopped_by_member",
+    "expired",
+  ].includes(request.status);
+
+  /*
+   * Une correction demandée oblige le membre à repartir sur
+   * un formulaire neuf. L'ancienne demande reste consultable,
+   * mais elle ne peut plus être signée ni renvoyée depuis ici.
+   */
+  const mustRestartRequest =
+    canCorrect || requestRejected;
+
+  const rejectionHistory = [...history]
+    .sort(
+      (first, second) =>
+        new Date(second.performedAt).getTime() -
+        new Date(first.performedAt).getTime()
+    )
+    .find((item) =>
+      String(item.action || "")
+        .toUpperCase()
+        .includes("REFUS") ||
+      String(item.action || "")
+        .toUpperCase()
+        .includes("REJECT")
+    );
+
+  const rejectionReason =
+    request.rejectionComment?.trim() ||
+    rejectionHistory?.comment?.trim() ||
+    "Aucun motif n'a été renseigné.";
+
   const hasFinanceQuote =
     request.paymentAmount !== null &&
       request.paymentAmount !== undefined
@@ -534,6 +557,7 @@ export default function MemberRequestDetailPage() {
       (request.currentDepartment === "MEMBER" ||
         request.assignedDepartment === "MEMBER") &&
       request.status !== "rejected" &&
+      !canCorrect &&
       !paymentUnderReview &&
       !processCompleted);
 
@@ -550,10 +574,10 @@ export default function MemberRequestDetailPage() {
         Boolean(item.comment?.trim())
     );
 
-  const canAct = canSubmit || canConfirm || canCorrect;
+  const canAct = canSubmit || canConfirm;
 
   const alreadySubmitted =
-    !canAct;
+    !canAct && !mustRestartRequest;
 
   return (
     <>
@@ -632,6 +656,18 @@ export default function MemberRequestDetailPage() {
               </Button>
             </div>
           )}
+
+          {mustRestartRequest && (
+            <Button
+              asChild
+              className="bg-[#D1965B] text-white hover:bg-[#B97D47]"
+            >
+              <Link href="/espace-membre/membre/nouvelle-demande">
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Recommencer la demande
+              </Link>
+            </Button>
+          )}
         </div>
 
         {canSubmit && (
@@ -672,6 +708,33 @@ export default function MemberRequestDetailPage() {
                   suivre son évolution depuis
                   la page Mes demandes.
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {mustRestartRequest && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <XCircle className="mt-0.5 h-6 w-6 shrink-0 text-red-600" />
+              <div className="min-w-0">
+                <p className="font-bold text-red-900">
+                  {canCorrect
+                    ? "Correction obligatoire sous cinq jours"
+                    : "Demande rejetée"}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-red-800">
+                  Cette ancienne demande ne peut plus être signée ou renvoyée. Consultez le motif ci-dessous, puis remplissez un nouveau formulaire depuis le début.
+                </p>
+                <Button
+                  asChild
+                  className="mt-4 bg-red-700 text-white hover:bg-red-800"
+                >
+                  <Link href="/espace-membre/membre/nouvelle-demande">
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    Recommencer la demande à neuf
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -768,6 +831,28 @@ export default function MemberRequestDetailPage() {
                         "MEMBRE"}
                     </p>
                   </div>
+
+                  {mustRestartRequest && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-4 sm:col-span-2">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-red-700">
+                        <AlertTriangle className="h-4 w-4" />
+                        Motif du rejet
+                      </div>
+
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-900">
+                        {rejectionReason}
+                      </p>
+
+                      {rejectionHistory?.performedAt && (
+                        <p className="mt-3 text-xs text-red-700/70">
+                          Décision enregistrée le{" "}
+                          {formatDateTime(
+                            rejectionHistory.performedAt
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -782,7 +867,8 @@ export default function MemberRequestDetailPage() {
                 </div>
               </div>
 
-              {request.electronicSignature && (
+              {request.electronicSignature &&
+                !mustRestartRequest && (
                 <div>
                   <h2 className="text-lg font-bold text-[#5C4033]">
                     Signature électronique
@@ -816,7 +902,9 @@ export default function MemberRequestDetailPage() {
                   {request.currentStep ||
                     (canAct
                       ? "En attente de votre signature électronique"
-                      : "Demande en cours de traitement")}
+                      : mustRestartRequest
+                        ? "Nouvelle demande requise"
+                        : "Demande en cours de traitement")}
                 </p>
 
                 {request.submittedAt && (

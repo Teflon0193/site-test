@@ -576,15 +576,21 @@ export default function ProgrammeRequestDetailPage() {
       setRejectionSignature("");
 
       toast.success(
-        "Demande rejetée",
+        "Avis de rejet enregistré",
         {
           description:
-            "Le demandeur pourra consulter le motif du rejet.",
+            "Le dossier a été transmis au superviseur Programme pour décision.",
         }
       );
 
-      await loadRequest();
-      router.refresh();
+      /*
+       * Ne pas recharger immédiatement la demande ici.
+       * Après l'avis de l'assistant, le backend retire son
+       * affectation et transmet le dossier au superviseur.
+       * Un GET immédiat peut donc renvoyer 403 alors que le rejet
+       * a bien été enregistré, ce qui affiche une fausse erreur.
+       * La réponse de l'API contient déjà la demande mise à jour.
+       */
     } catch (error) {
       console.error(
         "Programme rejection error:",
