@@ -3,6 +3,7 @@
 import {
   Download,
   FileCheck2,
+  FileSignature,
   FileText,
   Loader2,
   Scale,
@@ -63,14 +64,25 @@ const documentConfiguration: Record<
   DocumentConfiguration
 > = {
   INITIAL_REQUEST: {
-    label: "Formulaire initial",
+    label: "Formulaire officiel",
     description:
-      "Document transmis par le demandeur",
+      "Formulaire rempli et transmis par le demandeur",
     icon: FileText,
     iconColor: "text-blue-700",
     iconBackground: "bg-blue-50",
     badgeColor:
       "bg-blue-50 text-blue-700",
+  },
+
+  REQUEST_LETTER: {
+    label: "Lettre de demande",
+    description:
+      "Lettre de demande d’espace transmise par le demandeur",
+    icon: FileSignature,
+    iconColor: "text-sky-700",
+    iconBackground: "bg-sky-50",
+    badgeColor:
+      "bg-sky-50 text-sky-700",
   },
 
   ARTISTIC_OPINION: {
