@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import {
   Card,
   CardContent,
@@ -299,6 +300,11 @@ function getNextDepartment(
 }
 
 export default function ProgrammeRequestDetailPage() {
+  const { user } = useAuth();
+
+  const isProgrammeAssistant =
+    user?.role === "PROGRAMME_ASSISTANT";
+
   const params = useParams<{
     id: string;
   }>();
@@ -486,6 +492,16 @@ export default function ProgrammeRequestDetailPage() {
       return;
     }
 
+    if (
+      isProgrammeAssistant &&
+      comment.trim().length < 5
+    ) {
+      toast.error(
+        "Le commentaire de l’assistant doit contenir au moins 5 caractères."
+      );
+      return;
+    }
+
     if (missingDocumentTypes.length > 0) {
       toast.error(
         `Documents manquants : ${missingDocumentTypes.join(", ")}`
@@ -496,17 +512,33 @@ export default function ProgrammeRequestDetailPage() {
     try {
       setProcessing(true);
 
-      const updatedRequest =
-        await spaceRequestService.validate(
-          request.id,
-          comment.trim(),
-          validationSignature.trim()
-        );
+      const updatedRequest = isProgrammeAssistant
+        ? await spaceRequestService.assistantReview(
+            request.id,
+            "VALIDATED",
+            comment.trim(),
+            validationSignature.trim()
+          )
+        : await spaceRequestService.validate(
+            request.id,
+            comment.trim(),
+            validationSignature.trim()
+          );
 
       setRequest(updatedRequest);
       setValidateModalOpen(false);
       setComment("");
       setValidationSignature("");
+
+      if (isProgrammeAssistant) {
+        toast.success("Avis favorable transmis", {
+          description:
+            "Le dossier est revenu au superviseur Programme pour validation finale.",
+        });
+
+        router.replace("/espace-membre/programme/demandes");
+        return;
+      }
 
       toast.success(
         request.status === "program_payment_review"
@@ -563,12 +595,18 @@ export default function ProgrammeRequestDetailPage() {
     try {
       setProcessing(true);
 
-      const updatedRequest =
-        await spaceRequestService.reject(
-          request.id,
-          rejectionComment.trim(),
-          rejectionSignature.trim()
-        );
+      const updatedRequest = isProgrammeAssistant
+        ? await spaceRequestService.assistantReview(
+            request.id,
+            "REJECTED",
+            rejectionComment.trim(),
+            rejectionSignature.trim()
+          )
+        : await spaceRequestService.reject(
+            request.id,
+            rejectionComment.trim(),
+            rejectionSignature.trim()
+          );
 
       setRequest(updatedRequest);
       setRejectModalOpen(false);
@@ -576,12 +614,20 @@ export default function ProgrammeRequestDetailPage() {
       setRejectionSignature("");
 
       toast.success(
-        "Avis de rejet enregistré",
+        isProgrammeAssistant
+          ? "Recommandation de rejet transmise"
+          : "Rejet enregistré",
         {
-          description:
-            "Le dossier a été transmis au superviseur Programme pour décision.",
+          description: isProgrammeAssistant
+            ? "Le dossier est revenu au superviseur Programme pour la décision finale."
+            : "La décision de rejet a été enregistrée.",
         }
       );
+
+      if (isProgrammeAssistant) {
+        router.replace("/espace-membre/programme/demandes");
+        return;
+      }
 
       /*
        * Ne pas recharger immédiatement la demande ici.
@@ -728,7 +774,9 @@ export default function ProgrammeRequestDetailPage() {
                 className="border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                Rejeter
+                {isProgrammeAssistant
+                  ? "Recommander le rejet"
+                  : "Rejeter"}
               </Button>
 
               <Button
@@ -739,7 +787,9 @@ export default function ProgrammeRequestDetailPage() {
                 className="bg-[#D1965B] text-white hover:bg-[#B97D47]"
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                Valider
+                {isProgrammeAssistant
+                  ? "Donner un avis favorable"
+                  : "Valider"}
               </Button>
             </div>
           )}
@@ -1137,15 +1187,17 @@ export default function ProgrammeRequestDetailPage() {
             <div className="flex items-start justify-between border-b border-[#D1965B]/20 bg-[#F3EEE5] p-6">
               <div>
                 <h2 className="text-xl font-bold text-[#5C4033]">
-                  Valider la demande
+                  {isProgrammeAssistant
+                    ? "Transmettre un avis favorable"
+                    : "Valider la demande"}
                 </h2>
 
                 <p className="mt-1 text-sm text-[#5C4033]/70">
-                  Le dossier sera transmis au{" "}
-                  {getNextDepartment(
-                    request.status
-                  )}
-                  .
+                  {isProgrammeAssistant
+                    ? "Le dossier reviendra au superviseur Programme pour validation finale."
+                    : `Le dossier sera transmis au ${getNextDepartment(
+                        request.status
+                      )}.`}
                 </p>
               </div>
 
@@ -1166,7 +1218,9 @@ export default function ProgrammeRequestDetailPage() {
 
             <div className="space-y-5 p-6">
               <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm leading-6 text-green-900">
-                {request.status === "program_payment_review"
+                {isProgrammeAssistant
+                  ? "Votre avis favorable sera transmis au superviseur Programme. Le superviseur décidera de la validation finale et de la poursuite du workflow."
+                  : request.status === "program_payment_review"
                   ? "Vous confirmez avoir vérifié la preuve de paiement. La date demandée sera définitivement confirmée et le processus sera clôturé."
                   : "Vous confirmez avoir examiné cette demande et autorisez sa transmission à l’étape suivante."}
               </div>
@@ -1176,7 +1230,7 @@ export default function ProgrammeRequestDetailPage() {
                   htmlFor="validationComment"
                   className="text-[#5C4033]"
                 >
-                  Commentaire
+                  Commentaire{isProgrammeAssistant ? " *" : ""}
                 </Label>
 
                 <textarea
@@ -1189,9 +1243,19 @@ export default function ProgrammeRequestDetailPage() {
                   }
                   disabled={processing}
                   rows={5}
-                  placeholder="Ajoutez éventuellement une observation..."
+                  placeholder={
+                    isProgrammeAssistant
+                      ? "Expliquez votre avis favorable (minimum 5 caractères)..."
+                      : "Ajoutez éventuellement une observation..."
+                  }
                   className="w-full resize-none rounded-lg border border-[#D1965B]/30 bg-white px-3 py-3 text-sm text-[#5C4033] outline-none transition focus:border-[#D1965B] focus:ring-2 focus:ring-[#D1965B]/20"
                 />
+
+                {isProgrammeAssistant && (
+                  <p className="text-xs text-[#5C4033]/60">
+                    Minimum 5 caractères.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -1243,7 +1307,9 @@ export default function ProgrammeRequestDetailPage() {
                   type="button"
                   disabled={
                     processing ||
-                    validationSignature.trim().length < 3
+                    validationSignature.trim().length < 3 ||
+                    (isProgrammeAssistant &&
+                      comment.trim().length < 5)
                   }
                   onClick={() =>
                     void handleValidate()
@@ -1258,9 +1324,11 @@ export default function ProgrammeRequestDetailPage() {
                   ) : (
                     <>
                       <FileSignature className="mr-2 h-4 w-4" />
-                      {getNextStepLabel(
-                        request.status
-                      )}
+                      {isProgrammeAssistant
+                        ? "Transmettre l’avis favorable"
+                        : getNextStepLabel(
+                            request.status
+                          )}
                     </>
                   )}
                 </Button>
@@ -1291,12 +1359,15 @@ export default function ProgrammeRequestDetailPage() {
             <div className="flex items-start justify-between border-b border-red-200 bg-red-50 p-6">
               <div>
                 <h2 className="text-xl font-bold text-red-900">
-                  Rejeter la demande
+                  {isProgrammeAssistant
+                    ? "Recommander le rejet"
+                    : "Rejeter la demande"}
                 </h2>
 
                 <p className="mt-1 text-sm text-red-700">
-                  Le motif sera communiqué au
-                  demandeur.
+                  {isProgrammeAssistant
+                    ? "Votre recommandation reviendra au superviseur Programme pour la décision finale."
+                    : "Le motif sera communiqué au demandeur."}
                 </p>
               </div>
 
@@ -1315,10 +1386,9 @@ export default function ProgrammeRequestDetailPage() {
 
             <div className="space-y-5 p-6">
               <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-900">
-                Cette opération arrêtera le
-                traitement de la demande.
-                Expliquez clairement la raison
-                du rejet.
+                {isProgrammeAssistant
+                  ? "Cette action n’arrête pas directement la demande. Le superviseur Programme examinera votre motif et décidera du rejet final à transmettre au membre."
+                  : "Cette opération arrêtera le traitement de la demande. Expliquez clairement la raison du rejet."}
               </div>
 
               <div className="space-y-2">

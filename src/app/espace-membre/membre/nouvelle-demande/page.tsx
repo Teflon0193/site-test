@@ -1452,12 +1452,30 @@ export default function NewRequestPage() {
     return pdf.output("blob");
   };
 
+  const generateOfficialWord = async (
+    electronicSignature = ""
+  ) => {
+    return spaceRequestService.generateWord({
+      values,
+      space,
+      selectedSpace:
+        getCcapacSpace(space)?.name || "",
+      selectedObjectives,
+      selectedDisciplines,
+      selectedOperationalRoles,
+      authorizedRepresentative,
+      acceptedDeclarations,
+      electronicSignature,
+    });
+  };
+
   /*
    * L'ancien générateur utilisant les images avec pointillés
    * reste disponible uniquement comme secours, mais il n'est plus
    * utilisé pour l'aperçu ni pour le document envoyé.
    */
   void generateLegacyPdf;
+  void generateCleanPdf;
 
   const handlePreview = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1469,15 +1487,15 @@ export default function NewRequestPage() {
 
     try {
       setGenerating(true);
-      const blob = await generateCleanPdf();
+      const blob = await generateOfficialWord();
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(URL.createObjectURL(blob));
       setSignature(values.fullName.trim());
       setConfirmed(false);
       setPreviewOpen(true);
     } catch (error) {
-      console.error("PDF generation error:", error);
-      toast.error("Impossible de générer le PDF.");
+      console.error("Word generation error:", error);
+      toast.error("Impossible de générer le document Word.");
     } finally {
       setGenerating(false);
     }
@@ -1502,13 +1520,15 @@ export default function NewRequestPage() {
 
     try {
       setSending(true);
-      const signedBlob = await generateCleanPdf(
+      const signedBlob = await generateOfficialWord(
         cleanSignature
       );
-      const pdfFile = new File(
+      const wordFile = new File(
         [signedBlob],
-        `Fiche-demande-CCAPAC-${Date.now()}.pdf`,
-        { type: "application/pdf" }
+        `Fiche-demande-CCAPAC-${Date.now()}.docx`,
+        {
+          type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        }
       );
 
       const request = await spaceRequestService.create(
@@ -1527,7 +1547,7 @@ export default function NewRequestPage() {
             `Date souhaitée : ${formatDate(values.desiredDate)}`,
           ].join("\n"),
         },
-        pdfFile
+        wordFile
       );
 
       const letterFormData = new FormData();
@@ -1545,7 +1565,7 @@ export default function NewRequestPage() {
       await spaceRequestService.submit(request.id, cleanSignature);
 
       toast.success(
-        "Le formulaire PDF et la lettre Word ont été transmis au Service des Programmes."
+        "Le formulaire Word officiel et la lettre Word ont été transmis au Service des Programmes."
       );
       router.replace(`/espace-membre/membre/demandes/${request.id}`);
     } catch (error) {
@@ -1597,7 +1617,7 @@ export default function NewRequestPage() {
           Formulaire en ligne
         </h1>
         <p className="mt-3 max-w-3xl text-white/90">
-          Remplissez les renseignements ci-dessous. Vous pourrez prévisualiser le document PDF avant de le signer et de l’envoyer.
+          Remplissez les renseignements ci-dessous. Le document Word officiel sera rempli automatiquement avant l’envoi.
         </p>
       </header>
 
@@ -1780,14 +1800,14 @@ export default function NewRequestPage() {
                     Formulaire de réservation
                   </p>
                   <p className="mt-1 text-sm leading-6 text-emerald-800/75">
-                    Il sera automatiquement généré en PDF à partir des informations remplies sur cette page.
+                    Le modèle Word officiel sera automatiquement rempli avec les informations de cette page.
                   </p>
                 </div>
               </div>
 
               <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-emerald-800">
                 <CheckCircle2 className="h-4 w-4" />
-                Génération automatique en PDF
+                Génération automatique en Word
               </div>
             </div>
 
@@ -1849,7 +1869,7 @@ export default function NewRequestPage() {
 
           <div className="mt-5 rounded-xl border border-[#D1965B]/20 bg-[#FBF9F5] p-4 text-sm leading-6 text-[#5C4033]/75">
             <strong className="text-[#5C4033]">Envoi groupé :</strong>{" "}
-            la demande ne sera transmise au Service des Programmes qu’après la création du formulaire PDF et l’ajout de la lettre Word.
+            la demande ne sera transmise au Service des Programmes qu’après la création du formulaire Word officiel et l’ajout de la lettre Word.
           </div>
         </Section>
 
@@ -1857,7 +1877,7 @@ export default function NewRequestPage() {
           <div className="mb-3 flex items-center gap-3 sm:mb-0">
             <FileText className="h-6 w-6 text-[#D1965B]" />
             <div>
-              <p className="font-semibold">Votre formulaire sera généré en PDF</p>
+              <p className="font-semibold">Votre formulaire officiel sera généré en Word</p>
               <p className="text-xs text-[#5C4033]/60">Vous pourrez le vérifier avant l’envoi.</p>
             </div>
           </div>
@@ -1866,7 +1886,7 @@ export default function NewRequestPage() {
             {generating
               ? "Génération..."
               : requestLetter
-                ? "Générer et voir le PDF"
+                ? "Générer le document Word"
                 : "Ajoutez d’abord la lettre Word"}
           </Button>
         </div>
@@ -1877,18 +1897,35 @@ export default function NewRequestPage() {
           <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <header className="flex items-center justify-between border-b border-[#D1965B]/15 px-5 py-4">
               <div>
-                <h2 className="text-lg font-bold">Prévisualisation du formulaire PDF</h2>
-                <p className="text-xs text-[#5C4033]/60">Vérifiez les informations avant de signer.</p>
+                <h2 className="text-lg font-bold">Formulaire Word officiel généré</h2>
+                <p className="text-xs text-[#5C4033]/60">Téléchargez-le et vérifiez les informations avant de signer.</p>
               </div>
               <button type="button" onClick={() => setPreviewOpen(false)} className="rounded-lg p-2 hover:bg-[#F3EEE5]" aria-label="Fermer"><X className="h-5 w-5" /></button>
             </header>
 
             <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_340px]">
-              <iframe title="Aperçu du formulaire PDF" src={previewUrl} className="h-[52vh] w-full bg-gray-100 lg:h-[75vh]" />
+              <div className="flex min-h-[52vh] items-center justify-center bg-[#F3EEE5]/60 p-6 lg:min-h-[75vh]">
+                <div className="max-w-md rounded-2xl border border-[#D1965B]/20 bg-white p-8 text-center shadow-sm">
+                  <FileText className="mx-auto h-14 w-14 text-[#D1965B]" />
+                  <h3 className="mt-4 text-lg font-bold text-[#5C4033]">
+                    Document Word prêt
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[#5C4033]/65">
+                    Word ne peut pas être affiché fidèlement dans le navigateur. Téléchargez le document pour le vérifier.
+                  </p>
+                  <a
+                    href={previewUrl}
+                    download="Fiche-demande-CCAPAC-remplie.docx"
+                    className="mt-5 inline-flex rounded-xl bg-[#D1965B] px-5 py-3 text-sm font-semibold text-white hover:bg-[#B97D47]"
+                  >
+                    Télécharger le Word rempli
+                  </a>
+                </div>
+              </div>
 
               <aside className="overflow-y-auto border-t border-[#D1965B]/15 p-5 lg:border-l lg:border-t-0">
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                  En signant, vous certifiez sur l’honneur que les informations du PDF sont exactes. La demande sera envoyée avec le formulaire PDF et la lettre Word « {requestLetter?.name} ».
+                  En signant, vous certifiez sur l’honneur que les informations du Word sont exactes. La demande sera envoyée avec le formulaire officiel et la lettre Word « {requestLetter?.name} ».
                 </div>
 
                 <div className="mt-5 space-y-2">
@@ -1899,7 +1936,7 @@ export default function NewRequestPage() {
 
                 <label className="mt-5 flex items-start gap-3 rounded-xl border border-[#D1965B]/15 p-4 text-sm">
                   <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} className="mt-1 accent-[#D1965B]" />
-                  J’ai vérifié le PDF et j’accepte que mon nom constitue ma signature électronique.
+                  J’ai vérifié le document Word et j’accepte que mon nom constitue ma signature électronique.
                 </label>
 
                 <Button type="button" onClick={handleSignAndSend} disabled={sending} className="mt-5 w-full bg-[#D1965B] text-white hover:bg-[#B97D47]">

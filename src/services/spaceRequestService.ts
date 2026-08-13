@@ -2,6 +2,7 @@ import api from "@/lib/api";
 
 export type SpaceRequestDocumentType =
   | "INITIAL_REQUEST"
+  | "REQUEST_LETTER"
   | "ARTISTIC_OPINION"
   | "LEGAL_DOCUMENT"
   | "FINANCE_QUOTE"
@@ -18,6 +19,18 @@ export interface CreateSpaceRequestData {
   endTime?: string;
   participants?: number;
   description?: string;
+}
+
+export interface GenerateWordPayload {
+  values: Record<string, string>;
+  space: number;
+  selectedSpace: string;
+  selectedObjectives: string[];
+  selectedDisciplines: string[];
+  selectedOperationalRoles: string[];
+  authorizedRepresentative: boolean;
+  acceptedDeclarations: boolean;
+  electronicSignature?: string;
 }
 
 export interface SpaceRequestDocument {
@@ -298,6 +311,9 @@ const documentEndpoints: Record<
   >,
   string
 > = {
+  REQUEST_LETTER:
+    "request-letter",
+
   ARTISTIC_OPINION:
     "artistic-opinion",
 
@@ -312,6 +328,18 @@ const documentEndpoints: Record<
 };
 
 export const spaceRequestService = {
+  async generateWord(
+    payload: GenerateWordPayload
+  ): Promise<Blob> {
+    const response = await api.post<Blob>(
+      "/space-requests/generate-word",
+      payload,
+      { responseType: "blob" }
+    );
+
+    return response.data;
+  },
+
   async create(
     data: CreateSpaceRequestData,
     document: File

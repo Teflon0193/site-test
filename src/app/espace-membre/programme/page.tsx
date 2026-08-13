@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Search,
   UserCheck,
+  UserMinus,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -87,6 +88,9 @@ export default function ProgrammeDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [assigningId, setAssigningId] = useState<
+    number | null
+  >(null);
+  const [unassigningId, setUnassigningId] = useState<
     number | null
   >(null);
 
@@ -208,6 +212,56 @@ export default function ProgrammeDashboardPage() {
       );
     } finally {
       setAssigningId(null);
+    }
+  };
+
+  const handleUnassign = async (
+    request: SpaceRequest
+  ) => {
+    if (!request.assignedToUserId) return;
+
+    const assignedName =
+      request.assignedTo?.username ||
+      request.assignedTo?.email ||
+      "cet assistant";
+
+    const confirmed = window.confirm(
+      `Retirer l'affectation de ${assignedName} ? Le dossier redeviendra disponible pour une nouvelle affectation.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setUnassigningId(request.id);
+
+      const updated =
+        await programmeTeamService.unassignRequest(
+          request.id,
+          `Affectation retirée à ${assignedName}`
+        );
+
+      setRequests((current) =>
+        current.map((item) =>
+          item.id === request.id ? updated : item
+        )
+      );
+
+      setSelectedAssistants((current) => ({
+        ...current,
+        [request.id]: "",
+      }));
+
+      toast.success("Affectation retirée avec succès.");
+      await loadData(false);
+    } catch (error) {
+      console.error("Programme unassignment error:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Impossible de retirer l'affectation"
+      );
+    } finally {
+      setUnassigningId(null);
     }
   };
 
@@ -408,6 +462,26 @@ export default function ProgrammeDashboardPage() {
                                 ? "Réaffecter"
                                 : "Affecter"}
                           </Button>
+
+                          {request.assignedToUserId && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={
+                                assigningId === request.id ||
+                                unassigningId === request.id
+                              }
+                              onClick={() =>
+                                void handleUnassign(request)
+                              }
+                              className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                            >
+                              <UserMinus className="mr-2 h-4 w-4" />
+                              {unassigningId === request.id
+                                ? "Retrait..."
+                                : "Retirer l’affectation"}
+                            </Button>
+                          )}
                         </div>
                       )}
 

@@ -47,4 +47,20 @@ export const programmeTeamService = {
 
     return response.data.data;
   },
+
+  async unassignRequest(
+    requestId: number,
+    comment = ""
+  ): Promise<SpaceRequest> {
+    const response = await api.post<
+      ApiResponse<SpaceRequest>
+    >(
+      `/space-requests/${requestId}/unassign-programme-assistant`,
+      {
+        comment: comment.trim(),
+      }
+    );
+
+    return response.data.data;
+  },
 };

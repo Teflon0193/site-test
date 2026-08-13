@@ -462,10 +462,30 @@ export default function ArtisticRequestDetailPage() {
       });
   }, [isArtisticSupervisor]);
 
-  const documentUrl =
-    getDocumentUrl(
-      request?.document?.url
-    );
+  /*
+   * Documents transmis par le membre.
+   * On utilise la collection retournée par /:id/documents au lieu
+   * de l'ancien champ request.document qui ne contient qu'un fichier.
+   */
+  const initialRequestDocument =
+    documents.find(
+      (document) =>
+        document.type === "INITIAL_REQUEST"
+    ) || request?.document || null;
+
+  const requestLetterDocument =
+    documents.find(
+      (document) =>
+        document.type === "REQUEST_LETTER"
+    ) || null;
+
+  const initialRequestUrl = getDocumentUrl(
+    initialRequestDocument?.url
+  );
+
+  const requestLetterUrl = getDocumentUrl(
+    requestLetterDocument?.url
+  );
 
   const artisticOpinion = documents.find(
     (document) =>
@@ -980,71 +1000,107 @@ export default function ArtisticRequestDetailPage() {
                     </div>
                   </div>
 
-                  {!isFinalArtisticReview && (
-                    <div>
+                  <div>
                     <h3 className="font-semibold text-[#5C4033]">
-                      Document joint
+                      Documents transmis par le demandeur
                     </h3>
 
-                    {request.document &&
-                    documentUrl ? (
-                      <div className="mt-3 flex flex-col justify-between gap-4 rounded-xl border border-[#D1965B]/15 bg-white p-4 sm:flex-row sm:items-center">
+                    <p className="mt-1 text-sm text-[#5C4033]/60">
+                      Le formulaire officiel et la lettre de demande doivent être consultés avant toute décision artistique.
+                    </p>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div className="rounded-xl border border-[#D1965B]/15 bg-white p-4">
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="rounded-xl bg-[#D1965B]/10 p-3">
                             <FileText className="h-6 w-6 text-[#D1965B]" />
                           </div>
 
                           <div className="min-w-0">
-                            <p className="truncate font-medium text-[#5C4033]">
-                              {
-                                request.document
-                                  .name
-                              }
+                            <p className="text-xs font-bold uppercase tracking-wide text-[#D1965B]">
+                              Formulaire officiel
                             </p>
-
-                            <p className="mt-1 text-xs text-[#5C4033]/50">
-                              {request.document
-                                .size
-                                ? `${(
-                                    request
-                                      .document
-                                      .size /
-                                    1024 /
-                                    1024
-                                  ).toFixed(
-                                    2
-                                  )} Mo`
-                                : "Document de la demande"}
+                            <p className="mt-1 truncate font-medium text-[#5C4033]">
+                              {initialRequestDocument?.name ||
+                                "Formulaire de la demande"}
                             </p>
+                            {initialRequestDocument?.size ? (
+                              <p className="mt-1 text-xs text-[#5C4033]/50">
+                                {(initialRequestDocument.size / 1024 / 1024).toFixed(2)} Mo
+                              </p>
+                            ) : null}
                           </div>
                         </div>
 
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="shrink-0 border-[#D1965B]/30 text-[#5C4033] hover:bg-[#F3EEE5]"
-                        >
-                          <a
-                            href={documentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={
-                              request.document
-                                .name
-                            }
+                        {initialRequestUrl ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="mt-4 w-full border-[#D1965B]/30 text-[#5C4033] hover:bg-[#F3EEE5]"
                           >
-                            <Download className="mr-2 h-4 w-4" />
-                            Télécharger
-                          </a>
-                        </Button>
+                            <a
+                              href={initialRequestUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download={initialRequestDocument?.name}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Télécharger le formulaire
+                            </a>
+                          </Button>
+                        ) : (
+                          <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                            Formulaire officiel indisponible.
+                          </p>
+                        )}
                       </div>
-                    ) : (
-                      <p className="mt-3 text-sm text-[#5C4033]/60">
-                        Aucun document disponible.
-                      </p>
-                    )}
+
+                      <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="rounded-xl bg-blue-100 p-3">
+                            <FileSignature className="h-6 w-6 text-blue-700" />
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                              Lettre de demande
+                            </p>
+                            <p className="mt-1 truncate font-medium text-[#5C4033]">
+                              {requestLetterDocument?.name ||
+                                "Lettre de demande d’espace"}
+                            </p>
+                            {requestLetterDocument?.size ? (
+                              <p className="mt-1 text-xs text-[#5C4033]/50">
+                                {(requestLetterDocument.size / 1024 / 1024).toFixed(2)} Mo
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {requestLetterUrl ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="mt-4 w-full border-blue-300 bg-white text-blue-800 hover:bg-blue-100"
+                          >
+                            <a
+                              href={requestLetterUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download={requestLetterDocument?.name}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Télécharger la lettre
+                            </a>
+                          </Button>
+                        ) : (
+                          <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                            Lettre de demande indisponible.
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
 
                   {request.electronicSignature && (
                     <div>
@@ -1337,18 +1393,18 @@ export default function ArtisticRequestDetailPage() {
                         </p>
 
                         <p className="mt-2 break-words text-sm font-semibold text-[#5C4033]">
-                          {request.document?.name ||
+                          {initialRequestDocument?.name ||
                             "Document initial"}
                         </p>
 
-                        {documentUrl ? (
+                        {initialRequestUrl ? (
                           <Button
                             asChild
                             variant="outline"
                             className="mt-3 w-full border-[#D1965B]/30 bg-white text-[#5C4033] hover:bg-[#F3EEE5]"
                           >
                             <a
-                              href={documentUrl}
+                              href={initialRequestUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -1363,9 +1419,41 @@ export default function ArtisticRequestDetailPage() {
                         )}
                       </div>
 
+                      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                          2. Lettre de demande
+                        </p>
+
+                        <p className="mt-2 break-words text-sm font-semibold text-blue-900">
+                          {requestLetterDocument?.name ||
+                            "Lettre de demande d’espace"}
+                        </p>
+
+                        {requestLetterUrl ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="mt-3 w-full border-blue-300 bg-white text-blue-800 hover:bg-blue-100"
+                          >
+                            <a
+                              href={requestLetterUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FileSignature className="mr-2 h-4 w-4" />
+                              Consulter la lettre
+                            </a>
+                          </Button>
+                        ) : (
+                          <p className="mt-3 text-xs text-red-600">
+                            Lettre de demande indisponible.
+                          </p>
+                        )}
+                      </div>
+
                       <div className="rounded-xl border border-green-200 bg-green-50 p-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
-                          2. Charte institutionnelle
+                          3. Charte institutionnelle
                         </p>
 
                         <p className="mt-2 break-words text-sm font-semibold text-green-900">
@@ -1401,7 +1489,7 @@ export default function ArtisticRequestDetailPage() {
                     </div>
 
                     <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-800">
-                      Vérifiez les deux documents avant de signer la
+                      Vérifiez les trois documents avant de signer la
                       validation artistique finale.
                     </div>
                   </CardContent>
