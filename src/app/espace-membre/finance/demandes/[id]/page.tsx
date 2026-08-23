@@ -31,7 +31,9 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-} from "../../../../components/ui/card";
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -102,6 +104,10 @@ function FinanceStatusPill({ status }: { status: string }) {
   const label =
     status === "finance_cotation"
       ? "En attente de cotation"
+      : status === "finance_cotation_revision"
+        ? "Révision demandée par la DG"
+      : status === "dg_cotation_review"
+        ? "En attente de la DG"
       : status === "rejected"
         ? "Demande rejetée"
         : status === "program_review_after_finance"
@@ -422,7 +428,8 @@ export default function FinanceRequestPage() {
   }
 
   const canProcess =
-    request.status === "finance_cotation";
+    request.status === "finance_cotation" ||
+    request.status === "finance_cotation_revision";
 
   const requesterName =
     request.user?.username ||
@@ -464,6 +471,17 @@ export default function FinanceRequestPage() {
           <FinanceStatusPill status={request.status} />
         </div>
       </section>
+
+      {request.status === "finance_cotation_revision" && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardHeader><CardTitle>Révision demandée par la Direction générale</CardTitle></CardHeader>
+          <CardContent>
+            <p>{request.dgComment}</p>
+            <p className="mt-2 font-semibold">Montant suggéré : {Number(request.dgSuggestedAmount || 0).toLocaleString("fr-FR")} USD</p>
+            <p className="mt-1 text-sm">Modifiez le montant et remplacez la cotation, puis renvoyez-la à la DG.</p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

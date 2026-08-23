@@ -10,15 +10,21 @@ import { useParams, useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import {
   ArrowLeft,
+  Building2,
   CalendarDays,
+  Check,
+  Circle,
+  Clock3,
   Download,
   FileText,
   History,
   Mail,
   MapPin,
   Phone,
+  Route,
   Trash2,
   User,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -67,7 +73,197 @@ const departmentLabels: Record<string, string> = {
     "Communication et Régisseur général",
   JURIDIQUE: "Service juridique",
   FINANCE: "Service des Finances",
+  DG: "Direction générale",
+  DIRECTION_GENERALE: "Direction générale",
+  COMPLETED: "Dossier terminé",
 };
+
+type JourneyStep = {
+  title: string;
+  description: string;
+  department: string;
+};
+
+const journeySteps: JourneyStep[] = [
+  { title: "Membre", description: "Création et envoi", department: "MEMBER" },
+  { title: "Programme", description: "Examen initial", department: "PROGRAMME" },
+  { title: "Direction artistique", description: "Avis artistique initial", department: "DIRECTION_ARTISTIQUE" },
+  { title: "Programme", description: "Contrôle de l’avis", department: "PROGRAMME" },
+  { title: "Membre", description: "Confirmation", department: "MEMBER" },
+  { title: "Programme", description: "Reprise du dossier", department: "PROGRAMME" },
+  { title: "Direction artistique", description: "Validation finale", department: "DIRECTION_ARTISTIQUE" },
+  { title: "Communication / Régisseur", description: "Contrôles parallèles", department: "COMMUNICATION_REGISSEUR" },
+  { title: "Programme", description: "Synthèse", department: "PROGRAMME" },
+  { title: "Juridique", description: "Examen juridique", department: "JURIDIQUE" },
+  { title: "Finance", description: "Préparation de la cotation", department: "FINANCE" },
+  { title: "Direction générale", description: "Approbation de la cotation", department: "DG" },
+  { title: "Programme", description: "Transmission de la cotation", department: "PROGRAMME" },
+  { title: "Membre", description: "Paiement", department: "MEMBER" },
+  { title: "Programme", description: "Contrôle du paiement", department: "PROGRAMME" },
+  { title: "Terminé", description: "Clôture du dossier", department: "COMPLETED" },
+];
+
+const statusStageIndex: Record<string, number> = {
+  draft: 0,
+  submitted: 1,
+  program_review: 1,
+  artistic_initial_review: 2,
+  program_review_after_artistic: 3,
+  awaiting_member_confirmation: 4,
+  correction_requested: 4,
+  program_review_after_confirmation: 5,
+  artistic_final_review: 6,
+  parallel_communication_regisseur_review: 7,
+  program_review_after_parallel: 8,
+  program_review_after_regisseur_rejection: 8,
+  legal_review: 9,
+  finance_cotation: 10,
+  finance_cotation_revision: 10,
+  dg_cotation_review: 11,
+  program_review_after_finance: 12,
+  awaiting_payment_proof: 13,
+  program_payment_review: 14,
+  completed: 15,
+};
+
+const statusLabels: Record<string, string> = {
+  draft: "Brouillon chez le membre",
+  submitted: "Demande envoyée au Programme",
+  program_review: "Examen par le Programme",
+  artistic_initial_review: "Examen par la Direction artistique",
+  program_review_after_artistic: "Retour au Programme",
+  awaiting_member_confirmation: "Confirmation attendue du membre",
+  correction_requested: "Correction demandée au membre",
+  program_review_after_confirmation: "Reprise par le Programme",
+  artistic_final_review: "Validation artistique finale",
+  parallel_communication_regisseur_review: "Contrôle Communication et Régisseur",
+  program_review_after_parallel: "Synthèse par le Programme",
+  program_review_after_regisseur_rejection: "Réexamen par le Programme",
+  legal_review: "Examen par le Service juridique",
+  finance_cotation: "Cotation en préparation chez Finance",
+  finance_cotation_revision: "Cotation en révision chez Finance",
+  dg_cotation_review: "Cotation en attente de la Direction générale",
+  program_review_after_finance: "Cotation retournée au Programme",
+  awaiting_payment_proof: "Paiement attendu du membre",
+  program_payment_review: "Paiement contrôlé par le Programme",
+  completed: "Demande terminée",
+  rejected: "Demande rejetée",
+  expired: "Demande expirée",
+  stopped_by_member: "Demande arrêtée par le membre",
+};
+
+function normalizeStatus(value?: string | null) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getCurrentStage(status?: string | null) {
+  return statusStageIndex[normalizeStatus(status)] ?? 0;
+}
+
+function requestIsStopped(status?: string | null) {
+  const value = normalizeStatus(status);
+  return value.includes("rejected") || value === "expired" || value === "stopped_by_member";
+}
+
+function RequestJourney({ request }: { request: SpaceRequest }) {
+  const currentStage = getCurrentStage(request.status);
+  const stopped = requestIsStopped(request.status);
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-[#D1965B]/15 bg-white shadow-sm">
+      <div className="border-b border-[#D1965B]/10 px-6 py-5">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <div className="flex items-center gap-2">
+              <Route className="h-5 w-5 text-[#D1965B]" />
+              <h2 className="text-xl font-bold text-[#5C4033]">Parcours de la demande</h2>
+            </div>
+            <p className="mt-1 text-sm text-[#5C4033]/60">
+              Suivi du dossier depuis sa création jusqu’à sa clôture.
+            </p>
+          </div>
+
+          <div className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+            stopped
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-[#D1965B]/25 bg-[#FFF8F1] text-[#8B5E3C]"
+          }`}>
+            {stopped ? <XCircle className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+            {statusLabels[normalizeStatus(request.status)] || request.status}
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto px-5 py-7">
+        <div className="flex min-w-max items-start">
+          {journeySteps.map((step, index) => {
+            const done = !stopped && index < currentStage;
+            const active = index === currentStage;
+            const failed = stopped && active;
+
+            const circleClass = failed
+              ? "border-red-600 bg-red-600 text-white"
+              : active
+                ? "border-[#D1965B] bg-[#D1965B] text-white shadow-md shadow-[#D1965B]/25"
+                : done
+                  ? "border-green-600 bg-green-600 text-white"
+                  : "border-slate-200 bg-white text-slate-300";
+
+            const lineClass = index < currentStage && !stopped ? "bg-green-600" : "bg-slate-200";
+
+            return (
+              <div key={`${step.department}-${index}`} className="flex items-start">
+                <div className="w-36 text-center sm:w-40">
+                  <div className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full border-2 ${circleClass}`}>
+                    {failed ? (
+                      <XCircle className="h-5 w-5" />
+                    ) : done ? (
+                      <Check className="h-5 w-5" />
+                    ) : active ? (
+                      <Clock3 className="h-5 w-5" />
+                    ) : (
+                      <Circle className="h-4 w-4" />
+                    )}
+                  </div>
+                  <p className={`mt-3 text-sm font-bold ${active ? "text-[#8B5E3C]" : done ? "text-green-700" : "text-slate-500"}`}>
+                    {step.title}
+                  </p>
+                  <p className="mx-auto mt-1 max-w-[135px] text-xs leading-4 text-muted-foreground">
+                    {step.description}
+                  </p>
+                  {active && (
+                    <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${failed ? "bg-red-50 text-red-700" : "bg-[#FFF1E3] text-[#9B6438]"}`}>
+                      {failed ? "Arrêté ici" : "Étape actuelle"}
+                    </span>
+                  )}
+                </div>
+
+                {index < journeySteps.length - 1 && (
+                  <div className={`mt-5 h-1 w-10 rounded-full sm:w-16 ${lineClass}`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid gap-3 border-t border-[#D1965B]/10 bg-[#FFFDFB] p-5 sm:grid-cols-3">
+        <div className="flex items-center gap-3 rounded-xl bg-white p-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white"><Check className="h-4 w-4" /></span>
+          <div><p className="text-sm font-semibold text-green-700">Terminé</p><p className="text-xs text-muted-foreground">Étape validée</p></div>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl bg-white p-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#D1965B] text-white"><Clock3 className="h-4 w-4" /></span>
+          <div><p className="text-sm font-semibold text-[#9B6438]">Étape actuelle</p><p className="text-xs text-muted-foreground">Département responsable</p></div>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl bg-white p-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400"><Circle className="h-4 w-4" /></span>
+          <div><p className="text-sm font-semibold text-slate-500">En attente</p><p className="text-xs text-muted-foreground">Étape suivante</p></div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function formatDate(value?: string | null) {
   if (!value) return "Non renseignée";
@@ -89,6 +285,22 @@ function formatDate(value?: string | null) {
       value.includes("T") || value.includes(" ")
         ? "2-digit"
         : undefined,
+  });
+}
+
+function formatDesiredDate(value?: string | null) {
+  if (!value) return "Non renseignée";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Non renseignée";
+  }
+
+  return date.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
   });
 }
 
@@ -260,6 +472,8 @@ export default function SupervisorRequestDetailPage() {
         </div>
       </section>
 
+      <RequestJourney request={request} />
+
       <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
         <div className="space-y-6">
           <section className="rounded-2xl border border-[#D1965B]/15 bg-white p-6 shadow-sm">
@@ -284,7 +498,7 @@ export default function SupervisorRequestDetailPage() {
                   Date souhaitée
                 </div>
                 <p className="mt-2 font-semibold text-[#5C4033]">
-                  {formatDate(
+                  {formatDesiredDate(
                     request.desiredDate || request.date
                   )}
                 </p>
@@ -304,7 +518,8 @@ export default function SupervisorRequestDetailPage() {
               </div>
 
               <div className="rounded-xl bg-[#F8F5EF] p-4">
-                <p className="text-sm text-[#5C4033]/60">
+                <p className="flex items-center gap-2 text-sm text-[#5C4033]/60">
+                  <Building2 className="h-4 w-4 text-[#D1965B]" />
                   Département actuel
                 </p>
                 <p className="mt-2 font-semibold text-[#5C4033]">
@@ -327,16 +542,6 @@ export default function SupervisorRequestDetailPage() {
               </p>
             </div>
 
-            {request.description && (
-              <div className="mt-5">
-                <h3 className="font-semibold text-[#5C4033]">
-                  Description
-                </h3>
-                <p className="mt-2 whitespace-pre-wrap rounded-xl bg-[#F8F5EF] p-4 text-sm leading-6 text-[#5C4033]/75">
-                  {request.description}
-                </p>
-              </div>
-            )}
           </section>
 
           <section className="rounded-2xl border border-[#D1965B]/15 bg-white p-6 shadow-sm">

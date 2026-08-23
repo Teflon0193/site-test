@@ -84,6 +84,7 @@ const roleLabels: Record<string, string> = {
   JURIDIQUE_ASSISTANT:
     "Assistant juridique",
   FINANCE: "Service des Finances",
+  DG: "Directeur général",
 };
 
 const memberMenu: MenuItem[] = [
@@ -314,6 +315,12 @@ const supervisorMenu: MenuItem[] = [
   },
 ];
 
+const dgMenu: MenuItem[] = [
+  { href: "/espace-membre/dg", label: "Tableau de bord DG", icon: LayoutDashboard },
+  { href: "/espace-membre/dg/suivi", label: "Toutes les demandes", icon: ClipboardList },
+  { href: "/espace-membre/profile", label: "Mon profil", icon: User },
+];
+
 function departmentMenu(
   basePath: string,
   dashboardIcon: typeof Home
@@ -351,6 +358,9 @@ function getMenuItems(
 
     case "SUPERVISEUR":
       return supervisorMenu;
+
+    case "DG":
+      return dgMenu;
 
     case "PROGRAMME_ASSISTANT":
       return programmeAssistantMenu;

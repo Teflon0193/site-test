@@ -97,6 +97,12 @@ const USER_GROUPS: UserGroup[] = [
       "Utilisateurs ayant accès à la supervision",
     roles: ["SUPERVISEUR"],
   },
+  {
+    id: "direction-generale",
+    title: "Direction générale",
+    description: "Utilisateur chargé d’approuver les cotations",
+    roles: ["DG"],
+  },
 ];
 
 const ROLE_LABELS: Record<
@@ -121,6 +127,7 @@ const ROLE_LABELS: Record<
     "Assistant Juridique",
   FINANCE: "Finance",
   SUPERVISEUR: "Superviseur général",
+  DG: "Directeur général",
 };
 
 function isAssignableRole(

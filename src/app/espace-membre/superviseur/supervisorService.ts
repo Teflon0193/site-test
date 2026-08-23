@@ -16,6 +16,7 @@ export const ASSIGNABLE_ROLES = [
   "JURIDIQUE_SUPERVISEUR",
   "JURIDIQUE_ASSISTANT",
   "FINANCE",
+  "DG",
   "SUPERVISEUR",
 ] as const;
 

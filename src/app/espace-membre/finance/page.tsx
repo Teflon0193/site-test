@@ -116,6 +116,10 @@ function FinanceStatusPill({
   const label =
     status === "finance_cotation"
       ? "À coter"
+      : status === "finance_cotation_revision"
+        ? "Révision demandée par la DG"
+      : status === "dg_cotation_review"
+        ? "En attente de la DG"
       : status ===
           "program_review_after_finance"
         ? "Cotation transmise"
@@ -126,7 +130,7 @@ function FinanceStatusPill({
             : status;
 
   const colors =
-    status === "finance_cotation"
+    status === "finance_cotation" || status === "finance_cotation_revision"
       ? "border-amber-200 bg-amber-50 text-amber-800"
       : status === "rejected"
         ? "border-red-200 bg-red-50 text-red-700"
@@ -219,8 +223,8 @@ export default function FinanceDashboardPage() {
   const statistics = useMemo(() => {
     const pending = requests.filter(
       (request) =>
-        request.status ===
-        "finance_cotation"
+        request.status === "finance_cotation" ||
+        request.status === "finance_cotation_revision"
     ).length;
 
     const statusesAfterQuotation = new Set([
@@ -473,9 +477,8 @@ export default function FinanceDashboardPage() {
                         <Link
                           href={`/espace-membre/finance/demandes/${request.id}`}
                         >
-                          {request.status ===
-                          "finance_cotation"
-                            ? "Établir la cotation"
+                          {request.status === "finance_cotation" || request.status === "finance_cotation_revision"
+                            ? (request.status === "finance_cotation_revision" ? "Modifier la cotation" : "Établir la cotation")
                             : "Consulter"}
                         </Link>
                       </Button>

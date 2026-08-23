@@ -77,6 +77,9 @@ const roleDestinations: Record<
   FINANCE:
     "/espace-membre/finance",
 
+  DG:
+    "/espace-membre/dg",  
+
   SUPERVISEUR:
     "/espace-membre/superviseur",
 

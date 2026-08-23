@@ -211,6 +211,13 @@ export interface SpaceRequest {
   rejectionComment?: string | null;
 
   paymentAmount?: number | null;
+  dgReviewState?: "pending" | "approved" | "revision_requested" | null;
+  dgSuggestedAmount?: number | null;
+  dgComment?: string | null;
+  dgSignature?: string | null;
+  dgReviewedBy?: number | null;
+  dgReviewedAt?: string | null;
+  financeRevisionCount?: number;
 
   submittedAt?: string | null;
 
@@ -1058,6 +1065,30 @@ export const spaceRequestService = {
       electronicSignature: signature,
     });
 
+    return response.data.data;
+  },
+
+  async getDGRequests(): Promise<SpaceRequest[]> {
+    const response = await api.get<ApiResponse<SpaceRequest[]>>("/space-requests/dg");
+    return Array.isArray(response.data.data) ? response.data.data : [];
+  },
+
+  async reviewDGCotation(
+    id: number,
+    decision: "approve" | "revision",
+    comment: string,
+    electronicSignature: string,
+    suggestedAmount?: number
+  ): Promise<SpaceRequest> {
+    validateRequestId(id);
+    const signature = requireSignature(electronicSignature);
+    if (decision === "revision" && (!Number.isFinite(suggestedAmount) || Number(suggestedAmount) <= 0)) {
+      throw new Error("Le montant suggéré doit être positif.");
+    }
+    const response = await api.post<ApiResponse<SpaceRequest>>(
+      `/space-requests/${id}/dg-cotation-review`,
+      { decision, comment: comment.trim(), electronicSignature: signature, suggestedAmount }
+    );
     return response.data.data;
   },
 };
